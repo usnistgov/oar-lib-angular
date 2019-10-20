@@ -1,0 +1,13 @@
+    <p>Content</p>
+<ng-sidebar-container>
+  <div ng-sidebar-content class="wizpan">
+    <div class="wizpan-content">
+      <p style="background-color: green">Stuff.</p>
+      <button (click)="toggleSidebar()">What am I doing?</button>
+    </div>
+  </div>
+
+  <ng-sidebar [(opened)]="_opened">
+    <p>You are testing ng-sidebar</p>
+  </ng-sidebar>
+</ng-sidebar-container>
