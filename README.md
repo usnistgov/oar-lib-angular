@@ -58,10 +58,57 @@ To use these scripts and containers, Docker must be installed separately.
 
 ## Building and Testing the software
 
+As a standard OAR repository, it includes simple language-independent tools for building and testing
+the software without special knowledge of Typescript or Angular (assuming all prerequisites have
+been installed first); these are described in the section
+["Simple Building and Testing with OAR Tools"](#simple-building-and-testing-with-oar-tools).
+
+Developers, on the other hand, primarily use the native tools (`npm`) to build and test as described
+in ["Building and Testing Using Native Tools"](#building-and-testing-using-native-tools).  
+
+### Simple Building and Testing with OAR Tools
+
+As a standard OAR repository, the software products can be built by simply via the `makedist`
+script, assuming the prerequisites are installed:
+
+```
+  scripts/makedist
+```
+
+The built products will be written into the `dist` subdirectory (created by the `makedist`); each
+will be written into a zip-formatted file with a name formed from the product name and a version
+string.
+
+The individual products can be built separately by specifying the product name as arguments, e.g:
+
+```
+  scripts/makedist modules
+  scripts/makedist demos
+```
+
+Additional options are available; use the `-h` option to view the details:
+
+```
+  scripts/makedist -h
+```
+
+The `testall` script can be used to execute all unit and integration tests:
+
+```
+  scripts/testall
+```
+
+Like with `makedist`, you can run the tests for the different products separately by listing the
+desired product names as arguments to `testall`.  Running `testall -h` will explain available
+command-line options.
+
+
 ### Building and Testing Using Native Tools
 
 The `npm` tool can be used in the standard way for [Angular projects](https://angular.io/docs) to
-build and test this software.  
+build and test this software.
+
+[detail commands and instructions]
 
 ## Repository Administration
 
