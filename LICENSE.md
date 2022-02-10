@@ -29,9 +29,10 @@ SOFTWARE OR SERVICES PROVIDED HEREUNDER.
 
 ## Third-Party Software Licenses
 
-This repository includes the following software, licensed by third
-parties and not subject to the above disclaimer.
+This software leverages numerous open-source packages as software
+dependencies managed through the Node Package Manager (`npm`).  See
+`modules/package-lock.json` for a complete list of dependencies.  
 
-### *name of bundled dependency*
+No other third party software is redistributed through this
+repository.
 
-*Text of bundled dependency license*

@@ -128,7 +128,7 @@ themes:
   #     - Precision medicine
   #     - Regenerative medicine
   #
-  # - Information Technology
+  - Information Technology
   #     - Artificial intelligence
   #     - Biometrics
   #     - Cloud computing and virtualization
@@ -142,9 +142,9 @@ themes:
   #         - Cryptography
   #         - Cybersecurity Education and Workforce Development
   #         - Risk management
-  #     - Data and informatics
+     - Data and informatics
   #         - Human language technology
-  #         - Information retrieval
+         - Information retrieval
   #         - Natural language processing
   #     - Data entry
   #     - Federal information standards (FIPS)
