@@ -1,0 +1,39 @@
+.main-content {
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.radio-group {
+    margin-left: 2em;
+}
+
+.radio label {
+    cursor: pointer; 
+}
+.radio label input {
+    cursor: pointer; 
+}
+
+.wiz-nav {
+    padding: 10px 10px 10px 10px;
+}
+
+.wiz-nav > div > button {
+    border-radius: 25px;
+    border: 2px solid #ccc;
+    margin: 10px;
+    padding: 10px 40px;
+}
+
+.btn-default:hover {
+    background-color: #ccc;
+}
+.btn-info:disabled {
+    background-color: #eee;
+    color: #ccc;
+}
+.btn-default:disabled {
+    background-color: #eee;
+    color: #ccc;
+}
