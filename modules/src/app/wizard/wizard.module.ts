@@ -10,8 +10,7 @@ import { PushingSidebarComponent } from './pushingsidebar.component';
 import { SlideoutColumnComponent } from './slideoutcol.component';
 
 /**
- * a module of re-usable directives and components that can be used repeatedly across the 
- * the app.
+ * a module providing components used to build a wizard interface.
  */
 @NgModule({
     imports: [
@@ -33,5 +32,5 @@ import { SlideoutColumnComponent } from './slideoutcol.component';
         SlideoutColumnComponent
     ]
 })
-export class AppCommonModule { }
+export class WizardModule { }
 
