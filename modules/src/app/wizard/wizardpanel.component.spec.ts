@@ -2,9 +2,7 @@ import { ElementRef } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WizardPanelComponent } from './wizardpanel.component';
-import { AppCommonModule } from './app.common.module';
-
-import * as mock from '../testing/mock.services';
+import { WizardModule } from './wizard.module';
 
 describe('WizardPanelComponent', () => {
     let component : WizardPanelComponent;
@@ -12,7 +10,7 @@ describe('WizardPanelComponent', () => {
 
     beforeEach(async() => {
         TestBed.configureTestingModule({
-            imports: [ AppCommonModule ],
+            imports: [ WizardModule ],
             providers: [ ]
         }).compileComponents();
 
@@ -34,6 +32,10 @@ describe('WizardPanelComponent', () => {
         // expect(el.textContent).toBe("What am I doing?");
 
         el = cmpel.querySelector("p");
+        expect(el).not.toBeNull();
+        expect(el.textContent).toBe("Content");
+
+        el = cmpel.querySelector("button")
         expect(el).not.toBeNull();
         expect(el.textContent).toBe("What am I doing?");
     });

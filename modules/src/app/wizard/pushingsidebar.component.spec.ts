@@ -3,9 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { PushingSidebarComponent } from './pushingsidebar.component';
-import { AppCommonModule } from './app.common.module';
-
-import * as mock from '../testing/mock.services';
+import { WizardModule } from './wizard.module';
 
 @Component({
     selector: 'test-cmp',
@@ -28,13 +26,13 @@ import * as mock from '../testing/mock.services';
 })
 class TestComponent { }
 
-fdescribe('PushingSidebarComponent', () => {
+describe('PushingSidebarComponent', () => {
     let component : TestComponent;
     let fixture : ComponentFixture<TestComponent>;
 
     beforeEach(async() => {
         TestBed.configureTestingModule({
-            imports: [ AppCommonModule, BrowserAnimationsModule ],
+            imports: [ WizardModule, BrowserAnimationsModule ],
             declarations: [ TestComponent ],
             providers: [ ]
         }).compileComponents();
