@@ -17,7 +17,7 @@ export class StartWizardComponent {
     });
 
     constructor() {
-        this.modelctl.get("resourceType").valueChanges.subscribe({
+        this.modelctl.get("resourceType")?.valueChanges.subscribe({
             next(x) { if (x) console.log("resourceType: "+x); }
         });
     }

@@ -3,9 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { StartWizardComponent } from './startwiz.component';
-import { CreateModule } from './create.module';
-
-import * as mock from '../testing/mock.services';
+import { StartWizModule } from './startwiz.module';
 
 fdescribe('StartWizardComponent', () => {
     let component : StartWizardComponent;
@@ -13,7 +11,7 @@ fdescribe('StartWizardComponent', () => {
 
     beforeEach(async() => {
         TestBed.configureTestingModule({
-            imports: [ CreateModule, BrowserAnimationsModule ],
+            imports: [ StartWizModule, BrowserAnimationsModule ],
             declarations: [ ],
             providers: [ ]
         }).compileComponents();

@@ -6,14 +6,14 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { ArchwizardModule } from 'angular-archwizard';
 
 import { StartWizardComponent } from './startwiz.component';
-import { AppCommonModule } from '../common/app.common.module';
+import { WizardModule } from 'oar-modules/wizard/wizard.module';
 
 @NgModule({
     imports: [
         BrowserAnimationsModule,
         ReactiveFormsModule,
         ArchwizardModule,
-        AppCommonModule
+        WizardModule
     ],
     declarations: [
         StartWizardComponent
@@ -22,4 +22,4 @@ import { AppCommonModule } from '../common/app.common.module';
         StartWizardComponent
     ]
 })
-export class CreateModule { }
+export class StartWizModule { }
