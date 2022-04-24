@@ -1,0 +1,15 @@
+{
+    "name": "oarng",
+    "version": "0.0.1",
+    "peerDependencies": {
+        "@angular/common": "^13.3.0",
+        "@angular/core": "^13.3.0"
+        "ng-sidebar": "^9.1.1",
+        "primeflex": "^3.1.2",
+        "primeicons": "^5.0.0",
+        "primeng": "^13.3.3",
+    },
+    "dependencies": {
+        "tslib": "^2.3.0"
+    }
+}
