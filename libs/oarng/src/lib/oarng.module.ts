@@ -1,16 +1,11 @@
 import { NgModule } from '@angular/core';
-import { OarngComponent } from './oarng.component';
-
-
+import { WizardModule } from './wizard/wizard.module';
 
 @NgModule({
-  declarations: [
-    OarngComponent
-  ],
-  imports: [
-  ],
-  exports: [
-    OarngComponent
-  ]
+    imports: [
+        WizardModule
+    ],
+    exports: [
+    ]
 })
-export class OarngModule { }
+export class OARngModule { }
