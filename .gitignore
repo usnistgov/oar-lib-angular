@@ -53,3 +53,11 @@ m2repo
 */node_modules
 */.idea**
 
+# Emacs
+*~
+.#*
+#*
+
+# Visual Studio
+.vscode
+
