@@ -18,7 +18,7 @@ A 201 response MAY contain an ETag response header field indicating the current 
    <div class="p-col pdr-so-slider">
      <a href="#" (click)="toggleHelpView()" >&lt;&lt;</a>
    </div>
-   <div *ngIf="_helpvisible" class="p-col pdr-so-content">
+   <div *ngIf="isHelpVisible()" class="p-col pdr-so-content">
       Sidebar Content
    </div>
 </div>
@@ -54,10 +54,16 @@ A 201 response MAY contain an ETag response header field indicating the current 
     ]})
 export class SlideoutColumnComponent {
     private _helpvisible : boolean = false;
+    
     constructor(private chref: ChangeDetectorRef) { }
+    
     toggleHelpView() {
         this._helpvisible = ! this._helpvisible;
         console.log("toggling view: " + this._helpvisible);
         this.chref.detectChanges();
+    }
+
+    isHelpVisible() {
+        return this._helpvisible;
     }
 }

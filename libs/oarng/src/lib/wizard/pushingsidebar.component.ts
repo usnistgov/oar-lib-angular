@@ -10,7 +10,7 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     template: `
   <div class="pdr-psidebar-panel-root">
     <div class="pdr-psidebar-container" 
-               [@togglesbar]="_sbarvisible ? 'sbarvisible' : 'sbarhidden'">
+               [@togglesbar]="isSbarVisible() ? 'sbarvisible' : 'sbarhidden'">
       <div>
         <div style="float: right; margin: 0px 5px 5px 5px;">
           <a (click)="toggleSbarView()" aria-label="Close Help"
@@ -31,11 +31,11 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     </div>
 
     <div class="pdr-psidebar-main"
-         [@togglesbar]="_sbarvisible ? 'mainsquished' : 'mainexpanded'">
+         [@togglesbar]="isSbarVisible() ? 'mainsquished' : 'mainexpanded'">
       <div class="pdr-psidebar-slider">
         <span style="line-height: 100%">
           <a (click)="toggleSbarView()" aria-label="Help" 
-             title="{{(_sbarvisible) ? 'Close Help' : 'Open Help'}}">
+             title="{{(isSbarVisible()) ? 'Close Help' : 'Open Help'}}">
             <i class="faa faa-question-circle-o faa-lg" aria-hidden="true"
                style="color: orange; cursor: pointer;"></i>
           </a>
@@ -176,5 +176,9 @@ export class PushingSidebarComponent {
         this._sbarvisible = ! this._sbarvisible;
         console.log("toggling view: " + this._sbarvisible);
         this.chref.detectChanges();
+    }
+
+    isSbarVisible() {
+        return this._sbarvisible
     }
 }
