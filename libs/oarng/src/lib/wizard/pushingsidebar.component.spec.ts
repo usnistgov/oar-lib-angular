@@ -44,7 +44,8 @@ describe('PushingSidebarComponent', () => {
 
     it('displays as a panel', () => {
         expect(component).toBeDefined();
-
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('h3')?.textContent).toBe('Wizard Panel');
     });
 });
 
