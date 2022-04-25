@@ -21,8 +21,8 @@ written primarily in [Typescript](https://typescriptlang.org).
 ## Contents
 
 ```
-modules/   --> Angular project directory contain re-usuable modules
-demos/     --> Standalone applications specifically for displaying a reusable component
+libs/oarng --> Angular library containing re-usuable modules
+demos/     --> Standalone applications that demonstrate some of the reusable modules
 scripts/   --> Tools for running the demonstrations and running all tests
 oar-build/ --> general oar build system support (do not customize)
 docker/    --> Docker containers for building and running tests
@@ -82,8 +82,7 @@ string.
 The individual products can be built separately by specifying the product name as arguments, e.g:
 
 ```
-  scripts/makedist modules
-  scripts/makedist demos
+  scripts/makedist oarng
 ```
 
 Additional options are available; use the `-h` option to view the details:
@@ -108,7 +107,70 @@ command-line options.
 The `npm` tool can be used in the standard way for [Angular projects](https://angular.io/docs) to
 build and test this software.
 
-[detail commands and instructions]
+To install the Typescript compiler and all required Javascript modules, type:
+```
+  npm install
+```
+
+This only needs to be done ncec, unless dependencies (as recorded in the `package.json` file) change.
+
+To build the library, type:
+```
+  npm run build
+```
+
+The above command (which is a shortcut for `npm run build oarng`) just builds the library
+and installs it into the `dist/oarng` directory.  To build one of the demo applications,
+specify the demo app name on the build command line:
+```
+  npm run build wizard-demo
+```
+
+To run the unit tests for both the library and the demos, type:
+```
+  npm test
+```
+
+## Developing the Library
+
+This repository was set as a [multi-project Angular
+workspace](https://angular.io/guide/file-structure#multiple-projects) in order to host
+multiple libraries and demo applications.  The OARng libary (under `libs/oarng`) was
+[created as a library using the Angular CLI tool](https://angular.io/guide/creating-libraries).  
+Developers should consult the [Angular documentation on libaries](https://angular.io/guide/libraries)
+for more information on how libraries are different from applications.
+
+To add a new module to the library:
+  1.  Create a new module directory under `libs/oarng/src/lib`
+  2.  Copy in Angular class files contianing reusable Components, Services, Directives and
+      Interfaces.
+  3.  Create a module file (e.g. `mymod.module.ts`) in that directory for importing the
+      classes as a whole.
+  4.  Expand and validate the unit tests
+  5.  Add all exportable classes to the `libs/oarng/src/public-api.json`
+
+## Using the Library
+
+To use the OARng library, it must be built first:
+```
+  npm run build
+```
+which installs the library into `dists/oarng`.
+
+This library can be used in another Angular project, by adding this directory as a
+dependency in that other project's `package.json` file.  For example, the `package.json`
+file in the [oar-pdr-angular](https://github.com/usnistgov/oar-pdr-angular), which
+includes this repo as a submodule, includes the following in its `package.json` file:
+```
+  "dependencies": {
+     ...
+     "oarng": "../lib/dist/oarng",
+     ...
+  }
+```
+
+Running `npm install` in the importing project will install the library into its
+`node_modules` cache.  
 
 ## Repository Administration
 
