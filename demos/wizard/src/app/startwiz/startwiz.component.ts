@@ -6,7 +6,7 @@ import { WizardComponent } from 'angular-archwizard';
  * a wizard for starting the publication record.
  */
 @Component({
-    selector: 'pdr-start-wiz',
+    selector: 'oar-start-wiz',
     templateUrl: 'startwiz.component.html',
     styleUrls: [ 'startwiz.component.css' ]
 })

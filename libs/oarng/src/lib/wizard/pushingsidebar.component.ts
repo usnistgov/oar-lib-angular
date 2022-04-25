@@ -6,10 +6,10 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
  * it pushes content out of the way (as opposed to covering over it).  
  */
 @Component({
-    selector: 'pdr-pushing-sidebar',
+    selector: 'oar-pushing-sidebar',
     template: `
-  <div class="pdr-psidebar-panel-root">
-    <div class="pdr-psidebar-container" 
+  <div class="oar-psidebar-panel-root">
+    <div class="oar-psidebar-container" 
                [@togglesbar]="isSbarVisible() ? 'sbarvisible' : 'sbarhidden'">
       <div>
         <div style="float: right; margin: 0px 5px 5px 5px;">
@@ -18,21 +18,21 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
              class="faa faa-times-circle faa-lg" aria-hidden="true" 
              style="color: orange; cursor: pointer;"></i></a>
         </div>
-        <div class="pdr-psidebar-title">
+        <div class="oar-psidebar-title">
           <ng-content select=".sidebar-title"></ng-content>
         </div>
       </div>
-      <div class="pdr-psidebar-frame">
+      <div class="oar-psidebar-frame">
         <p-scrollPanel [style]="{width: '100%', height: '90%'}" 
-                       styleClass="pdr-psidebar-content">
+                       styleClass="oar-psidebar-content">
           <ng-content select=".sidebar-content"></ng-content>
         </p-scrollPanel>
       </div>
     </div>
 
-    <div class="pdr-psidebar-main"
+    <div class="oar-psidebar-main"
          [@togglesbar]="isSbarVisible() ? 'mainsquished' : 'mainexpanded'">
-      <div class="pdr-psidebar-slider">
+      <div class="oar-psidebar-slider">
         <span style="line-height: 100%">
           <a (click)="toggleSbarView()" aria-label="Help" 
              title="{{(isSbarVisible()) ? 'Close Help' : 'Open Help'}}">
@@ -41,7 +41,7 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
           </a>
         </span>
       </div>
-      <div class="pdr-psidebar-main-content">
+      <div class="oar-psidebar-main-content">
         <ng-content select=".main-content"></ng-content>
       </div>
     </div>
@@ -49,7 +49,7 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
   </div>
 `,
     styles: [`
-.pdr-psidebar-panel-root {
+.oar-psidebar-panel-root {
     width: 100%;
     position: relative;
     left: 0px;
@@ -57,12 +57,12 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     overflow: hidden;
 }
 
-.pdr-psidebar-frame {
+.oar-psidebar-frame {
     padding: 10px 10px 10px 10px; 
     height: 100%;
 }
 
-.pdr-psidebar-container {
+.oar-psidebar-container {
     width: 35%;
     height: 100%;
     float: right;
@@ -73,40 +73,40 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     padding-top: 5px;
 }
 
-.pdr-psidebar-show {
+.oar-psidebar-show {
     position: absolute;
     right: 0%;
     top: 0px;
     bottom: 0px;
 }
 
-.pdr-psidebar-hide {
+.oar-psidebar-hide {
     position: absolute;
     right: -20%;
     top: 0px;
     bottom: 0px;
 }
 
-.pdr-psidebar-main {
+.oar-psidebar-main {
     height: 100%;
     position: relative;
     left: 0px;
     top: 0px;
 }
 
-.pdr-psidebar-main-content {
+.oar-psidebar-main-content {
     padding: 15px 15px 15px 15px;
 }
 
-.pdr-psidebar-main-expand {
+.oar-psidebar-main-expand {
     margin-right: 10%
 }
 
-.pdr-psidebar-main-squish {
+.oar-psidebar-main-squish {
     margin-right: 35%
 }
 
-.pdr-psidebar-slider {
+.oar-psidebar-slider {
     float: right;
     padding-top: 10px;
     padding-right: 10px;
@@ -116,21 +116,21 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     bottom: 0px;
 }
 
-.pdr-psidebar-container {
+.oar-psidebar-container {
 }
 
-.pdr-psidebar-title {
+.oar-psidebar-title {
     font-size: larger;
     color: orange;
     padding-left: 10px;
 }
 
-.pdr-psidebar-content .ui-scrollpanel-bar-x {
+.oar-psidebar-content .ui-scrollpanel-bar-x {
     height: 20px;
     visibility: visible;
 }
 
-.pdr-psidebar-content .ui-scrollpanel-bar-y {
+.oar-psidebar-content .ui-scrollpanel-bar-y {
     width: 4px;
 }
 `],

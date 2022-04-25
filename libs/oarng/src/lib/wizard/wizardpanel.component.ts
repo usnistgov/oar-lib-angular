@@ -12,7 +12,7 @@ import { Component } from '@angular/core';
  * display of one step of the wizard workflow. 
  */
 @Component({
-    selector: 'pdr-wizard-panel',
+    selector: 'oar-wizard-panel',
     templateUrl: 'wizardpanel.component.html',
     styleUrls: [ 'wizardpanel.component.html' ],
     providers: [ ]
