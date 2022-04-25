@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormGroup, FormControl } from '@angular/forms';
+import { WizardComponent } from 'angular-archwizard';
 
 /**
  * a wizard for starting the publication record.
@@ -13,7 +14,8 @@ export class StartWizardComponent {
 
     modelctl = new FormGroup({
         resourceType: new FormControl(''),
-        paperState: new FormControl('')
+        creatorIsContact: new FormControl(''),
+        otherContact: new FormControl('')
     });
 
     constructor() {

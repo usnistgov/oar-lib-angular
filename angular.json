@@ -34,7 +34,7 @@
                 }
             }
         },
-        "wizard": {
+        "wizard-demo": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:application": {
@@ -58,7 +58,15 @@
                             "demos/wizard/src/assets"
                         ],
                         "styles": [
-                            "demos/wizard/src/styles.css"
+                            "demos/wizard/src/styles.css",
+                            "node_modules/primeng/resources/primeng.css",
+                            "node_modules/primeicons/primeicons.css",
+                            "node_modules/primeflex/primeflex.css",
+                            "node_modules/primeng/resources/themes/saga-blue/theme.css",
+                            "angular-archwizard/archwizard.css",
+                            "angular-archwizard/archwizard.scss",
+                            "libs/oarng/src/styles/font-awesome/css/font-awesome.min.css",
+                            "libs/oarng/src/styles/main.css"
                         ],
                         "scripts": []
                     },
@@ -99,10 +107,10 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                            "browserTarget": "wizard:build:production"
+                            "browserTarget": "wizard-demo:build:production"
                         },
                         "development": {
-                            "browserTarget": "wizard:build:development"
+                            "browserTarget": "wizard-demo:build:development"
                         }
                     },
                     "defaultConfiguration": "development"

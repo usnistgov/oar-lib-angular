@@ -6,7 +6,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { ArchwizardModule } from 'angular-archwizard';
 
 import { StartWizardComponent } from './startwiz.component';
-import { WizardModule } from 'oar-modules/wizard/wizard.module';
+// import { OARngModule } from 'oarng/lib/oarng.module';
+import { WizardModule } from 'oarng';
 
 @NgModule({
     imports: [
