@@ -1,0 +1,138 @@
+<div style="max-width: 1000px; margin-left: auto; margin-right: auto">
+<form [formGroup]="modelctl">
+<aw-wizard>
+  <aw-wizard-step stepTitle="Publication Type">
+    <oar-pushing-sidebar>
+      <div class="main-content">
+
+        <p>We're going to start with a few questions...</p>
+
+        <p>
+        What is the <i>primary</i> type of product that you wish to present in this
+        publication?
+        </p>
+
+        <div class="radio-group">
+          <div class="radio">
+            <label title="downloadable files or a searchable database">
+              <input type="radio" required name="resourceType" value="data"
+                     formControlName="resourceType">
+              Data
+            </label>
+          </div>
+          <div class="radio">
+            <label title="source code or a downloadable application one may install and run">
+              <input type="radio" required name="resourceType" value="software"
+                     formControlName="resourceType">
+              Software
+            </label>
+          </div>
+          <div class="radio">
+            <label title="a web site that presents tools and information">
+              <input type="radio" required name="resourceType" value="website"
+                     formControlName="resourceType">
+              A website or portal
+            </label>
+          </div>
+          <div class="radio">
+            <label title="either a programmatic web service or a service with a web-page interface">
+              <input type="radio" required name="resourceType" value="service"
+                     formControlName="resourceType">
+              A network-accessible service
+            </label>
+          </div>
+          <div class="radio">
+            <label>
+              <input type="radio" required name="resourceType" value="other"
+                     formControlName="resourceType">
+              Something else
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <span class="sidebar-title">Question Help</span>
+      <div class="sidebar-content">
+
+        <p>
+        With this question, you are telling us the <i>type</i> of product you are publishing.
+        Your publication may present multiple types of products--for example, data plus software
+        to analyze it--but, it is helpful for us to know what you consider is the most important
+        product.  And don't worry: you can change this later.  
+        <p>
+        <i>[Helpful examples, links to policy and guideance]</i>
+
+      </div>
+    </oar-pushing-sidebar>
+
+    <div class="wiz-nav">
+      <div class="wiz-nav-esc" style="float: left;">
+        <button class="btn btn-outline-rounded btn-default" type="button"
+                (click)="cancel();">
+          Cancel <i style="margin-left: 10px;" class="faa faa-times"></i> 
+        </button>
+      </div>
+      <div class="wiz-nav-pn" style="float: right;"> 
+        <button class="btn btn-outline-rounded btn-default" type="button" disabled>
+          <i style="margin-right: 10px;" class="faa faa-long-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-outline-rounded btn-info" type="button"
+                [disabled]="!modelctl.get('resourceType')!.value" awNextStep>
+          Next <i style="margin-left: 10px;" class="faa faa-long-arrow-right"></i> 
+        </button>
+      </div>
+    </div>
+  </aw-wizard-step>
+  <aw-wizard-step stepTitle="Contact Info">
+    <oar-pushing-sidebar>
+      <div class="main-content">
+        <p>Should you be the primary public contact for this record?</p>
+        <div class="radio-group">
+          <div class="radio">
+            <label title="Yes, I will be the primary public contact.">
+              <input type="radio" required name="creatorIsContact" value="true"
+                     formControlName="creatorIsContact">
+              Yes
+            </label>
+          </div>
+          <div class="radio">
+            <label title="No, another NIST staff person will be the primary public contact.">
+              <input type="radio" required name="creatorIsContact" value="false"
+                     formControlName="creatorIsContact">
+              No
+            </label>
+          </div>
+        </div>
+        <p>
+           Type in contact's name and select the appropriate match: <br />
+           <input type="text" name="otherContact" formControlName="otherContact" />
+        </p>
+      </div>
+      <span class="sidebar-title">Question Help</span>
+      <div class="sidebar-content">
+        The primary public contact is a person familiar the content of this publication and,
+        thus, can answer questions from the public that wish to reference this publication or
+        make use of its contents.
+      </div>
+    </oar-pushing-sidebar>
+
+    <div class="wiz-nav">
+      <div class="wiz-nav-esc" style="float: left;">
+        <button class="btn btn-outline-rounded btn-default" type="button"
+                (click)="cancel();">
+          Cancel <i style="margin-left: 10px;" class="faa faa-times"></i> 
+        </button>
+      </div>
+      <div class="wiz-nav-pn" style="float: right;"> 
+        <button class="btn btn-outline-rounded btn-default" type="button" awPreviousStep>
+          <i style="margin-right: 10px;" class="faa faa-long-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-outline-rounded btn-info" type="button" awNextStep>
+          Next <i style="margin-left: 10px;" class="faa faa-long-arrow-right"></i> 
+        </button>
+      </div>
+    </div>
+  </aw-wizard-step>
+</aw-wizard>
+</form>
+</div>
