@@ -1,0 +1,29 @@
+<form [formGroup]="parantFormGroup" style=" min-height: 50vh;" >
+    <oar-pushing-sidebar>
+        <div class="main-content">
+            <p>Will you be uploading any files to be included with this publication?</p>
+            <div class="radio-group">
+                <div class="radio">
+                    <label title="Yes, I will be the primary public contact.">
+                        <input type="radio" required name="willUpload" value="true"
+                            formControlName="willUpload">
+                        Yes
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="No, another NIST staff person will be the primary public contact.">
+                        <input type="radio" required name="willUpload" value="false"
+                            formControlName="willUpload">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+        <span class="sidebar-title">Question Help</span>
+        <div class="sidebar-content">
+            The primary public contact is a person familiar the content of this publication and,
+            thus, can answer questions from the public that wish to reference this publication or
+            make use of its contents.
+        </div>
+    </oar-pushing-sidebar>
+</form>

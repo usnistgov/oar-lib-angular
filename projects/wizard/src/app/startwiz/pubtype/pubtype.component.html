@@ -1,0 +1,60 @@
+<form [formGroup]="parantFormGroup" >
+    <oar-pushing-sidebar>
+        <div class="main-content">
+            <p>We're going to start with a few questions...</p>
+
+            <p>
+                What is the <i>primary</i> type of product that you wish to present in this
+                publication?
+            </p>
+
+            <div class="radio-group">
+                <div class="radio">
+                    <label title="downloadable files or a searchable database">
+                        <input type="radio" required name="resourceType" value="data" formControlName="resourceType" [(ngModel)]="dataModel.resourceType">
+                        Data
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="source code or a downloadable application one may install and run">
+                        <input type="radio" required name="resourceType" value="software"
+                            formControlName="resourceType" [(ngModel)]="dataModel.resourceType">
+                        Software
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="a web site that presents tools and information">
+                        <input type="radio" required name="resourceType" value="website" formControlName="resourceType" [(ngModel)]="dataModel.resourceType">
+                        A website or portal
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="either a programmatic web service or a service with a web-page interface">
+                        <input type="radio" required name="resourceType" value="service" formControlName="resourceType" [(ngModel)]="dataModel.resourceType">
+                        A network-accessible service
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" required name="resourceType" value="other" formControlName="resourceType" [(ngModel)]="dataModel.resourceType">
+                        Something else
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <span class="sidebar-title">Question Help</span>
+        <div class="sidebar-content">
+
+            <p>
+                With this question, you are telling us the <i>type</i> of product you are publishing.
+                Your publication may present multiple types of products--for example, data plus software
+                to analyze it--but, it is helpful for us to know what you consider is the most important
+                product. And don't worry: you can change this later.
+            <p>
+                <i>[Helpful examples, links to policy and guideance]</i>
+
+        </div>
+    </oar-pushing-sidebar>
+
+</form>

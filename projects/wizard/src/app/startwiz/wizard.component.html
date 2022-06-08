@@ -1,0 +1,28 @@
+<!-- <wiz-navigator [steps]="steps"></wiz-navigator> -->
+<div class="wiz-page-container">
+    <wiz-navigator [steps]="steps"></wiz-navigator>
+    <form [formGroup]="fgSteps">
+        <div class="step-page-container" [ngStyle]="{'padding-top.px': bodyHeight * .1>0 ? bodyHeight * .1 : 0, 'min-height': bodyHeight - 210 + 'px'}">
+            <div class="form-step">
+                <ng-container [ngSwitch]="currentStep?.stepIndex">
+                    <ng-container *ngSwitchCase="'1'">
+                        <div formGroupName="pubtype">
+                            <app-pubtype [dataModel]="dataModel"></app-pubtype>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'2'">
+                        <div formGroupName="contactInfo">
+                            <app-contactinfo [dataModel]="dataModel"></app-contactinfo>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'3'">
+                        <app-files></app-files>
+                    </ng-container>
+                </ng-container>
+            </div>
+        </div>
+</form>
+    <!-- <button (click)="onNextStep()" [disabled]="!currentStep?.isComplete" class="form-continue-btn common-btn">
+        {{ showButtonLabel() }}
+      </button> -->
+</div>

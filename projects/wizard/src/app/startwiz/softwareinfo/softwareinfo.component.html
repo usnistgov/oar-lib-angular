@@ -1,0 +1,34 @@
+<form [formGroup]="parantFormGroup" style=" height: 50vh;" >
+    <oar-pushing-sidebar>
+        <div class="main-content">
+            <p>Would you like to provide a link to a public software repository (e.g. in GitHub)?</p>
+            <div class="radio-group">
+                <div class="radio">
+                    <label title="downloadable files or a searchable database">
+                        <input type="radio" required name="softwareLink" value="data" formControlName="softwareLink">
+                        Yes
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="source code or a downloadable application one may install and run">
+                        <input type="radio" required name="softwareLink" value="software"
+                            formControlName="softwareLink">
+                        No
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- <input type="text" pInputText name="SoftwareName" formControlName="SoftwareName"/>
+
+            <div style="margin-top: 1em;">
+                <div style="margin-bottom: .5em;">Version of the software: </div>
+                <input type="text" pInputText name="SoftwareVersion" formControlName="SoftwareVersion"/>
+            </div> -->
+        </div>
+        <span class="sidebar-title">Question Help</span>
+        <div class="sidebar-content">
+            This is a sample description served as a placeholder.
+        </div>
+    </oar-pushing-sidebar>
+</form>

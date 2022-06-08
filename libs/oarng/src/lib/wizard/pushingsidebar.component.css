@@ -1,0 +1,124 @@
+.oar-psidebar-panel-root {
+    width: 100%;
+    position: relative;
+    left: 0px;
+    top: 0px;
+    overflow: hidden;
+}
+
+.oar-psidebar-frame {
+    padding: 10px 10px 10px 10px; 
+}
+
+.oar-psidebar-container {
+    width: 35%;
+    height: fit-content;
+    float: right;
+    border: 3px solid orange; 
+    border-radius: 10px;
+    background-color:  #f7f7f7;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+#left-container {
+    display: table-cell;
+    width: 60%;
+}
+
+#right-container {
+    display: table-cell;
+    width: 30%;
+    border: 1px solid green;
+    overflow: hidden;
+}
+
+#oar-splitter {
+    display: table-cell;
+    width: 10%;
+    height: 100%;
+    margin: auto;
+    vertical-align: middle;
+}
+
+#top-line {
+    width: 1px;
+    background-image: linear-gradient( white, rgb(81, 81, 81));
+    border: 0px solid green;
+    height: 100px;
+}
+
+#bottom-line {
+    background-image: linear-gradient( rgb(81, 81, 81), white);
+    width: 1px;
+    border: 0px solid green;
+    height: 100px;
+}
+
+.oar-psidebar-show {
+    position: absolute;
+    right: 0%;
+    top: 0px;
+    bottom: 0px;
+}
+
+.oar-psidebar-hide {
+    position: absolute;
+    right: -20%;
+    top: 0px;
+    bottom: 0px;
+}
+
+.oar-psidebar-main {
+    height: fit-content;
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+.oar-psidebar-main-content {
+    padding: 0px 15px 15px 15px;
+}
+
+.oar-psidebar-main-expand {
+    margin-right: 10%
+}
+
+.oar-psidebar-main-squish {
+    margin-right: 35%
+}
+
+.oar-psidebar-slider {
+    float: right;
+    padding-top: 10px;
+    padding-right: 10px;
+    position: relative;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+}
+
+.oar-psidebar-container {
+}
+
+.oar-psidebar-title {
+    font-size: larger;
+    color: orange;
+    padding-left: 10px;
+}
+
+.oar-psidebar-content .ui-scrollpanel-bar-x {
+    height: 20px;
+    /* visibility: visible; */
+
+}
+
+.oar-psidebar-content .ui-scrollpanel-bar-y {
+    width: 10px;
+    /* visibility: visible; */
+}
+
+.sidebar-frame {
+    height: fit-content;
+    overflow: scroll;
+}

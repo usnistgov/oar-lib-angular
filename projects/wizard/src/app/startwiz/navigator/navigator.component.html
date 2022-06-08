@@ -1,0 +1,14 @@
+<!-- <div class="navigator-bar">
+    <span *ngFor="let step of steps | async; let i = index;">
+        <span [ngStyle]="{'position': 'absolute', 'left': step.position_x, 'top':step.position_y}">{{step.title}}</span>
+    </span>
+</div> -->
+
+<div class="form-steps-container">
+    <ng-container *ngFor="let step of steps; let i = index;">
+        <div (click)="onStepClick(step)" 
+            [ngClass]="{ 'step-complete': step.isComplete, 'step-incomplete': !step.isComplete, 'step-current': (currentStep | async)?.stepIndex === step.stepIndex }"
+            class="step-bubble">{{ step.stepIndex }}</div>
+        <div *ngIf="i < steps.length - 1" class="step-divider"></div>
+    </ng-container>
+</div>

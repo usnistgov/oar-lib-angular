@@ -1,0 +1,32 @@
+#layout-wrapper {
+    vertical-align: top;
+}
+
+#footer {
+    /* position: absolute;
+    bottom: 0; */
+    position: relative;
+    /* top: 254px; */
+    width: 100%;
+}
+
+.app-page-container {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.wiz-page-container {
+    flex: 1;
+}
+
+.form-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}

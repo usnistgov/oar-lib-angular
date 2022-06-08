@@ -1,0 +1,23 @@
+.wiz-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 80%;
+    margin: auto;
+}
+
+.step-page-container {
+    flex: 1;
+    margin: auto;
+    width: 100%;
+}
+
+.form-continue-btn {
+    background-color: blue;
+    margin: 32px;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+    }
+}

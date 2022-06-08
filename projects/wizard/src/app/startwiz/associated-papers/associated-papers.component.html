@@ -1,0 +1,45 @@
+<form [formGroup]="parantFormGroup" >
+    <oar-pushing-sidebar>
+        <div class="main-content">
+            <p>
+                Is there or will there be a literature article published regarding this (Data/Software/...)?
+            </p>
+
+            <div class="radio-group">
+                <div class="radio">
+                    <label title="No, this will be a stand-alone publication">
+                        <input type="radio" required name="assocPageType" value="data" formControlName="assocPageType">
+                        No, this will be a stand-alone publication
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="Yes, this (Data/Software/...) publication should be considered a supplement of the article">
+                        <input type="radio" required name="assocPageType" value="software"
+                            formControlName="assocPageType">
+                        Yes, this (Data/Software/...) publication should be considered a supplement of the article
+                    </label>
+                </div>
+                <div class="radio">
+                    <label title="Yes, but the article is only loosely related this publication.">
+                        <input type="radio" required name="assocPageType" value="website" formControlName="assocPageType">
+                        Yes, but the article is only loosely related this publication.
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <span class="sidebar-title">Question Help</span>
+        <div class="sidebar-content">
+
+            <p>
+                With this question, you are telling us the <i>type</i> of product you are publishing.
+                Your publication may present multiple types of products--for example, data plus software
+                to analyze it--but, it is helpful for us to know what you consider is the most important
+                product. And don't worry: you can change this later.
+            <p>
+                <i>[Helpful examples, links to policy and guideance]</i>
+
+        </div>
+    </oar-pushing-sidebar>
+
+</form>
