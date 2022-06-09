@@ -13,7 +13,11 @@ export class AssociatedPapersComponent implements OnInit {
     constructor(private rootFormGroup: FormGroupDirective, private chref: ChangeDetectorRef) { }
 
     ngOnInit(): void {
-        this.parantFormGroup = this.rootFormGroup.control;
+        this.parantFormGroup = this.rootFormGroup.control.controls['assocPapers'] as FormGroup;
+    }
+
+    ngAfterContentInit() {
+        this.chref.detectChanges();
     }
 
     /**

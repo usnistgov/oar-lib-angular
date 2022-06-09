@@ -62,11 +62,15 @@ export class WizardComponent implements OnInit {
 
     ngOnInit(): void {
         this.steps = [
-            new StepModel(1, 'test1'),
-            new StepModel(2, 'test2'),
-            new StepModel(3, 'test3')
+            new StepModel(1, 'Publication Type'),
+            new StepModel(2, 'Contact Info'),
+            new StepModel(3, 'Files'),
+            new StepModel(4, 'Optional'),
+            new StepModel(5, 'Associated Papers')
         ]
 
+        this.stepService.setSteps(this.steps);
+        
         this.currentStepSub = this.stepService.getCurrentStep().subscribe((step: StepModel) => {
             this.currentStep = step;
         });
@@ -86,9 +90,21 @@ export class WizardComponent implements OnInit {
         }
     }
 
+    get isFirstStep() {
+        return this.stepService.isFirstStep();
+    }
+
+    onPrevStep() {
+        if (!this.isFirstStep) {
+            this.stepService.moveToPrevStep();
+        } else {
+            this.onSubmit();
+        }
+    }
+
     showButtonLabel() {
-        return "continue";
-        return !this.stepService.isLastStep() ? 'Continue' : 'Finish';
+        // return "continue";
+        return !this.stepService.isLastStep() ? 'Next' : 'Finish';
     }
 
     ngOnDestroy(): void {

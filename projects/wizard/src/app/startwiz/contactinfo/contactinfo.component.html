@@ -5,15 +5,15 @@
             <div class="radio-group">
                 <div class="radio">
                     <label title="Yes, I will be the primary public contact.">
-                        <input type="radio" required name="creatorIsContact" value="true"
-                            formControlName="creatorIsContact" [(ngModel)]="dataModel.creatorIsContact">
+                        <input type="radio" required name="creatorIsContact" value="true" (change)="toggleContactName($event)"
+                            formControlName="creatorIsContact">
                         Yes
                     </label>
                 </div>
                 <div class="radio">
                     <label title="No, another NIST staff person will be the primary public contact.">
-                        <input type="radio" required name="creatorIsContact" value="false"
-                            formControlName="creatorIsContact" [(ngModel)]="dataModel.creatorIsContact">
+                        <input type="radio" required name="creatorIsContact" value="false" (change)="toggleContactName($event)"
+                            formControlName="creatorIsContact">
                         No
                     </label>
                 </div>

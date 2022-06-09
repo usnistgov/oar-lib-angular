@@ -32,9 +32,19 @@ export class StepService {
         return this.steps$.asObservable();
     }
 
+    setSteps(steps:StepModel[]): void {
+        this.steps$.next(steps);
+    }
+
+    moveToPrevStep(): void {
+        const index = this.currentStep$.value.stepIndex - 2;
+        if (index >= 0) {
+            this.currentStep$.next(this.steps$.value[index]);
+        }
+    }
+
     moveToNextStep(): void {
         const index = this.currentStep$.value.stepIndex;
-
         if (index < this.steps$.value.length) {
             this.currentStep$.next(this.steps$.value[index]);
         }
@@ -42,5 +52,9 @@ export class StepService {
 
     isLastStep(): boolean {
         return this.currentStep$.value.stepIndex === this.steps$.value.length;
+    }
+
+    isFirstStep(): boolean {
+        return this.currentStep$.value.stepIndex === 1;
     }
 }

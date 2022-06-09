@@ -13,7 +13,7 @@ export class FilesComponent implements OnInit {
     constructor(private rootFormGroup: FormGroupDirective, private chref: ChangeDetectorRef) { }
 
     ngOnInit(): void {
-        this.parantFormGroup = this.rootFormGroup.control;
+        this.parantFormGroup = this.rootFormGroup.control.controls['files'] as FormGroup;
     }
 
     /**
