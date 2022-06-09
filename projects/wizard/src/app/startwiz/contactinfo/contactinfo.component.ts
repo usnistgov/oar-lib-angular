@@ -32,6 +32,10 @@ export class ContactinfoComponent implements OnInit {
         this.cdr.detectChanges();
     }
 
+    ngAfterContentInit() {
+        this.cdr.detectChanges();
+    }
+
     /**
      * close out the collection of information and dispatch it as necessary
      */
@@ -47,5 +51,11 @@ export class ContactinfoComponent implements OnInit {
 
     isSbarVisible() {
         return this._sbarvisible
+    }
+
+    toggleContactName(evt:any) {
+        var target = evt.target;
+
+        this.dataModel.creatorIsContact = (target.value==='true');
     }
 }

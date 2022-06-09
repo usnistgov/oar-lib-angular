@@ -4,11 +4,19 @@
     </span>
 </div> -->
 
-<div class="form-steps-container">
-    <ng-container *ngFor="let step of steps; let i = index;">
-        <div (click)="onStepClick(step)" 
-            [ngClass]="{ 'step-complete': step.isComplete, 'step-incomplete': !step.isComplete, 'step-current': (currentStep | async)?.stepIndex === step.stepIndex }"
-            class="step-bubble">{{ step.stepIndex }}</div>
-        <div *ngIf="i < steps.length - 1" class="step-divider"></div>
-    </ng-container>
+<div class="navigator-bar">
+    <div class="form-steps-container">
+            <ng-container *ngFor="let step of steps; let i = index;">
+                <div (click)="onStepClick(step)" 
+                    [ngClass]="{ 'step-complete': step.isComplete, 'step-incomplete': !step.isComplete, 'step-current': (currentStep | async)?.stepIndex === step.stepIndex }"
+                    class="step-bubble">{{ step.stepIndex }}</div>
+                <div *ngIf="i < steps.length - 1" class="step-divider"></div>
+            </ng-container>
+    </div>
+
+    <div class="form-steps-container">
+        <ng-container *ngFor="let step of steps; let i = index;">
+            <div style="width: 200px;text-align: center;margin-top: 5px;" [ngStyle]="titleStyle(i)">{{ step.title }}</div>
+        </ng-container>
+    </div>
 </div>

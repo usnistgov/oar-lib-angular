@@ -13,6 +13,7 @@ export class AppComponent {
     title = 'OAR Module Demo: Wizard';
     clientHeight: number = 500;
     footbarHeight!: number;
+    appVersion: string = "2.0";
 
     @ViewChild('footbar') elementView!: ElementRef;
 

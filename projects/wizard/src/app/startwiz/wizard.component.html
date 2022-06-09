@@ -16,13 +16,37 @@
                         </div>
                     </ng-container>
                     <ng-container *ngSwitchCase="'3'">
-                        <app-files></app-files>
+                        <div formGroupName="files">
+                            <app-files></app-files>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'4'">
+                        <div formGroupName="softwareInfo">
+                            <app-softwareinfo></app-softwareinfo>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'5'">
+                        <div formGroupName="assocPapers">
+                            <app-associated-papers></app-associated-papers>
+                        </div>
                     </ng-container>
                 </ng-container>
             </div>
         </div>
-</form>
-    <!-- <button (click)="onNextStep()" [disabled]="!currentStep?.isComplete" class="form-continue-btn common-btn">
-        {{ showButtonLabel() }}
-      </button> -->
+    </form>
+    <div class="bottom-control-container">
+        <div class="bottom-btn-container">
+            <button (click)="onPrevStep()" class="form-cancel-btn common-btn">
+                Cancel
+            </button>
+
+            <button (click)="onNextStep()" [disabled]="!currentStep?.canExit" class="form-nav-btn common-btn">
+                {{ showButtonLabel() }}
+            </button>
+
+            <button (click)="onPrevStep()" [disabled]="!currentStep?.canExit || isFirstStep" class="form-nav-btn common-btn">
+                Prev
+            </button>
+        </div>
+    </div>
 </div>
