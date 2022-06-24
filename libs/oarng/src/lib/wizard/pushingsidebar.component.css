@@ -1,5 +1,6 @@
 .oar-psidebar-panel-root {
     width: 100%;
+    height: 100%;
     position: relative;
     left: 0px;
     top: 0px;
@@ -13,12 +14,13 @@
 .oar-psidebar-container {
     width: 35%;
     height: fit-content;
-    float: right;
+    max-height: 90%;
     border: 3px solid orange; 
     border-radius: 10px;
     background-color:  #f7f7f7;
     padding-bottom: 5px;
     padding-top: 5px;
+    overflow: auto;
 }
 
 #left-container {
