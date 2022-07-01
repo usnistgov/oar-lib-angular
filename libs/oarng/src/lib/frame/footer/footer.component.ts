@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import * as footerlinks from '../../assets/site-constants/footer-links.json';
+import * as footerlinks from '../../../assets/site-constants/footer-links.json';
 
 @Component({
   selector: 'app-footer',
