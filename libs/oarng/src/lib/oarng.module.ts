@@ -1,14 +1,13 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WizardModule } from './wizard/wizard.module';
-import { HeaderComponent } from './frame/header/header.component';
-import { FooterComponent } from './frame/footer/footer.component'
+import { FrameModule } from './frame/frame.module';
 
 @NgModule({
-    declarations: [HeaderComponent, FooterComponent],
+    declarations: [],
     imports: [
-        WizardModule,CommonModule
+        WizardModule,CommonModule,FrameModule
     ],
-    exports: [HeaderComponent, FooterComponent]
+    exports: []
 })
 export class OARngModule { }
