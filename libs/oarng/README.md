@@ -13,7 +13,9 @@ Heaser takes three parameters: appVersion, headLn1 and headLn2.
 
 ``
 appVersion - the version of the current application.
+
 headLn1 - this is the first line of text right next to the NIST logo. Will be converted to upcase.
+
 headLn2 - this is the second line of text right next to the NIST logo. Will be converted to upcase.
 ``
 
