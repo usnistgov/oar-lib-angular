@@ -20,6 +20,7 @@ describe('HeaderComponent', () => {
   });
 
   it('should create', () => {
+    debugger;
     expect(component).toBeTruthy();
   });
 });
