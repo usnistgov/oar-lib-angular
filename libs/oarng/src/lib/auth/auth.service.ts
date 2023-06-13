@@ -1,9 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, of, throwError, Subscriber } from 'rxjs';
-// import * as ngenv from '../../../environments/environment';
-import { UserDetails, deepCopy } from './userdetails';
-
+import { UserDetails, deepCopy } from './auth';
+import { AppConfig, Config } from './config-service.service';
 
 /**
  * a container for authorization and authentication information that is obtained
@@ -39,8 +38,8 @@ export interface AuthInfo {
  */
 export abstract class LibAuthService {
     protected _authcred: AuthInfo = {
-        userDetails: { userId: null },
-        token: null
+        userDetails: { userId: "" },
+        token: ""
     };
 
     /**
@@ -56,7 +55,7 @@ export abstract class LibAuthService {
     set userDetails(userDetails: UserDetails) { this._authcred.userDetails = userDetails; }
 
     /**
-     * Store the error message returned from authorizeEditing
+     * Store the error message returned from getAuthInfo
      */
     protected _errorMessage: string | null = null;
 
@@ -75,7 +74,7 @@ export abstract class LibAuthService {
 
     /**
      * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to authorizeEditing();
+     * If false, can attempt to gain authorization via a call to getAuthInfo();
      */
     public abstract isAuthorized(): boolean;
 
@@ -92,7 +91,7 @@ export abstract class LibAuthService {
      *                  be used to send edits to the customization server.  The service will be null if 
      *                  the user is not authorized.  
      */
-    public abstract authorizeEditing(resid: string, nologin?: boolean)
+    public abstract getAuthInfo(nologin?: boolean)
         : Observable<AuthInfo>;
 
     /**
@@ -108,9 +107,7 @@ export abstract class LibAuthService {
  *
  * This implementation is intended for use in production.  
  */
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable()
 export class LibWebAuthService extends LibAuthService {
 
     private _endpoint: string | null = null;
@@ -133,15 +130,15 @@ export class LibWebAuthService extends LibAuthService {
      *                (this is normally provided by the root injector).
      * @param httpcli an HttpClient for communicating with the customization web service
      */
-    constructor(endpoint: string, private httpcli: HttpClient) {
+    constructor(config: AppConfig, private httpcli: HttpClient) {
         super();
-        this._endpoint = endpoint;
+        this._endpoint = config.getConfig()["AUTHAPI"];
         if (!this._endpoint.endsWith('/')) this._endpoint += "/";
     }
 
     /**
      * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to authorizeEditing();
+     * If false, can attempt to gain authorization via a call to getAuthInfo();
      */
     public isAuthorized(): boolean {
         return Boolean(this.authToken);
@@ -160,13 +157,13 @@ export class LibWebAuthService extends LibAuthService {
      *                  to the authentication service.  If true, redirection will not occur; instead, 
      *                  no user information is set and null is returned if the user is not logged in.  
      */
-    public authorizeEditing(resid: string, nologin: boolean = false): Observable<AuthInfo> {
+    public getAuthInfo(nologin: boolean = false): Observable<AuthInfo> {
         if (this.authToken)
             return of(this._authcred);
 
         // we need an authorization token
         return new Observable<AuthInfo>(subscriber => {
-            this.getAuthorization(resid).subscribe({
+            this.getAuthorization(this.endpoint).subscribe({
                 next:(info) => {
                     this._authcred.token = info.token;
                     this._authcred.userDetails = deepCopy(info.userDetails);
@@ -222,8 +219,17 @@ export class LibWebAuthService extends LibAuthService {
      *            but not authorized, or (3) nothing, indicating that the user is not authenticated.  
      *            If there is a CustomizationError, an exception is sent to the error handler.
      */
-    public getAuthorization(resid: string): Observable<AuthInfo> {
-        let url = this.endpoint + "auth/_perm/" + resid;
+    public getAuthorization(endpoint: string | null): Observable<AuthInfo> {
+        let endp: string = "";
+        if(!endpoint) {
+            return new Observable((subscriber) => {
+                let msg = "No endpoint for auth service.";
+                subscriber.error(msg);
+            });
+        }else if (!endpoint.endsWith('/')) endp = endpoint + "/";
+        let url = endp + "auth/_tokeninfo";
+
+        console.log("Authentication url", url);
         // console.log(url);
           // wrap the HttpClient Observable with our own so that we can manage errors
         return new Observable<AuthInfo>(subscriber => {
@@ -271,7 +277,7 @@ export class LibWebAuthService extends LibAuthService {
      */
     public loginUser(): void {
         let redirectURL = this.endpoint + "saml/login?redirectTo=" + window.location.href + "?editEnabled=true";
-        // console.log("Redirecting to " + redirectURL + " to authenticate user");
+        console.log("Redirecting to " + redirectURL + " to authenticate user");
         window.location.assign(redirectURL);
     }
 }
@@ -280,9 +286,7 @@ export class LibWebAuthService extends LibAuthService {
  * An AuthService intended for development and testing purposes which simulates interaction 
  * with a authorization service.
  */
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable()
 export class LibMockAuthService extends LibAuthService {
     private resdata: any = {};
 
@@ -292,9 +296,9 @@ export class LibMockAuthService extends LibAuthService {
      * @param resmd      the original resource metadata 
      * @param userid     the ID of the user; default "anon"
      */
-    constructor(userDetails?: UserDetails, private httpcli?: HttpClient) {
+    constructor(@Inject('userDetails') private userDetails1: UserDetails, private httpcli?: HttpClient) {
         super();
-        if (userDetails === undefined) {
+        if (userDetails1 === undefined) {
             this._authcred = {
                 userDetails: {
                 userId: "anon",
@@ -306,7 +310,7 @@ export class LibMockAuthService extends LibAuthService {
             }
         }else{
             this._authcred = {
-                userDetails: userDetails,
+                userDetails: userDetails1,
                 token: 'fake jwt token'
             }
         }
@@ -314,7 +318,7 @@ export class LibMockAuthService extends LibAuthService {
 
     /**
      * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to authorizeEditing();
+     * If false, can attempt to gain authorization via a call to getAuthInfo();
      */
     public isAuthorized(): boolean {
         return Boolean(this.userDetails);
@@ -332,7 +336,7 @@ export class LibMockAuthService extends LibAuthService {
      *                  be used to send edits to the customization server.  The service will be null if 
      *                  the user is not authorized.  
      */
-    public authorizeEditing(resid: string, nologin: boolean = false): Observable<AuthInfo> {
+    public getAuthInfo(nologin: boolean = false): Observable<AuthInfo> {
         // simulate logging in with a redirect 
         if (!this.userDetails){ 
           this.loginUser();}
@@ -360,5 +364,26 @@ export class LibMockAuthService extends LibAuthService {
         } 
         window.location.assign(redirectURL);
     }
+
+}
+
+
+/**
+ * create an AuthService based on the runtime context.
+ * 
+ * This factory function determines whether the application has access to a customization 
+ * web service (e.g. in production mode under oar-docker).  In this case, it will return 
+ * a AuthService configured to use the service.  In a development runtime context, where 
+ * the app is running standalone without such access, a mock service is returned.  
+ * 
+ * Which type of AuthService is returned is determined by the value of 
+ * context.useCustomizationService from the angular environment (i.e. 
+ * src/environments/environment.ts).  A value of false assumes a develoment context.
+ */
+export function createAuthService(config: AppConfig, httpClient: HttpClient)
+    : LibAuthService {
+        console.log("Will use configured customization web service");
+        return new LibWebAuthService(config, httpClient);
+
 }
 

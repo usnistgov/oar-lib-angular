@@ -8,22 +8,22 @@ export interface UserDetails {
     /** 
      * the user name that the user used to log in with at the authentication service
      */
-    userId : string | null,
+    userId : string,
 
     /**
      * the user's given name
      */
-    userName ?: string | null,
+    userName ?: string,
 
     /** 
      * the user's family name
      */
-    userLastName ?: string | null,
+    userLastName ?: string,
 
     /**
      * the user's email address
      */
-    userEmail ?: string | null
+    userEmail ?: string
 }
 
 

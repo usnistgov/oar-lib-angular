@@ -14,3 +14,5 @@ export * from './lib/wizard/slideoutcol.component';
 export * from './lib/frame/header/header.component';
 export * from './lib/frame/footer/footer.component';
 export * from './lib/auth/auth.service';
+export * from './lib/auth/auth';
+export * from './lib/auth/config-service.service';
