@@ -239,12 +239,12 @@ export class LibWebAuthService extends LibAuthService {
                     subscriber.next(creds as AuthInfo);
                 },
                 error:(err) => {
-                  console.log('httperr', err);
+                    console.log('httperr', err);
 
-                  let httperr: any = err;
+                    let httperr: any = err;
 
-                  if(typeof httperr === "string")
-                      err = JSON.parse(httperr);
+                    if(typeof err === "string")
+                        httperr = JSON.parse(err);
 
                     if (httperr.status == 404) {
                         // URL returned Not Found
