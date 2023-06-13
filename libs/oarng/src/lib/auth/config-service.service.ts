@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import environment from '../../assets/environment.json';
 import { isPlatformBrowser } from '@angular/common';
-import process from 'process';
+// import process from 'process';
 import { Location } from '@angular/common';
 
 declare var require: any
@@ -50,18 +50,19 @@ export class AppConfig {
             .toPromise()
             .then(
                 resp => {
-                // resp as Config;
-                this.confValues.AUTHAPI = (resp as Config)['AUTHAPI'];
+                    // resp as Config;
+                    this.confValues.AUTHAPI = (resp as Config)['AUTHAPI'];
                 },
                 err => {
-                console.log("ERROR IN CONFIG :" + JSON.stringify(err));
+                    console.log("ERROR IN CONFIG :" + JSON.stringify(err));
                 }
             );
             return this.confCall;
         } else {
 
             this.appConfig = <any>environment;
-            this.confValues.AUTHAPI = process.env['AUTHAPI'] || this.appConfig.AUTHAPI;
+//            this.confValues.AUTHAPI = process.env['AUTHAPI'] || this.appConfig.AUTHAPI;
+            this.confValues.AUTHAPI = this.appConfig.AUTHAPI;
             console.log(" ****** In server: " + JSON.stringify(this.confValues));
         }
     }
