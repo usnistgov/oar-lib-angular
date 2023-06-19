@@ -163,36 +163,42 @@ export class LibWebAuthService extends LibAuthService {
 
         // we need an authorization token
         return new Observable<AuthInfo>(subscriber => {
-            this.getAuthorization(this.endpoint).subscribe({
-                next:(info) => {
-                    this._authcred.token = info.token;
-                    this._authcred.userDetails = deepCopy(info.userDetails);
-                    if (info.token) {
-                        // the user is authenticated and authorized to edit!
-                        subscriber.next(this._authcred);
-                        subscriber.complete();
-                    }
-                    else if (info.userDetails && info.userDetails.userId) {
-                        // the user is authenticated but not authorized
-                        this.errorMessage = info["errorMessage"];
-                        subscriber.next(undefined);
-                        subscriber.complete();
-                    }
-                    else {
-                        // the user is not authenticated!
-                        subscriber.complete();
-
-                        // redirect the browser to the authentication server
-                        if (!nologin){
-                            this.loginUser();
-                        }else {
-                            subscriber.next(undefined);
+            this.getAuthorization(this.endpoint).subscribe(
+                (response) => {
+                    if(response) {
+                        this._authcred.token = response.token;
+                        this._authcred.userDetails = deepCopy(response.userDetails);
+                        if (response.token) {
+                            // the user is authenticated and authorized to edit!
+                            subscriber.next(this._authcred);
                             subscriber.complete();
                         }
+                        else if (response.userDetails && response.userDetails.userId) {
+                            // the user is authenticated but not authorized
+                            this.errorMessage = response["message"];
+                            subscriber.next(this._authcred);
+                            subscriber.complete();
+                        }else{
+                            // the user is not authenticated!
+                            subscriber.complete();
+
+                            // redirect the browser to the authentication server
+                            if (!nologin){
+                                this.loginUser();
+                            }else {
+                                subscriber.next(undefined);
+                                subscriber.complete();
+                            }
+                        }
+                    }else{
+
                     }
+                    
+
+
                 },
-                error:(err) => {
-                    if (err['statusCode'] && err.statusCode == 401) {
+                err => {
+                    if (err['status'] && err.statusCode == 401) {
                         // User needs to log in; redirect the browser to the authentication server
                         if (!nologin){
                             this.loginUser();
@@ -204,7 +210,7 @@ export class LibWebAuthService extends LibAuthService {
                     else
                         subscriber.error(err);
                 }
-            });
+            );
         });
     }
 
@@ -227,18 +233,21 @@ export class LibWebAuthService extends LibAuthService {
                 subscriber.error(msg);
             });
         }else if (!endpoint.endsWith('/')) endp = endpoint + "/";
+        else endp = endpoint;
+
         let url = endp + "auth/_tokeninfo";
 
         console.log("Authentication url", url);
         // console.log(url);
           // wrap the HttpClient Observable with our own so that we can manage errors
         return new Observable<AuthInfo>(subscriber => {
-            this.httpcli.get(url, { headers: { 'Content-Type': 'application/json' } }).subscribe({
-                next: (creds) => {
+            // this.httpcli.get(url, { headers: { 'Content-Type': 'application/json' } }).
+            this.httpcli.get(url).subscribe(
+                response => {
                     // URL returned OK
-                    subscriber.next(creds as AuthInfo);
+                    subscriber.next(response as AuthInfo);
                 },
-                error:(err) => {
+                err => {
                     console.log('httperr', err);
 
                     let httperr: any = err;
@@ -246,7 +255,7 @@ export class LibWebAuthService extends LibAuthService {
                     if(typeof err === "string")
                         httperr = JSON.parse(err);
 
-                    if (httperr.status == 404) {
+                    if (httperr.status == 401) {
                         // URL returned Not Found
                         subscriber.next({} as AuthInfo);
                         subscriber.complete();
@@ -270,7 +279,7 @@ export class LibWebAuthService extends LibAuthService {
                         subscriber.error(msg)
                     }
                 }
-            });
+            );
         });
     }
 
@@ -282,7 +291,7 @@ export class LibWebAuthService extends LibAuthService {
      *                  successful.  
      */
     public loginUser(): void {
-        let redirectURL = this.endpoint + "saml/login?redirectTo=" + window.location.href + "?editEnabled=true";
+        let redirectURL = this.endpoint + "saml/login?redirectTo=" + window.location.href;
         console.log("Redirecting to " + redirectURL + " to authenticate user");
         window.location.assign(redirectURL);
     }

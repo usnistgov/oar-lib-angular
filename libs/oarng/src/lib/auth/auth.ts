@@ -23,7 +23,27 @@ export interface UserDetails {
     /**
      * the user's email address
      */
-    userEmail ?: string
+    userEmail ?: string,
+
+    /**
+     * the user's group
+     */
+    userGroup ?: string,
+
+    /**
+     * the user's division
+     */
+    userDiv ?: string,
+
+    /**
+     * the user's division number
+     */
+    userDivNum ?: string,
+
+    /**
+     * the user's 
+     */
+    userOU ?: string
 }
 
 
@@ -31,8 +51,6 @@ export interface UserDetails {
  * a container for information describing the update detail info.
  */
 export interface UpdateDetails {
-
-    // TODO: check this documentation against the documentation of the customization service
     
     /**
      * User info who made the update
