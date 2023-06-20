@@ -28,43 +28,35 @@ export class AppConfig {
     ) { }
 
     loadAppConfig() {
-        if (isPlatformBrowser(this.platformId)) {
-
-            // set this.envVariables to be the full URL for retrieving
-            // configuration.  Normal rules of relative URLs are applied.    
-            let baseurl = null;
-            if (this.envVariables.startsWith("/")) {
-                baseurl = location.origin;
-            }
-            else {
-                console.log(location.href);
-                baseurl = location.href.replace(/#.*$/, "");
-                baseurl = baseurl.split("/", 3).join("/") + "/";
-                // if (! this.envVariables.endsWith("/"))
-                //     baseurl = baseurl.replace(/\/[^\/]+$/, "/");
-            }
-            this.envVariables = baseurl + this.envVariables;
-        //   console.log("Retrieving configuration from "+this.envVariables);
-            
-            this.confCall = this.http.get(this.envVariables)
-            .toPromise()
-            .then(
-                resp => {
-                    // resp as Config;
-                    this.confValues.AUTHAPI = (resp as Config)['AUTHAPI'];
-                },
-                err => {
-                    console.log("ERROR IN CONFIG :" + JSON.stringify(err));
-                }
-            );
-            return this.confCall;
-        } else {
-
-            this.appConfig = <any>environment;
-//            this.confValues.AUTHAPI = process.env['AUTHAPI'] || this.appConfig.AUTHAPI;
-            this.confValues.AUTHAPI = this.appConfig.AUTHAPI;
-            console.log(" ****** In server: " + JSON.stringify(this.confValues));
+        // set this.envVariables to be the full URL for retrieving
+        // configuration.  Normal rules of relative URLs are applied.    
+        let baseurl = null;
+        let url = "";
+        if (this.envVariables.startsWith("/")) {
+            baseurl = location.origin;
         }
+        else {
+            console.log(location.href);
+            baseurl = location.href.replace(/#.*$/, "");
+            baseurl = baseurl.split("/", 3).join("/") + "/";
+            // if (! this.envVariables.endsWith("/"))
+            //     baseurl = baseurl.replace(/\/[^\/]+$/, "/");
+        }
+        url = baseurl + this.envVariables;
+    //   console.log("Retrieving configuration from "+this.envVariables);
+        
+        this.confCall = this.http.get(url)
+        .toPromise()
+        .then(
+            resp => {
+                // resp as Config;
+                this.confValues.AUTHAPI = (resp as Config)['AUTHAPI'];
+            },
+            err => {
+                console.log("ERROR IN CONFIG :" + JSON.stringify(err));
+            }
+        );
+        return this.confCall;
     }
 
     getConfig() {
