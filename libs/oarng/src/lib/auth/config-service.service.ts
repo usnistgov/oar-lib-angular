@@ -1,14 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import environment from '../../assets/environment.json';
-import { isPlatformBrowser } from '@angular/common';
-// import process from 'process';
-import { Location } from '@angular/common';
+import { Injectable } from '@angular/core';
 
 declare var require: any
-
-// const process = require('process');
-
 
 export interface Config {
     AUTHAPI: string;
@@ -18,13 +11,11 @@ export interface Config {
   providedIn: 'root'
 })
 export class AppConfig {
-    private appConfig: any;
     private confCall: any;
     private envVariables = "assets/environment.json";
     private confValues = {} as Config;
 
-    constructor(private http: HttpClient, @Inject(PLATFORM_ID)
-                private platformId: Object
+    constructor(private http: HttpClient
     ) { }
 
     loadAppConfig() {
@@ -32,17 +23,13 @@ export class AppConfig {
         // configuration.  Normal rules of relative URLs are applied.    
         let baseurl = null;
         let url = "";
+        baseurl = location.href;
         if (this.envVariables.startsWith("/")) {
-            baseurl = location.origin;
+            url = baseurl + this.envVariables.substring(1);
+        }else {
+            url = baseurl + this.envVariables;
         }
-        else {
-            console.log(location.href);
-            baseurl = location.href.replace(/#.*$/, "");
-            baseurl = baseurl.split("/", 3).join("/") + "/";
-            // if (! this.envVariables.endsWith("/"))
-            //     baseurl = baseurl.replace(/\/[^\/]+$/, "/");
-        }
-        url = baseurl + this.envVariables;
+
     //   console.log("Retrieving configuration from "+this.envVariables);
         
         this.confCall = this.http.get(url)
