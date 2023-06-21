@@ -163,8 +163,8 @@ export class LibWebAuthService extends LibAuthService {
 
         // we need an authorization token
         return new Observable<AuthInfo>(subscriber => {
-            this.getAuthorization(this.endpoint).subscribe(
-                (response) => {
+            this.getAuthorization(this.endpoint).subscribe({
+                next:((response: AuthInfo) => {
                     if(response) {
                         this._authcred.token = response.token;
                         this._authcred.userDetails = deepCopy(response.userDetails);
@@ -191,13 +191,11 @@ export class LibWebAuthService extends LibAuthService {
                             }
                         }
                     }else{
-
+                        subscriber.next(undefined);
+                        subscriber.complete();
                     }
-                    
-
-
-                },
-                err => {
+                }),
+                error: ((err) => {
                     if (err['status'] && err.statusCode == 401) {
                         // User needs to log in; redirect the browser to the authentication server
                         if (!nologin){
@@ -209,7 +207,7 @@ export class LibWebAuthService extends LibAuthService {
                     }
                     else
                         subscriber.error(err);
-                }
+                })}
             );
         });
     }

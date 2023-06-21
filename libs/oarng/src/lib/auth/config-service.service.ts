@@ -24,6 +24,10 @@ export class AppConfig {
         let baseurl = null;
         let url = "";
         baseurl = location.href;
+        console.log("baseurl", baseurl);
+        if(!baseurl.endsWith("/")) baseurl = location.origin;
+        if(!baseurl.endsWith("/")) baseurl += "/";
+        
         if (this.envVariables.startsWith("/")) {
             url = baseurl + this.envVariables.substring(1);
         }else {
