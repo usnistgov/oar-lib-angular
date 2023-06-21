@@ -5,6 +5,7 @@ declare var require: any
 
 export interface Config {
     AUTHAPI: string;
+    REDIRECTAUTHAPI: string
 }
 
 @Injectable({
@@ -42,7 +43,8 @@ export class AppConfig {
 
     loadConfigForTest(){
         this.confValues = {
-            "AUTHAPI":  "http://localhost:9091/midas/"
+            "AUTHAPI":  "http://localhost:9091/midas/",
+            "REDIRECTAUTHAPI": "saml/login?redirectTo="
         };
     }    
 }

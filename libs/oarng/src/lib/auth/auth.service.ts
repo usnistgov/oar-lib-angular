@@ -110,7 +110,8 @@ export abstract class LibAuthService {
 @Injectable()
 export class LibWebAuthService extends LibAuthService {
 
-    private _endpoint: string | null = null;
+    private _endpoint: string  = "";
+    private _redirectEndpoint: string = "";
     private _authtok: string | null = null;
 
 
@@ -134,6 +135,8 @@ export class LibWebAuthService extends LibAuthService {
         super();
         this._endpoint = config.getConfig()["AUTHAPI"];
         if (!this._endpoint.endsWith('/')) this._endpoint += "/";
+
+        this._redirectEndpoint = config.getConfig()["REDIRECTAUTHAPI"] as string;
     }
 
     /**
@@ -246,8 +249,6 @@ export class LibWebAuthService extends LibAuthService {
                     subscriber.next(response as AuthInfo);
                 },
                 err => {
-                    console.log('httperr', err);
-
                     let httperr: any = err;
 
                     if(typeof err === "string")
@@ -258,23 +259,8 @@ export class LibWebAuthService extends LibAuthService {
                         subscriber.next({} as AuthInfo);
                         subscriber.complete();
                     }
-                    else if (httperr.status < 100 && httperr.error) {
-                        let msg = "Service connection error"
-                        if (httperr['message'])
-                            msg += ": " + httperr.message
-                        if (httperr.error.message)
-                            msg += ": " + httperr.error.message
-                        if (httperr.status == 0 && httperr.statusText.includes('Unknown'))
-                            msg += " (possibly due to CORS restriction?)";
-                        subscriber.error(msg);
-                    }
                     else {
-                        // URL returned some other error status
-                        let msg = "Unexpected error during authorization";
-                        // TODO: can we get at body of message when an error occurs?
-                        // msg += (httperr.body['message']) ? httperr.body['message'] : httperr.statusText;
-                        msg += " (" + httperr.status.toString() + " " + httperr.statusText + ")"
-                        subscriber.error(msg)
+                        subscriber.error(httperr)
                     }
                 }
             );
@@ -289,7 +275,7 @@ export class LibWebAuthService extends LibAuthService {
      *                  successful.  
      */
     public loginUser(): void {
-        let redirectURL = this.endpoint + "saml/login?redirectTo=" + window.location.href;
+        let redirectURL = this.endpoint + this._redirectEndpoint + window.location.href;
         console.log("Redirecting to " + redirectURL + " to authenticate user");
         window.location.assign(redirectURL);
     }
