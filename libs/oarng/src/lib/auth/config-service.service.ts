@@ -19,24 +19,9 @@ export class AppConfig {
     ) { }
 
     loadAppConfig() {
-        // set this.envVariables to be the full URL for retrieving
-        // configuration.  Normal rules of relative URLs are applied.    
-        let baseurl = null;
-        let url = "";
-        baseurl = location.href;
-        console.log("baseurl", baseurl);
-        if(!baseurl.endsWith("/")) baseurl = location.origin;
-        if(!baseurl.endsWith("/")) baseurl += "/";
+        console.log("Retrieving configuration from "+this.envVariables);
         
-        if (this.envVariables.startsWith("/")) {
-            url = baseurl + this.envVariables.substring(1);
-        }else {
-            url = baseurl + this.envVariables;
-        }
-
-    //   console.log("Retrieving configuration from "+this.envVariables);
-        
-        this.confCall = this.http.get(url)
+        this.confCall = this.http.get(this.envVariables)
         .toPromise()
         .then(
             resp => {
