@@ -2,7 +2,7 @@ import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 import { ConfigurationService } from './config.service';
-import { ReleaseInfo } from './config.model';
+import { ReleaseInfo, Configuration, CONFIG_URL, RELEASE_INFO } from './config.model';
 
 
 export function configFetcherFactory(configSvc: ConfigurationService) {
@@ -21,4 +21,4 @@ export function configFetcherFactory(configSvc: ConfigurationService) {
 })
 export class ConfigModule { }
 
-export { ConfigurationService }
+export { ConfigurationService, ReleaseInfo, Configuration, CONFIG_URL, RELEASE_INFO }
