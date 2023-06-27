@@ -3,7 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false,
-//   authAPI: "http://localhost:9091/midas/",
+    production: false,
+    configUrl: "assets/config.json"
 };
 

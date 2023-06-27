@@ -1,3 +1,6 @@
+// this file will replace environments.ts when in production mode
+
 export const environment = {
-  production: true
+    production: true,
+    configUrl: "assets/config.json"
 };
