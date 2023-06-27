@@ -27,6 +27,7 @@ export class AppConfig {
         .then(
             resp => {
                 // resp as Config;
+                console.log("Lib load config returns:", resp);
                 this.confValues.AUTHAPI = (resp as Config)['AUTHAPI'];
             },
             err => {

@@ -1,4 +1,0 @@
-{
-    "AUTHAPI":  "https://localhost/sso/",
-    "REDIRECTAUTHAPI": "saml/login?redirectTo="
-}
