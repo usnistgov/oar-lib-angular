@@ -17,4 +17,4 @@ export * from './lib/auth/auth.service';
 export * from './lib/auth/auth';
 export * from './lib/auth/config-service.service';
 export * from './lib/config/config.service';
-export RELEASE_INFO from './environments/release-info';
+export { CONFIG_URL, RELEASE_INFO } from './lib/config/config.model';
