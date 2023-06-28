@@ -19,7 +19,7 @@ export class ConfigurationService {
     config: Configuration | null = null;
     relInfo: ReleaseInfo|undefined|null = null;
 
-    constructor(private http: HttpClient,
+    constructor(protected http: HttpClient,
                 @Inject(CONFIG_URL) configUrl?: string,
                 @Optional() @Inject(RELEASE_INFO) relInfo?: ReleaseInfo)
     {
@@ -65,7 +65,7 @@ export class ConfigurationService {
      * @param error The error object.
      * @returns An observable containing the error message.
      */
-    private handleError(error: any) {
+    protected handleError(error: any) {
         let errorMessage = '';
         if (error.error instanceof ErrorEvent) {
             // Get client-side error
@@ -74,7 +74,7 @@ export class ConfigurationService {
             // Get server-side error
             errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
         }
-        window.alert(errorMessage);
+        // window.alert(errorMessage);
         return throwError(() => {
             return errorMessage;
         });
