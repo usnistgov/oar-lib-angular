@@ -105,7 +105,34 @@ export abstract class AuthenticationService {
 }
 
 /**
- * an implementation of the CustomizationService that caches metadata updates on the 
+ * configuration data describing how to access the remote authentication service assembled in a 
+ * single object.
+ */
+interface AuthServiceAccessConfig {
+    /**
+     * the base URL for the remote authentication service
+     */
+    serviceEndpoint: string;
+
+    /**
+     * the URL that should be used to redirect the user back to the current application 
+     * from the remote authentication service.
+     */
+    redirectURL: string;
+}
+
+/**
+ * the configuration part required by the AuthenticationService
+ */
+interface AuthConfiguration extends Configuration {
+    /**
+     * the parameters describing how to access the remote authentication service
+     */
+    auth: AuthServiceAccessConfig;
+}
+
+/**
+ * an implementation of the AutenticationService that caches metadata updates on the 
  * server via a web service.  
  *
  * This implementation is intended for use in production.  
@@ -113,6 +140,7 @@ export abstract class AuthenticationService {
 @Injectable()
 export class OARAuthenticationService extends AuthenticationService {
 
+    private _cfg: AuthServiceAccessConfig | null = null;
     private _endpoint: string|null  = null;
     private _authtok: string | null = null;
 
@@ -128,8 +156,16 @@ export class OARAuthenticationService extends AuthenticationService {
      */
     get endpoint(): string { 
         if (! this._endpoint) {
-            this._endpoint = this.configSvc.getConfig()['AUTHAPI'] as string;
-            if (!this._endpoint.endsWith('/')) this._endpoint += "/";
+            try {
+                this._endpoint = this.configSvc.getConfig<AuthConfiguration>().auth.serviceEndpoint;
+                if (!this._endpoint.endsWith('/'))
+                    this._endpoint += "/";
+            }
+            catch (ex) {
+                if (ex instanceof Error) 
+                    ex.message = "Incomplete auth configuration: missing 'serviceEndpoint' ("+ex.message+")";
+                throw ex;
+            }
         }
         return this._endpoint;
     }
@@ -138,7 +174,15 @@ export class OARAuthenticationService extends AuthenticationService {
      * the URL the remote authorization service should redirect to to restart the application
      * after routing the browser user through the login service.  
      */
-    get redirectURL(): string { return this.configSvc.getConfig()["REDIRECTAUTHAPI"] as string; }
+    get redirectURL(): string {
+        try {
+            return this.configSvc.getConfig<AuthConfiguration>().auth.redirectURL;
+        } catch (ex) {
+            if (ex instanceof Error) 
+                ex.message = "Incomplete auth configuration: missing 'redirect' ("+ex.message+")";
+            throw ex;
+        }
+    }
 
     /**
      * the authorization token that gives the user permission to edit the resource metadata

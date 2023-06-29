@@ -21,14 +21,17 @@ describe('AuthService', () => {
 
         let req = httpMock.expectOne('assets/config.json');
         req.flush({
-            AUTHAPI: "https://auth.nist/",
-            REDIRECTAUTHAPI: "https://oar.app.nist/"
+            auth: {
+                serviceEndpoint: "https://auth.nist/",
+                redirectURL: "https://oar.app.nist/"
+            }
         });
     }));
 
     it('should be created', () => {
         expect(service).toBeTruthy();
         expect(service.endpoint).toEqual("https://auth.nist/");
+        expect(service.redirectURL).toEqual("https://oar.app.nist/");
     });
 
 });

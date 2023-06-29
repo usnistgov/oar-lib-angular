@@ -53,11 +53,20 @@ export class ConfigurationService {
 
     /**
      * return the (already loaded) configuration data.  It is expected that when this 
-     * method is call that the configuration was already fetched (via fetchConfg()) at 
+     * method is called, the configuration was already fetched (via fetchConfg()) at 
      * application start-up.  
-     */
     public getConfig(): Configuration {
         return this.config ?? { };
+    }
+     */
+
+    /**
+     * return the (already loaded) configuration data typed as a specific Configuration subinterface.  
+     * It is expected that when this method is call that the configuration was already fetched (via 
+     * fetchConfg()) at application start-up.  
+     */
+    public getConfig<T extends Configuration>(): T {
+        return (this.config ?? { }) as T;
     }
 
     /**

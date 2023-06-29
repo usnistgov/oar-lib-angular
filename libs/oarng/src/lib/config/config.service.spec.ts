@@ -63,7 +63,7 @@ describe('ConfigurationService', () => {
 
     it('should return configuration object', () => {
         service.config = mockConfig;
-        const actualConfig = service.getConfig();
+        const actualConfig: Configuration = service.getConfig();
         expect(actualConfig).toBeDefined();
         expect(actualConfig['PDRDMP']).toEqual(mockConfig['PDRDMP']);
     });
