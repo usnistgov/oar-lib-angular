@@ -1,46 +1,54 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, of, throwError, Subscriber } from 'rxjs';
+
 import { UserDetails, deepCopy } from './auth';
-import { AppConfig, Config } from './config-service.service';
+import { Configuration, ConfigurationService } from '../config/config.module';
 
 /**
- * a container for authorization and authentication information that is obtained
- * from the customization service while authorizing the user to edit the metadata.
- * This interface is used for receiving this information from the customization 
- * web service. 
+ * a container for authentication information that is obtained from the authentication
+ * service.  It contains two key parts.  The first is a block of unencode attributes describing 
+ * the user which the Angular application can use directly for display or for customizing the 
+ * view.  The second is an authentication token which can be passed to other server-side services
+ * as an HTTP Bearer Authorization string.  Typically, this token is a JSON Web Token (JWT) that 
+ * encodes the same information as the unencoded attributes and which can by used by the service 
+ * to make authorization decisions.
  */
 export interface AuthInfo {
     /**
-     * the user identifier
+     * the unencoded user identity and attributes
      */
     userDetails?: UserDetails,
 
     /**
-     * the authorization token needed to edit metadata via the customization service
+     * the token that can be used to authenticate to other services.  This is typically a JWT,
+     * but it is not required to be. 
      */
     token?: string | null,
 
+    /**
+     * other parameters are allowed
+     */
     [prop: string]: any;
 }
 
 /**
- * the authentication/authorization front-end service to the customization service.
+ * the front-end authentication service used to retrieve identity information and to manage 
+ * the authentication process.  
  *
- * The purpose of this service is to authenticate a user and establish their authorization to 
- * edit a resource metadata record via the customization service.  In particular, this service 
- * serves as a factory for a CustomizationService that allows editing of the resource metadata 
- * associated with a particular identifier.  
+ * This service allows an OAR Angular application to retrieve infomation the currently logged 
+ * in user, to log the user in if they are not already logged in, and to retrieve an authentication
+ * token that can be used to authenticate to other backend services.  
  *
  * This abstract class allows for different implementations for different execution 
  * contexts.  In particular, mock versions can be provided for development and testing 
  * contexts.
  */
-export abstract class LibAuthService {
+export abstract class AuthenticationService {
     protected _authcred: AuthInfo = {
         userDetails: { userId: "" },
         token: ""
-    };
+    }
 
     /**
      * the full set of user information obtained via the log-in process
@@ -73,30 +81,25 @@ export abstract class LibAuthService {
     // protected abstract _getUserDetails(): UserDetails;
 
     /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
+     * return true if the user is currently authenticated.
+     * If false, one can attempt to gain authorization via a call to getAuthInfo();
      */
-    public abstract isAuthorized(): boolean;
+    public isAuthorized(): boolean { return !!this.userID && !!this._authcred.token; }
 
     /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.  Note that an implementation may need to redirect the browser 
+     * return the authentication information describing the current user.  
+     * Note that an implementation may need to redirect the browser 
      * to an authentication service to determine who the current user is.  
      *
-     * @param resid     the identifier for the resource to edit
      * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
      *                  to the authentication service.  If true, redirection will not occur; instead, 
      *                  no user information is set and null is returned if the user is not logged in.  
-     * @param Observable<CustomizationService>  an observable wrapped CustomizationService that should 
-     *                  be used to send edits to the customization server.  The service will be null if 
-     *                  the user is not authorized.  
      */
-    public abstract getAuthInfo(nologin?: boolean)
-        : Observable<AuthInfo>;
+    public abstract getAuthInfo(nologin?: boolean): Observable<AuthInfo>;
 
     /**
      * redirect the browser to the authentication service, instructing it to return back to 
-     * the current landing page.  
+     * this application after the login process is complete.  
      */
     public abstract loginUser(): void;
 }
@@ -108,54 +111,45 @@ export abstract class LibAuthService {
  * This implementation is intended for use in production.  
  */
 @Injectable()
-export class LibWebAuthService extends LibAuthService {
+export class OARAuthenticationService extends AuthenticationService {
 
-    private _endpoint: string  = "";
-    private _redirectEndpoint: string = "";
+    private _endpoint: string|null  = null;
     private _authtok: string | null = null;
 
+    /**
+     * create the AuthService 
+     */
+    constructor(protected httpcli: HttpClient, protected configSvc: ConfigurationService) {
+        super()
+    }
 
     /**
      * the endpoint URL for the customization web service 
      */
-    get endpoint() { return this._endpoint; }
+    get endpoint(): string { 
+        if (! this._endpoint) {
+            this._endpoint = this.configSvc.getConfig()['AUTHAPI'] as string;
+            if (!this._endpoint.endsWith('/')) this._endpoint += "/";
+        }
+        return this._endpoint;
+    }
+
+    /**
+     * the URL the remote authorization service should redirect to to restart the application
+     * after routing the browser user through the login service.  
+     */
+    get redirectURL(): string { return this.configSvc.getConfig()["REDIRECTAUTHAPI"] as string; }
 
     /**
      * the authorization token that gives the user permission to edit the resource metadata
      */
-    get authToken() { return this._authcred.token; }
+    get authToken(): string|null|undefined { return this._authcred.token; }
 
     /**
-     * create the AuthService according to the given configuration
-     * @param config  the current app configuration which provides the customization service endpoint.
-     *                (this is normally provided by the root injector).
-     * @param httpcli an HttpClient for communicating with the customization web service
-     */
-    constructor(config: AppConfig, private httpcli: HttpClient) {
-        super();
-        this._endpoint = config.getConfig()["AUTHAPI"];
-        if (!this._endpoint.endsWith('/')) this._endpoint += "/";
-
-        this._redirectEndpoint = config.getConfig()["REDIRECTAUTHAPI"] as string;
-    }
-
-    /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
-     */
-    public isAuthorized(): boolean {
-        return Boolean(this.authToken);
-    }
-
-    /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.  If the CustomizationService returned through the 
-     * Observable is null, the user is not authorized to edit.  
+     * return the authentication information describing the current user.  
+     * Note that an implementation may need to redirect the browser 
+     * to an authentication service to determine who the current user is.  
      *
-     * Note that instead of returning, this method may redirect the browser to an authentication
-     * server to authenticate the user.  
-     * 
-     * @param resid     the identifier for the resource to edit
      * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
      *                  to the authentication service.  If true, redirection will not occur; instead, 
      *                  no user information is set and null is returned if the user is not logged in.  
@@ -216,15 +210,12 @@ export class LibWebAuthService extends LibAuthService {
     }
 
     /**
-     * fetch an authorization to edit the current resource metadata from the customization
-     * service.
+     * fetch authorization information afresh from the remote authorization service.  If the user
+     * has not completed the login process, an empty info object is returned.  
      *
-     * @param resid    the identifier for the resource to edit
      * @return Observable<AuthInfo>  -- On success, an AuthInfo containing either (1) the user's 
-     *            ID and an authorization token, indicating that the user is both authenticated 
-     *            and authorized, (2) just the user's ID, indicating that the user is authenticated
-     *            but not authorized, or (3) nothing, indicating that the user is not authenticated.  
-     *            If there is a CustomizationError, an exception is sent to the error handler.
+     *            ID and an authorization token, indicating that the user is authenticated, or (2)
+     *            an empty AuthInfo object, indicating that the user needs to log in. 
      */
     public getAuthorization(endpoint: string | null): Observable<AuthInfo> {
         let endp: string = "";
@@ -238,9 +229,9 @@ export class LibWebAuthService extends LibAuthService {
 
         let url = endp + "auth/_tokeninfo";
 
-        console.log("Authentication url", url);
-        // console.log(url);
-          // wrap the HttpClient Observable with our own so that we can manage errors
+        console.debug("Authentication url", url);
+
+        // wrap the HttpClient Observable with our own so that we can manage errors
         return new Observable<AuthInfo>(subscriber => {
             // this.httpcli.get(url, { headers: { 'Content-Type': 'application/json' } }).
             this.httpcli.get(url).subscribe(
@@ -255,7 +246,7 @@ export class LibWebAuthService extends LibAuthService {
                         httperr = JSON.parse(err);
 
                     if (httperr.status == 401) {
-                        // URL returned Not Found
+                        // User failed authentication (usually does not happen)
                         subscriber.next({} as AuthInfo);
                         subscriber.complete();
                     }
@@ -275,7 +266,7 @@ export class LibWebAuthService extends LibAuthService {
      *                  successful.  
      */
     public loginUser(): void {
-        let redirectURL = this.endpoint + this._redirectEndpoint + window.location.href;
+        let redirectURL = this.endpoint + this.redirectURL + window.location.href;
         console.log("Redirecting to " + redirectURL + " to authenticate user");
         window.location.assign(redirectURL);
     }
@@ -283,31 +274,32 @@ export class LibWebAuthService extends LibAuthService {
 
 /**
  * An AuthService intended for development and testing purposes which simulates interaction 
- * with a authorization service.
+ * with a authorization service.  
+ *
+ * This implementation does not contact any remote service.  Instead, this service is provided 
+ * with the user identity information representing the authenticated user at construction time.  
  */
 @Injectable()
-export class LibMockAuthService extends LibAuthService {
-    private resdata: any = {};
+export class MockAuthenticationService extends AuthenticationService {
 
     /**
      * construct the authorization service
      *
-     * @param resmd      the original resource metadata 
      * @param userid     the ID of the user; default "anon"
      */
-    constructor(@Inject('userDetails') private userDetails1: UserDetails, private httpcli?: HttpClient) {
+    constructor(@Inject('userDetails') userDetails1: UserDetails) {
         super();
         if (userDetails1 === undefined) {
             this._authcred = {
                 userDetails: {
-                userId: "anon",
-                userName: "Anon",
-                userLastName: "Lee",
-                userEmail: "Anon.Lee@nist.gov"
+                    userId: "anon",
+                    userName: "Anon",
+                    userLastName: "Lee",
+                    userEmail: "Anon.Lee@nist.gov"
                 },
                 token: 'fake jwt token'
             }
-        }else{
+        } else {
             this._authcred = {
                 userDetails: userDetails1,
                 token: 'fake jwt token'
@@ -316,24 +308,13 @@ export class LibMockAuthService extends LibAuthService {
     }
 
     /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
-     */
-    public isAuthorized(): boolean {
-        return Boolean(this.userDetails);
-    }
-
-    /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.
+     * return the authentication information describing the current user.  
+     * Note that an implementation may need to redirect the browser 
+     * to an authentication service to determine who the current user is.  
      *
-     * @param resid     the identifier for the resource to edit
      * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
      *                  to the authentication service.  If true, redirection will not occur; instead, 
      *                  no user information is set and null is returned if the user is not logged in.  
-     * @param Observable<CustomizationService>  an observable wrapped CustomizationService that should 
-     *                  be used to send edits to the customization server.  The service will be null if 
-     *                  the user is not authorized.  
      */
     public getAuthInfo(nologin: boolean = false): Observable<AuthInfo> {
         // simulate logging in with a redirect 
@@ -366,23 +347,4 @@ export class LibMockAuthService extends LibAuthService {
 
 }
 
-
-/**
- * create an AuthService based on the runtime context.
- * 
- * This factory function determines whether the application has access to a customization 
- * web service (e.g. in production mode under oar-docker).  In this case, it will return 
- * a AuthService configured to use the service.  In a development runtime context, where 
- * the app is running standalone without such access, a mock service is returned.  
- * 
- * Which type of AuthService is returned is determined by the value of 
- * context.useCustomizationService from the angular environment (i.e. 
- * src/environments/environment.ts).  A value of false assumes a develoment context.
- */
-export function createAuthService(config: AppConfig, httpClient: HttpClient)
-    : LibAuthService {
-        console.log("Will use configured customization web service");
-        return new LibWebAuthService(config, httpClient);
-
-}
 

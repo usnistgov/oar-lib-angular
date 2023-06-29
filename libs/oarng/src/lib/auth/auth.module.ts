@@ -1,22 +1,24 @@
 import { NgModule, APP_INITIALIZER }     from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { LibMockAuthService, LibWebAuthService, createAuthService } from './auth.service';
-import { AppConfig, Config } from './config-service.service';
+import { AuthenticationService, OARAuthenticationService } from './auth.service';
+import { ConfigModule } from '../config/config.module';
 
 /**
  * a module providing components used to build a wizard interface.
  */
 @NgModule({
     imports: [
-        CommonModule
+        CommonModule, ConfigModule
     ],
     declarations: [
     ],
-    providers: [ 
-        { provide: LibWebAuthService, useFactory: createAuthService, deps: [ AppConfig, HttpClient ] }
+    providers: [
+        OARAuthenticationService
     ],
     exports: [
     ]
 })
-export class LibAuthModule { }
+export class AuthModule { }
+
+export { AuthenticationService, OARAuthenticationService }

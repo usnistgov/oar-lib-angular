@@ -3,8 +3,6 @@
  */
 export interface UserDetails {
 
-    // TODO: check this documentation against the documentation of the customization service
-    
     /** 
      * the user name that the user used to log in with at the authentication service
      */
@@ -44,6 +42,11 @@ export interface UserDetails {
      * the user's 
      */
     userOU ?: string
+
+    /**
+     * other attributes are allowed
+     */
+    [paramName: string]: any;
 }
 
 
