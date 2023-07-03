@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed, waitForAsync  } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Configuration, CONFIG_URL } from '../config/config.model';
-import { AuthModule, OARAuthenticationService } from './auth.module';
+import { AuthModule, AuthenticationService, OARAuthenticationService } from './auth.module';
 import { environment } from '../../environments/environment';
 
 describe('AuthService', () => {
-    let service: OARAuthenticationService;
+    let service: AuthenticationService;
     let httpMock: HttpTestingController;
 
     beforeEach(waitForAsync(() => {
@@ -17,7 +17,7 @@ describe('AuthService', () => {
         }).compileComponents();
         httpMock = TestBed.inject(HttpTestingController);
 
-        service = TestBed.inject(OARAuthenticationService);
+        service = TestBed.inject(AuthenticationService);
 
         let req = httpMock.expectOne('assets/config.json');
         req.flush({
@@ -30,8 +30,10 @@ describe('AuthService', () => {
 
     it('should be created', () => {
         expect(service).toBeTruthy();
-        expect(service.endpoint).toEqual("https://auth.nist/");
-        expect(service.redirectURL).toEqual("https://oar.app.nist/");
+        expect(service instanceof OARAuthenticationService).toBeTruthy();
+        let svc = service as OARAuthenticationService;
+        expect(svc.endpoint).toEqual("https://auth.nist/");
+        expect(svc.redirectURL).toEqual("https://oar.app.nist/");
     });
 
 });

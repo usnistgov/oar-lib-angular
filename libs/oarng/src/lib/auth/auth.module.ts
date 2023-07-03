@@ -14,7 +14,7 @@ import { ConfigModule } from '../config/config.module';
     declarations: [
     ],
     providers: [
-        OARAuthenticationService
+        { provide: AuthenticationService, useClass: OARAuthenticationService }
     ],
     exports: [
     ]
