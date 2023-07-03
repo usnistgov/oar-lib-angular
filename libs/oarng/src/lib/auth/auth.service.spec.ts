@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, waitForAsync  } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Configuration, CONFIG_URL } from '../config/config.model';
+import { ConfigurationService } from '../config/config.service';
 import { AuthModule, AuthenticationService, OARAuthenticationService } from './auth.module';
 import { environment } from '../../environments/environment';
 
@@ -22,8 +23,7 @@ describe('AuthService', () => {
         let req = httpMock.expectOne('assets/config.json');
         req.flush({
             auth: {
-                serviceEndpoint: "https://auth.nist/",
-                redirectURL: "https://oar.app.nist/"
+                serviceEndpoint: "https://auth.nist/"
             }
         });
     }));
@@ -33,7 +33,32 @@ describe('AuthService', () => {
         expect(service instanceof OARAuthenticationService).toBeTruthy();
         let svc = service as OARAuthenticationService;
         expect(svc.endpoint).toEqual("https://auth.nist/");
-        expect(svc.redirectURL).toEqual("https://oar.app.nist/");
+    });
+
+    it('should generate a login URL', () => {
+        let svc = service as OARAuthenticationService;
+        expect(svc.getLoginURL()).toEqual("https://auth.nist/saml/login?redirectTo=http://localhost/");
+
+        let cfgsvc = TestBed.inject(ConfigurationService);
+        cfgsvc.loadConfig({
+            auth: {
+                serviceEndpoint: "https://oarauth.nist/",
+                loginBaseURL: "https://login.nist/?redirect="
+            }
+        });
+        expect(svc.getLoginURL()).toEqual("https://login.nist/?redirect=http://localhost/");
+        expect(svc.getLoginURL("http://nowhere.net/")).toEqual("https://login.nist/?redirect=http://nowhere.net/");
+
+        cfgsvc.loadConfig({
+            auth: {
+                serviceEndpoint: "https://oarauth.nist/",
+                loginBaseURL: "https://login.nist/redirect=",
+                returnURL:  "https://righthere.net/"
+            }
+        });
+        expect(svc.getLoginURL()).toEqual("https://login.nist/redirect=https://righthere.net/");
+        expect(svc.getLoginURL("http://nowhere.net/")).toEqual("https://login.nist/redirect=http://nowhere.net/");
+        
     });
 
 });

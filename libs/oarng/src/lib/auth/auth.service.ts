@@ -82,8 +82,10 @@ export abstract class AuthenticationService {
     /**
      * redirect the browser to the authentication service, instructing it to return back to 
      * this application after the login process is complete.  
+     * @param returnURL   the URL to redirect the browser to after a successful login to return to 
+     *                    to the application.  If not provided, window.location.href will be used. 
      */
-    public abstract loginUser(): void;
+    public abstract loginUser(returnURL?: string): void;
 }
 
 /**
@@ -97,10 +99,21 @@ export interface AuthServiceAccessConfig {
     serviceEndpoint: string;
 
     /**
-     * the URL that should be used to redirect the user back to the current application 
-     * from the remote authentication service.
+     * the base URL to redirect to when it is necessary to request that the user log in.  If
+     * not provided, a default based on serviceEndpoint will be used.  It is expected that this
+     * URL will require a second URL to be appended to it which represents the URL for gettting 
+     * back to this application after a successful login.  This typically means that the loginURL
+     * should include queryParameters where that last parameter is for the return URL and ends with 
+     * an equal sign ("=").  
      */
-    redirectURL: string;
+    loginBaseURL?: string;
+
+    /**
+     * the URL that should be used to redirect the user back to the current application 
+     * from the remote login service after a successful login.  If not provided, the current 
+     * value of window.location.href will be used.  
+     */
+    returnURL?: string;
 }
 
 /**
@@ -145,15 +158,26 @@ export class OARAuthenticationService extends AuthenticationService {
     /**
      * the URL the remote authorization service should redirect to to restart the application
      * after routing the browser user through the login service.  
+     * @param returnURL   the URL that the login service should redirect to after a successful login
+     *                    to return the browser to this application.  If not provided, the value
+     *                    of window.location.href will be used.  
      */
-    get redirectURL(): string {
+    getLoginURL(returnURL?: string): string {
+        let out : string|null|undefined = null;
         try {
-            return this.configSvc.getConfig<AuthConfiguration>().auth.redirectURL;
-        } catch (ex) {
-            if (ex instanceof Error) 
-                ex.message = "Incomplete auth configuration: missing 'redirect' ("+ex.message+")";
-            throw ex;
+            out = this.configSvc.getConfig<AuthConfiguration>().auth.loginBaseURL;
+        } catch (ex) { }
+        if (! out)
+            out = this.endpoint + "saml/login?redirectTo=";
+        if (! returnURL) {
+            try {
+                returnURL = this.configSvc.getConfig<AuthConfiguration>().auth.returnURL;
+            }
+            catch (ex) { }
         }
+        if (! returnURL)
+            returnURL = window.location.href;
+        return out + returnURL;
     }
 
     /**
@@ -164,21 +188,24 @@ export class OARAuthenticationService extends AuthenticationService {
      *                  user in will be made.  This may cause the browser to be redirected 
      *                  to a login service.  If this value is true, redirection will not occur; instead, 
      *                  the anonymous identity will be set as the credentials.  
+     * @param returnURL   the URL that the login service should redirect to after a successful login
+     *                    to return the browser to this application.  If not provided, the value
+     *                    of window.location.href will be used.  
      */
-    public fetchCredentials(nologin: boolean = false): Observable<Credentials> {
+    public fetchCredentials(nologin: boolean = false, returnURL?: string): Observable<Credentials> {
         return this.fetchCredentialsFrom(this.endpoint).pipe(
             tap((c) => {
                 if (!nologin && ! AuthenticationService.authenticatedCreds(c))
                     // this will cause the browser to redirect to login service,
                     // terminating this application
-                    this.loginUser();
+                    this.loginUser(returnURL);
             }),
             catchError((e) => {
                 if (e.status && e.status == 401) {
                     if (!nologin)
                         // this will cause the browser to redirect to login service,
                         // terminating this application
-                        this.loginUser();
+                        this.loginUser(returnURL);
 
                     return of(deepCopy(anonymousCreds));
                 }
@@ -230,12 +257,14 @@ export class OARAuthenticationService extends AuthenticationService {
      * redirect the browser to the authentication service, instructing it to return back to 
      * the current landing page.  
      * 
-     * @return string   the authenticated user's identifier, or null if authentication was not 
-     *                  successful.  
+     * @param returnURL the URL that the login service should redirect to after a successful login
+     *                  to return the browser to this application.  If not provided, the value
+     *                  of window.location.href will be used.  
      */
-    public loginUser(): void {
-        console.log("Redirecting to " + this.redirectURL + " to authenticate user");
-        window.location.assign(this.redirectURL);
+    public loginUser(returnURL?: string): void {
+        let loginURL = this.getLoginURL(returnURL);
+        console.log("To login user, redirecting to " + loginURL);
+        window.location.assign(loginURL);
     }
 }
 
@@ -286,7 +315,11 @@ export class MockAuthenticationService extends AuthenticationService {
      *
      * This implementation does nothing.
      */
-    public loginUser(): void { }
+    public loginUser(returnURL?: string): void {
+        if (! returnURL)
+            returnURL = window.location.href;
+        window.location.assign(returnURL);
+    }
 }
 
 
