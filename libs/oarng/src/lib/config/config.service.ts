@@ -12,7 +12,9 @@ import { environment } from "../../environments/environment";
  * It loads the configuration from a given file and provides access to it
  * throughout the app.
  */
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class ConfigurationService {
 
     configUrl = environment.configUrl;

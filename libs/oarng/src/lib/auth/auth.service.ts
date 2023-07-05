@@ -132,7 +132,9 @@ export interface AuthConfiguration extends Configuration {
  *
  * This implementation is intended for use in production.  
  */
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class OARAuthenticationService extends AuthenticationService {
 
     /**
@@ -275,7 +277,9 @@ export class OARAuthenticationService extends AuthenticationService {
  * This implementation does not contact any remote service.  Instead, this service is provided 
  * with the user identity information representing the authenticated user at construction time.  
  */
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class MockAuthenticationService extends AuthenticationService {
 
     private _fakeCred: Credentials = {
