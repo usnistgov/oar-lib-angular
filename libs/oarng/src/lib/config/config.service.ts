@@ -22,8 +22,8 @@ export class ConfigurationService {
     relInfo: ReleaseInfo|undefined|null = null;
 
     constructor(protected http: HttpClient,
-                @Inject(CONFIG_URL) configUrl?: string,
-                @Optional() @Inject(RELEASE_INFO) relInfo?: ReleaseInfo)
+                @Optional() @Inject(RELEASE_INFO) relInfo?: ReleaseInfo,
+                @Optional() @Inject(CONFIG_URL) configUrl?: string)
     {
         this.relInfo = relInfo;
         if (configUrl) this.configUrl = configUrl;
