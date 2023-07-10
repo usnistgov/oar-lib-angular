@@ -97,7 +97,7 @@ export interface UserDetails extends UserAttributes {
     /** 
      * the unique user identifier that the user logged in as
      */
-    userId : string,
+    userId : string;
 }
 
 /**
