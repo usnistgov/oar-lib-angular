@@ -23,6 +23,15 @@ specific configuration data to operate; thus, it is dependent on the _oarng_
 [`AuthenticationService`](./auth.service.ts), one can accomplish all of the above three actions with one
 method call returning a [`Credentials`](auth.ts) object.
 
+#### Table of Contents
+
+- [Using the `AuthenticationService`](#using-the-authenticationservice)
+  - [Import the `AuthModule`](#import-the-authmodule)
+  - [Add Authentication Parameters to your Default Configuration File](#add-authentication-parameters-to-your-default-configuration-file)
+  - [Make `AuthenticationService` an Injectable Dependency](#make-authenticationservice-an-injectable-dependency)
+  - [Retrieve a `Credentials` Instance Where Needed](#retrieve-a-credentials-instance-where-needed)
+- [Using the Authentication Token](#using-the-authentication-token)
+
 ## Using the `AuthenticationService`
 
 ### Import the `AuthModule`

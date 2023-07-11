@@ -18,6 +18,19 @@ data via a _synchronous_ call.
 The service is designed to require minimal setup (just import the module) to use; however, one can take
 advantage of extra type safety and other features with a little extra setup.
 
+#### Table of Contents
+
+- [Using the `ConfigurationService` With Minimal Setup](#using-the-configurationservice-with-minimal-setup)
+  - [Import the `ConfigModule`](#import-the-configmodule)
+  - [Make `ConfigurationService` an Injectable
+    Dependency](#make-configurationservice-an-injectable-dependency)
+  - [Create a Default Configuration Data File](#create-a-default-configuration-data-file)
+    - [Customizing the Configuration File Location](#customizing-the-configuration-file-location)
+  - [Access Configuration Data as Needed](#access-configuration-data-as-needed)
+- [Adding Type Safety (Recommended)](#adding-type-safety-recommended)
+- [Including Access to Software Version Information](#including-access-to-software-version-information)
+- [Extending the `ConfigurationService`](#extending-the-configurationservice)
+
 ## Using the `ConfigurationService` With Minimal Setup
 
 ### Import the `ConfigModule`
