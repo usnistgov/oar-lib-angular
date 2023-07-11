@@ -31,6 +31,7 @@ method call returning a [`Credentials`](auth.ts) object.
   - [Make `AuthenticationService` an Injectable Dependency](#make-authenticationservice-an-injectable-dependency)
   - [Retrieve a `Credentials` Instance Where Needed](#retrieve-a-credentials-instance-where-needed)
 - [Using the Authentication Token](#using-the-authentication-token)
+- [Using a Mock Instance in Unit Tests](#using-a-mock-instance-in-unit-tests)
 
 ## Using the `AuthenticationService`
 
