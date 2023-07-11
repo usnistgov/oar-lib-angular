@@ -1,3 +1,5 @@
+import { InjectionToken } from '@angular/core';
+
 /**
  * a container for information describing the user logged into the application.
  */
@@ -190,3 +192,5 @@ export function deepCopy(obj: any): any {
  
     throw new Error("Unable to copy obj! Its type isn't supported.");
 }
+
+export const MOCK_CREDENTIALS = new InjectionToken<Credentials>('mock-credentials');

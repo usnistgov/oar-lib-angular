@@ -2,7 +2,7 @@ import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, of, map, tap, catchError, throwError, Subscriber } from 'rxjs';
 
-import { AuthInfo, UserDetails, Credentials, messageToCredentials, deepCopy } from './auth';
+import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
 import { Configuration, ConfigurationService } from '../config/config.module';
 
 const anonymousCreds: Credentials = {
@@ -293,7 +293,7 @@ export class MockAuthenticationService extends AuthenticationService {
      *
      * @param userid     the ID of the user; default "anon"
      */
-    constructor(@Optional() @Inject('userDetails') userCred: Credentials) {
+    constructor(@Optional() @Inject(MOCK_CREDENTIALS) userCred: Credentials) {
         super();
         if (userCred)
             this._fakeCred = userCred;

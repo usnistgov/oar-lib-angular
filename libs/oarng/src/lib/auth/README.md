@@ -187,3 +187,60 @@ To use the token, include it as a "Bearer" token to the `Authorization` HTTP req
 If the token is invalid, the backend service should return a 401 status, so be sure to handle that
 possible error.  
 
+## Using a Mock Instance in Unit Tests
+
+The `AuthModule` also provides a mock implementation of an `AuthenticationService` called
+[`MockAuthenticationService`](auth.service.ts) for use in unit tests
+of components or services that require an `AuthenticationService`.  To use it, provide it to your
+unit test's `TestBed` configuration:
+
+```javascript
+import { AuthenticationService, MockAuthenticationService } from 'oarng';
+
+describe('...', () => {
+    ...
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            ...
+            providers: [
+                ...
+                { provide: AuthenticationService, useClass: MockAuthenticationService },
+                ...
+            ],
+            ...
+    }
+}
+```
+
+By default, calling `getCredentials()` on this mock service will always successfully return a
+`Credentials` instance describing a fake user.  (The associated token is also fake, and not a
+real JWT.)  You can override the default identity by providing your own `Credentials` instance as an
+argument to the class's constructor.  For example:
+
+```javascript
+import { Credentials, AuthenticationService, MockAuthenticationService } from 'oarng';
+
+let myFakeCreds: Credentials = {
+    userId: "wash1",
+    userAttributes: { userName: "George", userLastName: "Washington" },
+    token: "fake token"
+}
+
+describe('...', () => {
+    ...
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            ...
+            providers: [
+                ...
+                { provide: MOCK_CREDENTIALS, useValue: myFakeCreds },
+                { provide: AuthenticationService, useClass: MockAuthenticationService,
+                  dependencies: [ MOCK_CREDENTIALS ]  },
+                ...
+            ],
+            ...
+    }
+}
+```
