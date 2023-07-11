@@ -31,6 +31,9 @@ CODEOWNERS --> A listing of contacts, administrators, and contributors for this 
 LICENSE.md --> A statement of rights and responsibilities for use and copying of this software
 ```
 
+For more details using components and services from the oarng library, consult README.md documents
+found in the module directories.  
+
 ## Prerequisites
 
 Software in this repository is built using the [Angular](https://angular.io/) application framework
