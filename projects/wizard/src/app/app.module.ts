@@ -7,6 +7,7 @@ import { StartWizModule } from './startwiz/startwiz.module';
 import { WizardModule } from 'oarng';
 import { OARngModule } from 'oarng';
 import { InputTextModule } from "primeng/inputtext";
+import { FrameModule } from 'oarng';
 
 @NgModule({
     declarations: [
@@ -18,7 +19,8 @@ import { InputTextModule } from "primeng/inputtext";
         AppRoutingModule,
         WizardModule,
         InputTextModule,
-        OARngModule
+        OARngModule,
+        FrameModule
     ],
     providers: [],
     bootstrap: [AppComponent]
