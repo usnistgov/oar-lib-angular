@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync  } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Configuration, CONFIG_URL } from '../config/config.model';
 import { ConfigurationService } from '../config/config.service';
 import { AuthModule, AuthenticationService, OARAuthenticationService } from './auth.module';
@@ -61,4 +62,44 @@ describe('AuthService', () => {
         
     });
 
+    /*
+    test("Should handle fetch errors well", async () => {
+        let svc = service as OARAuthenticationService;
+        expect.assertions(3);
+        try {
+            const c = await svc.fetchCredentialsFrom("goob://example.com/fake").toPromise();
+            throw new Error("Did not catch bad URL (cred: "+c+")");
+        }
+        catch (error) {
+            expect(error).toBeInstanceOf(Error);
+            expect((error as Error).message).toContain("goob");
+            expect((error as Error).message).not.toContain("Error Code");
+        }
+    });
+    */
+
+    test("handleError: processing error", async () => {
+        let svc = service as OARAuthenticationService;
+        let err = new Error("test error");
+        debugger;
+        expect.assertions(1);
+        try {
+            await svc.handleFetchError(err).toPromise();
+        }
+        catch (e) {
+            expect(e).toBe(err);
+        }
+    });
+
+    test("handleError: HTTP error", async () => {
+        let svc = service as OARAuthenticationService;
+        let err = new HttpErrorResponse({status: 404, statusText: "Not Found"});
+        expect.assertions(1);
+        try {
+            await svc.handleFetchError(err).toPromise();
+        }
+        catch (e) {
+            expect(e).toBe(err);
+        }
+    });
 });

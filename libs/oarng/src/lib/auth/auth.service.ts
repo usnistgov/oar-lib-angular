@@ -203,15 +203,9 @@ export class OARAuthenticationService extends AuthenticationService {
                     this.loginUser(returnURL);
             }),
             catchError((e) => {
-                if (e.status && e.status == 401) {
-                    if (!nologin)
-                        // this will cause the browser to redirect to login service,
-                        // terminating this application
-                        this.loginUser(returnURL);
-
-                    return of(deepCopy(anonymousCreds));
-                }
-                return throwError(e);
+                if (e.status && e.status == 401) 
+                    return this.handleUnauthenticated((nologin) ? undefined : returnURL);
+                return this.handleFetchError(e);
             })
         );
     }
@@ -230,29 +224,54 @@ export class OARAuthenticationService extends AuthenticationService {
         console.debug("Authentication request url: ", url);
 
         return this.httpcli.get(url).pipe(
-            map<any, Credentials>(messageToCredentials),
-            catchError(this.handleError)
+            map<any, Credentials>(messageToCredentials)
         );
     }
 
     /**
-     * Handle the HTTP errors.
-     * @param error The error object.
-     * @returns An observable containing the error message.
+     * handle the case where the remote service indicates that the user is not logged in.  This 
+     * implementation will redirect the browser to the login site (via loginUser()) if requested;
+     * otherwise, it returns anonymous credentials.
+     * @param authReturnURL  if provided, the login process will be initiated; if this requires 
+     *                       browser redirection, this parameter will be interpreeted as the 
+     *                       URL to return to after completing the process.
+     * @return Observable<Credentials> 
      */
-    protected handleError(error: any) {
-        let errorMessage = '';
-        if (error.error instanceof ErrorEvent) {
-            // Get client-side error
-            errorMessage = error.error.message;
-        } else {
-            // Get server-side error
-            errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    handleUnauthenticated(authReturnURL?: string) : Observable<Credentials> {
+        if (authReturnURL) 
+            // this will cause the browser to redirect to login service,
+            // terminating this application
+            this.loginUser(authReturnURL);
+        return of(deepCopy(anonymousCreds));
+    }
+
+    /**
+     * Handle the possible errors while fetching Credentials.  The error could be 
+     * directly from the HTTP call (and is, thus, an HttpErrorResponse) or an error
+     * occuring while processing the response (making it a simple Error).  This
+     * implementation will interpret the type of error to report a helpful error message 
+     * to the consult, and then reraise the error.
+     * @param error The error object.
+     * @returns an Observable returned by throwError()
+     */
+    handleFetchError(error: any) {
+        if (error.status) {
+            let message = null;
+            if (error.status == 0) 
+                message = "Authentication Client/Communiction Error: " + error.error
+            else if (error.status >= 400 && error.status < 500) 
+                message = "Authentication service reports: " + error.message +
+                    "; incorrect service endpoint configuration?"
+            else if (error.status > 500)
+                message = "Authentication server error: " + error.message
+            else
+                message = "Unexpected Authentication service response: " + error.message
+            console.error(message);
         }
-        // window.alert(errorMessage);
-        return throwError(() => {
-            return errorMessage;
-        });
+        else 
+            console.error("Failure processing Authentication service response: "+error);
+
+        return throwError(error);
     }
                        
     /**

@@ -131,6 +131,8 @@ export interface AuthInfo {
  * convert an OAR authentication web service message to a Credentials object
  */
 export function messageToCredentials(message: AuthInfo) : Credentials {
+    if (! message.userDetails)
+        throw new Error("Unexpected authentication service response (missing userDetails): "+message);
     let out : Credentials = {
         userId: message.userDetails.userId,
         userAttributes: deepCopy(message.userDetails)
