@@ -1,58 +1,30 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, of, throwError, Subscriber } from 'rxjs';
-import { UserDetails, deepCopy } from './auth';
-import { AppConfig, Config } from './config-service.service';
+import { Observable, of, map, tap, catchError, throwError, Subscriber } from 'rxjs';
+
+import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
+import { Configuration, ConfigurationService } from '../config/config.module';
+
+const anonymousCreds: Credentials = {
+    userId: "anon",
+    userAttributes: { userName: "Anonymous", userLastName: "Public" },
+    token: null
+};
 
 /**
- * a container for authorization and authentication information that is obtained
- * from the customization service while authorizing the user to edit the metadata.
- * This interface is used for receiving this information from the customization 
- * web service. 
- */
-export interface AuthInfo {
-    /**
-     * the user identifier
-     */
-    userDetails?: UserDetails,
-
-    /**
-     * the authorization token needed to edit metadata via the customization service
-     */
-    token?: string | null,
-
-    [prop: string]: any;
-}
-
-/**
- * the authentication/authorization front-end service to the customization service.
+ * the front-end authentication service used to retrieve identity information and to manage 
+ * the authentication process.  
  *
- * The purpose of this service is to authenticate a user and establish their authorization to 
- * edit a resource metadata record via the customization service.  In particular, this service 
- * serves as a factory for a CustomizationService that allows editing of the resource metadata 
- * associated with a particular identifier.  
+ * This service allows an OAR Angular application to retrieve infomation the currently logged 
+ * in user, to log the user in if they are not already logged in, and to retrieve an authentication
+ * token that can be used to authenticate to other backend services.  
  *
  * This abstract class allows for different implementations for different execution 
  * contexts.  In particular, mock versions can be provided for development and testing 
  * contexts.
  */
-export abstract class LibAuthService {
-    protected _authcred: AuthInfo = {
-        userDetails: { userId: "" },
-        token: ""
-    };
-
-    /**
-     * the full set of user information obtained via the log-in process
-     */
-    get userDetails() { return this._authcred.userDetails as UserDetails; }
-
-    /**
-     * the user ID that the current authorization has been granted to.
-     */
-    get userID() { return this.userDetails.userId; }
-
-    set userDetails(userDetails: UserDetails) { this._authcred.userDetails = userDetails; }
+export abstract class AuthenticationService {
+    protected _cred: Credentials = deepCopy(anonymousCreds);
 
     /**
      * Store the error message returned from getAuthInfo
@@ -67,322 +39,310 @@ export abstract class LibAuthService {
      */
     constructor() { }
 
-    /**
-     * return the user details in a implementation-specific way
-     */
-    // protected abstract _getUserDetails(): UserDetails;
+    static authenticatedCreds(cred: Credentials) {
+        return (!!cred && !!cred.token &&
+                (!cred.expires || (new Date()) < cred.expires));
+    }
 
     /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
+     * return true if the user is currently authenticated.
+     * If false, one can attempt to gain authorization via a call to getAuthInfo();
      */
-    public abstract isAuthorized(): boolean;
+    public isAuthenticated(): boolean { return AuthenticationService.authenticatedCreds(this._cred); }
 
     /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.  Note that an implementation may need to redirect the browser 
-     * to an authentication service to determine who the current user is.  
+     * return valid credentials.  If valid credentials are internally cached, they are returned
+     * for immediate use.  Otherwise, credentials are fetched via fetchCredentials().
      *
-     * @param resid     the identifier for the resource to edit
-     * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
-     *                  to the authentication service.  If true, redirection will not occur; instead, 
-     *                  no user information is set and null is returned if the user is not logged in.  
-     * @param Observable<CustomizationService>  an observable wrapped CustomizationService that should 
-     *                  be used to send edits to the customization server.  The service will be null if 
-     *                  the user is not authorized.  
+     * @param nologin   if false (default) and the user is not logged in, an attempt ot log the 
+     *                  user in will be made.  This may cause the browser to be redirected 
+     *                  to a login service.  If this value is true, redirection will not occur; instead, 
+     *                  the anonymous identity will be set as the credentials.  
      */
-    public abstract getAuthInfo(nologin?: boolean)
-        : Observable<AuthInfo>;
+    public getCredentials(nologin: boolean = false): Observable<Credentials> {
+        if (this.isAuthenticated())
+            return of(deepCopy(this._cred));
+
+        return this.fetchCredentials(nologin).pipe(
+            tap(c => this._cred = deepCopy(c))
+        );
+    }
+
+    /**
+     * fetch valid credentials.  These credentials may come from a remote authentication
+     * service and may trigger a user log-in process.
+     *
+     * @param nologin   if false (default) and the user is not logged in, an attempt to log the 
+     *                  user in will be made.  This may cause the browser to be redirected 
+     *                  to a login service.  If this value is true, redirection will not occur; instead, 
+     *                  the anonymous identity will be set as the credentials.  
+     */
+    public abstract fetchCredentials(nologin?: boolean): Observable<Credentials>;
 
     /**
      * redirect the browser to the authentication service, instructing it to return back to 
-     * the current landing page.  
+     * this application after the login process is complete.  
+     * @param returnURL   the URL to redirect the browser to after a successful login to return to 
+     *                    to the application.  If not provided, window.location.href will be used. 
      */
-    public abstract loginUser(): void;
+    public abstract loginUser(returnURL?: string): void;
 }
 
 /**
- * an implementation of the CustomizationService that caches metadata updates on the 
+ * configuration data describing how to access the remote authentication service assembled in a 
+ * single object.
+ */
+export interface AuthServiceAccessConfig {
+    /**
+     * the base URL for the remote authentication service
+     */
+    serviceEndpoint: string;
+
+    /**
+     * the base URL to redirect to when it is necessary to request that the user log in.  If
+     * not provided, a default based on serviceEndpoint will be used.  It is expected that this
+     * URL will require a second URL to be appended to it which represents the URL for gettting 
+     * back to this application after a successful login.  This typically means that the loginURL
+     * should include queryParameters where that last parameter is for the return URL and ends with 
+     * an equal sign ("=").  
+     */
+    loginBaseURL?: string;
+
+    /**
+     * the URL that should be used to redirect the user back to the current application 
+     * from the remote login service after a successful login.  If not provided, the current 
+     * value of window.location.href will be used.  
+     */
+    returnURL?: string;
+}
+
+/**
+ * the configuration part required by the AuthenticationService
+ */
+export interface AuthConfiguration extends Configuration {
+    /**
+     * the parameters describing how to access the remote authentication service
+     */
+    auth: AuthServiceAccessConfig;
+}
+
+/**
+ * an implementation of the AutenticationService that caches metadata updates on the 
  * server via a web service.  
  *
  * This implementation is intended for use in production.  
  */
-@Injectable()
-export class LibWebAuthService extends LibAuthService {
+@Injectable({
+    providedIn: 'root'
+})
+export class OARAuthenticationService extends AuthenticationService {
 
-    private _endpoint: string  = "";
-    private _redirectEndpoint: string = "";
-    private _authtok: string | null = null;
-
+    /**
+     * create the AuthService 
+     */
+    constructor(protected httpcli: HttpClient, protected configSvc: ConfigurationService) {
+        super()
+    }
 
     /**
      * the endpoint URL for the customization web service 
      */
-    get endpoint() { return this._endpoint; }
-
-    /**
-     * the authorization token that gives the user permission to edit the resource metadata
-     */
-    get authToken() { return this._authcred.token; }
-
-    /**
-     * create the AuthService according to the given configuration
-     * @param config  the current app configuration which provides the customization service endpoint.
-     *                (this is normally provided by the root injector).
-     * @param httpcli an HttpClient for communicating with the customization web service
-     */
-    constructor(config: AppConfig, private httpcli: HttpClient) {
-        super();
-        this._endpoint = config.getConfig()["AUTHAPI"];
-        if (!this._endpoint.endsWith('/')) this._endpoint += "/";
-
-        this._redirectEndpoint = config.getConfig()["REDIRECTAUTHAPI"] as string;
+    get endpoint(): string { 
+        try {
+            return this.configSvc.getConfig<AuthConfiguration>().auth.serviceEndpoint;
+        } catch (ex) {
+            if (ex instanceof Error) 
+                ex.message = "Incomplete auth configuration: missing 'serviceEndpoint' ("+ex.message+")";
+            throw ex;
+        }
     }
 
     /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
+     * the URL the remote authorization service should redirect to to restart the application
+     * after routing the browser user through the login service.  
+     * @param returnURL   the URL that the login service should redirect to after a successful login
+     *                    to return the browser to this application.  If not provided, the value
+     *                    of window.location.href will be used.  
      */
-    public isAuthorized(): boolean {
-        return Boolean(this.authToken);
+    getLoginURL(returnURL?: string): string {
+        let out : string|null|undefined = null;
+        try {
+            out = this.configSvc.getConfig<AuthConfiguration>().auth.loginBaseURL;
+        } catch (ex) { }
+        if (! out)
+            out = this.endpoint + "saml/login?redirectTo=";
+        if (! returnURL) {
+            try {
+                returnURL = this.configSvc.getConfig<AuthConfiguration>().auth.returnURL;
+            }
+            catch (ex) { }
+        }
+        if (! returnURL)
+            returnURL = window.location.href;
+        return out + returnURL;
     }
 
     /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.  If the CustomizationService returned through the 
-     * Observable is null, the user is not authorized to edit.  
+     * fetch valid credentials.  These credentials may come from a remote authentication
+     * service and may trigger a user log-in process.
      *
-     * Note that instead of returning, this method may redirect the browser to an authentication
-     * server to authenticate the user.  
-     * 
-     * @param resid     the identifier for the resource to edit
-     * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
-     *                  to the authentication service.  If true, redirection will not occur; instead, 
-     *                  no user information is set and null is returned if the user is not logged in.  
+     * @param nologin   if false (default) and the user is not logged in, an attempt to log the 
+     *                  user in will be made.  This may cause the browser to be redirected 
+     *                  to a login service.  If this value is true, redirection will not occur; instead, 
+     *                  the anonymous identity will be set as the credentials.  
+     * @param returnURL   the URL that the login service should redirect to after a successful login
+     *                    to return the browser to this application.  If not provided, the value
+     *                    of window.location.href will be used.  
      */
-    public getAuthInfo(nologin: boolean = false): Observable<AuthInfo> {
-        if (this.authToken)
-            return of(this._authcred);
-
-        // we need an authorization token
-        return new Observable<AuthInfo>(subscriber => {
-            this.getAuthorization(this.endpoint).subscribe({
-                next:((response: AuthInfo) => {
-                    if(response) {
-                        this._authcred.token = response.token;
-                        this._authcred.userDetails = deepCopy(response.userDetails);
-                        if (response.token) {
-                            // the user is authenticated and authorized to edit!
-                            subscriber.next(this._authcred);
-                            subscriber.complete();
-                        }
-                        else if (response.userDetails && response.userDetails.userId) {
-                            // the user is authenticated but not authorized
-                            this.errorMessage = response["message"];
-                            subscriber.next(this._authcred);
-                            subscriber.complete();
-                        }else{
-                            // the user is not authenticated!
-                            subscriber.complete();
-
-                            // redirect the browser to the authentication server
-                            if (!nologin){
-                                this.loginUser();
-                            }else {
-                                subscriber.next(undefined);
-                                subscriber.complete();
-                            }
-                        }
-                    }else{
-                        subscriber.next(undefined);
-                        subscriber.complete();
-                    }
-                }),
-                error: ((err) => {
-                    if (err['status'] && err.statusCode == 401) {
-                        // User needs to log in; redirect the browser to the authentication server
-                        if (!nologin){
-                            this.loginUser();
-                        }else {
-                            subscriber.next(undefined);
-                            subscriber.complete();
-                        }
-                    }
-                    else
-                        subscriber.error(err);
-                })}
-            );
-        });
+    public fetchCredentials(nologin: boolean = false, returnURL?: string): Observable<Credentials> {
+        return this.fetchCredentialsFrom(this.endpoint).pipe(
+            tap((c) => {
+                if (!nologin && ! AuthenticationService.authenticatedCreds(c))
+                    // this will cause the browser to redirect to login service,
+                    // terminating this application
+                    this.loginUser(returnURL);
+            }),
+            catchError((e) => {
+                if (e.status && e.status == 401) 
+                    return this.handleUnauthenticated((nologin) ? undefined : returnURL);
+                return this.handleFetchError(e);
+            })
+        );
     }
 
     /**
-     * fetch an authorization to edit the current resource metadata from the customization
-     * service.
-     *
-     * @param resid    the identifier for the resource to edit
-     * @return Observable<AuthInfo>  -- On success, an AuthInfo containing either (1) the user's 
-     *            ID and an authorization token, indicating that the user is both authenticated 
-     *            and authorized, (2) just the user's ID, indicating that the user is authenticated
-     *            but not authorized, or (3) nothing, indicating that the user is not authenticated.  
-     *            If there is a CustomizationError, an exception is sent to the error handler.
+     * fetch credentials for the currently logged in user from a given endpoint.  This will not 
+     * attempt to log the user in.
      */
-    public getAuthorization(endpoint: string | null): Observable<AuthInfo> {
-        let endp: string = "";
-        if(!endpoint) {
-            return new Observable((subscriber) => {
-                let msg = "No endpoint for auth service.";
-                subscriber.error(msg);
-            });
-        }else if (!endpoint.endsWith('/')) endp = endpoint + "/";
-        else endp = endpoint;
+    public fetchCredentialsFrom(endpoint: string): Observable<Credentials> {
+        if (!endpoint)
+            throw new Error("Missing or empty authorization service endpoint URL");
 
-        let url = endp + "auth/_tokeninfo";
+        let url = endpoint;
+        if (! url.endsWith('/')) url += '/';
+        url += "auth/_tokeninfo";
+        console.debug("Authentication request url: ", url);
 
-        console.log("Authentication url", url);
-        // console.log(url);
-          // wrap the HttpClient Observable with our own so that we can manage errors
-        return new Observable<AuthInfo>(subscriber => {
-            // this.httpcli.get(url, { headers: { 'Content-Type': 'application/json' } }).
-            this.httpcli.get(url).subscribe(
-                response => {
-                    // URL returned OK
-                    subscriber.next(response as AuthInfo);
-                },
-                err => {
-                    let httperr: any = err;
-
-                    if(typeof err === "string")
-                        httperr = JSON.parse(err);
-
-                    if (httperr.status == 401) {
-                        // URL returned Not Found
-                        subscriber.next({} as AuthInfo);
-                        subscriber.complete();
-                    }
-                    else {
-                        subscriber.error(httperr)
-                    }
-                }
-            );
-        });
+        return this.httpcli.get(url).pipe(
+            map<any, Credentials>(messageToCredentials)
+        );
     }
 
+    /**
+     * handle the case where the remote service indicates that the user is not logged in.  This 
+     * implementation will redirect the browser to the login site (via loginUser()) if requested;
+     * otherwise, it returns anonymous credentials.
+     * @param authReturnURL  if provided, the login process will be initiated; if this requires 
+     *                       browser redirection, this parameter will be interpreeted as the 
+     *                       URL to return to after completing the process.
+     * @return Observable<Credentials> 
+     */
+    handleUnauthenticated(authReturnURL?: string) : Observable<Credentials> {
+        if (authReturnURL) 
+            // this will cause the browser to redirect to login service,
+            // terminating this application
+            this.loginUser(authReturnURL);
+        return of(deepCopy(anonymousCreds));
+    }
+
+    /**
+     * Handle the possible errors while fetching Credentials.  The error could be 
+     * directly from the HTTP call (and is, thus, an HttpErrorResponse) or an error
+     * occuring while processing the response (making it a simple Error).  This
+     * implementation will interpret the type of error to report a helpful error message 
+     * to the consult, and then reraise the error.
+     * @param error The error object.
+     * @returns an Observable returned by throwError()
+     */
+    handleFetchError(error: any) {
+        if (error.status) {
+            let message = null;
+            if (error.status == 0) 
+                message = "Authentication Client/Communiction Error: " + error.error
+            else if (error.status >= 400 && error.status < 500) 
+                message = "Authentication service reports: " + error.message +
+                    "; incorrect service endpoint configuration?"
+            else if (error.status > 500)
+                message = "Authentication server error: " + error.message
+            else
+                message = "Unexpected Authentication service response: " + error.message
+            console.error(message);
+        }
+        else 
+            console.error("Failure processing Authentication service response: "+error);
+
+        return throwError(error);
+    }
+                       
     /**
      * redirect the browser to the authentication service, instructing it to return back to 
      * the current landing page.  
      * 
-     * @return string   the authenticated user's identifier, or null if authentication was not 
-     *                  successful.  
+     * @param returnURL the URL that the login service should redirect to after a successful login
+     *                  to return the browser to this application.  If not provided, the value
+     *                  of window.location.href will be used.  
      */
-    public loginUser(): void {
-        let redirectURL = this.endpoint + this._redirectEndpoint + window.location.href;
-        console.log("Redirecting to " + redirectURL + " to authenticate user");
-        window.location.assign(redirectURL);
+    public loginUser(returnURL?: string): void {
+        let loginURL = this.getLoginURL(returnURL);
+        console.log("To login user, redirecting to " + loginURL);
+        window.location.assign(loginURL);
     }
 }
 
 /**
  * An AuthService intended for development and testing purposes which simulates interaction 
- * with a authorization service.
+ * with a authorization service.  
+ *
+ * This implementation does not contact any remote service.  Instead, this service is provided 
+ * with the user identity information representing the authenticated user at construction time.  
  */
-@Injectable()
-export class LibMockAuthService extends LibAuthService {
-    private resdata: any = {};
+@Injectable({
+    providedIn: 'root'
+})
+export class MockAuthenticationService extends AuthenticationService {
+
+    private _fakeCred: Credentials = {
+        userId: "anon",
+        userAttributes: { userName: "John", userLastName: "Public" },
+        token: 'fake jwt token'
+    }
 
     /**
      * construct the authorization service
      *
-     * @param resmd      the original resource metadata 
      * @param userid     the ID of the user; default "anon"
      */
-    constructor(@Inject('userDetails') private userDetails1: UserDetails, private httpcli?: HttpClient) {
+    constructor(@Optional() @Inject(MOCK_CREDENTIALS) userCred: Credentials) {
         super();
-        if (userDetails1 === undefined) {
-            this._authcred = {
-                userDetails: {
-                userId: "anon",
-                userName: "Anon",
-                userLastName: "Lee",
-                userEmail: "Anon.Lee@nist.gov"
-                },
-                token: 'fake jwt token'
-            }
-        }else{
-            this._authcred = {
-                userDetails: userDetails1,
-                token: 'fake jwt token'
-            }
-        }
+        if (userCred)
+            this._fakeCred = userCred;
     }
 
     /**
-     * return true if the user is currently authorized to to edit the resource metadata.
-     * If false, can attempt to gain authorization via a call to getAuthInfo();
-     */
-    public isAuthorized(): boolean {
-        return Boolean(this.userDetails);
-    }
-
-    /**
-     * create a CustomizationService that allows the user to edit the resource metadata 
-     * associated with the given ID.
+     * fetch valid credentials.  
      *
-     * @param resid     the identifier for the resource to edit
-     * @param nologin   if false (default) and the user is not logged in, the browser will be redirected 
-     *                  to the authentication service.  If true, redirection will not occur; instead, 
-     *                  no user information is set and null is returned if the user is not logged in.  
-     * @param Observable<CustomizationService>  an observable wrapped CustomizationService that should 
-     *                  be used to send edits to the customization server.  The service will be null if 
-     *                  the user is not authorized.  
+     * This implementation just returns the fake credentials set at construction time
+     *
+     * @param nologin   if false (default) and the user is not logged in, an attempt to log the 
+     *                  user in will be made.  This may cause the browser to be redirected 
+     *                  to a login service.  If this value is true, redirection will not occur; instead, 
+     *                  the anonymous identity will be set as the credentials.  
      */
-    public getAuthInfo(nologin: boolean = false): Observable<AuthInfo> {
-        // simulate logging in with a redirect 
-        if (!this.userDetails){ 
-          this.loginUser();}
-
-        return of<AuthInfo>(this._authcred);
+    public fetchCredentials(nologin: boolean = false): Observable<Credentials> {
+        return of(this._fakeCred);
     }
-
+    
     /**
      * redirect the browser to the authentication service, instructing it to return back to 
-     * the current landing page.  
+     * this application after the login process is complete.  
+     *
+     * This implementation does nothing.
      */
-    public loginUser(): void {
-        let redirectURL = window.location.href + "?editEnabled=true";
-        console.log("Bypassing authentication service; redirecting directly to " + redirectURL);
-        if (!this._authcred.userDetails){
-            this._authcred = {
-                userDetails: {
-                userId: "anon",
-                userName: "Anon",
-                userLastName: "Lee",
-                userEmail: "Anon.Lee@nist.gov"
-                },
-                token: 'fake jwt token'
-            }
-        } 
-        window.location.assign(redirectURL);
+    public loginUser(returnURL?: string): void {
+        if (! returnURL)
+            returnURL = window.location.href;
+        window.location.assign(returnURL);
     }
-
 }
 
-
-/**
- * create an AuthService based on the runtime context.
- * 
- * This factory function determines whether the application has access to a customization 
- * web service (e.g. in production mode under oar-docker).  In this case, it will return 
- * a AuthService configured to use the service.  In a development runtime context, where 
- * the app is running standalone without such access, a mock service is returned.  
- * 
- * Which type of AuthService is returned is determined by the value of 
- * context.useCustomizationService from the angular environment (i.e. 
- * src/environments/environment.ts).  A value of false assumes a develoment context.
- */
-export function createAuthService(config: AppConfig, httpClient: HttpClient)
-    : LibAuthService {
-        console.log("Will use configured customization web service");
-        return new LibWebAuthService(config, httpClient);
-
-}
 

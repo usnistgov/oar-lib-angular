@@ -1,66 +1,159 @@
+import { InjectionToken } from '@angular/core';
+
 /**
  * a container for information describing the user logged into the application.
  */
-export interface UserDetails {
-
-    // TODO: check this documentation against the documentation of the customization service
-    
-    /** 
-     * the user name that the user used to log in with at the authentication service
-     */
-    userId : string,
+export interface UserAttributes {
 
     /**
      * the user's given name
      */
-    userName ?: string,
+    userName ?: string;
 
     /** 
      * the user's family name
      */
-    userLastName ?: string,
+    userLastName ?: string;
 
     /**
      * the user's email address
      */
-    userEmail ?: string,
+    userEmail ?: string;
 
     /**
      * the user's group
      */
-    userGroup ?: string,
+    userGroup ?: string;
 
     /**
      * the user's division
      */
-    userDiv ?: string,
+    userDiv ?: string;
 
     /**
      * the user's division number
      */
-    userDivNum ?: string,
+    userDivNum ?: string;
 
     /**
-     * the user's 
+     * the user's organizational unit
      */
-    userOU ?: string
+    userOU ?: string;
+
+    /**
+     * other attributes are allowed
+     */
+    [paramName: string]: any;
 }
 
+/**
+ * an object provided to applications indicating that the user is authenticated.  The user should be 
+ * considered unauthenticated if there is no token or if the current time is later than the 
+ * expires value. 
+ */
+export interface Credentials {
+
+    /** 
+     * the unique user identifier that the user logged in as
+     */
+    userId : string;
+
+    /**
+     * attributes describing the user with the above identifier
+     */
+    userAttributes : UserAttributes;
+
+    /**
+     * authentication token that can be used to connect with other services requiring authentication.
+     * In the OAR context, this is typically a JSON Web Token (JWT), but it is not required to be.
+     * It is intended, for example, to be presented as a Authorization Bearer token in HTTP requests 
+     * to the services.
+     */
+    token? : string|null;
+
+    /**
+     * the UTC date when these credentials (specifically, the token) are no longer valid.  If there 
+     * is such an expiration time, it should be encoded into the token as well for evalution by services 
+     * requiring it.  An application may evaluate this time to determine if re-authentication is necessary.
+     */
+    expires? : Date;
+
+    /**
+     * The UTC date when the authenticated session started as marked by the creation of the above token.
+     * Applications may use this value to manage the session independently of the token's expiration date.
+     * This value, if set, should also be encoded into the token.
+     */
+    since? : Date;
+
+    /**
+     * other attributes are allowed
+     */
+    [paramName: string]: any;
+}
 
 /**
- * a container for information describing the update detail info.
+ * part of the OAR Authentication web service message format providing the unencoded user information
  */
-export interface UpdateDetails {
-    
-    /**
-     * User info who made the update
+export interface UserDetails extends UserAttributes {
+
+    /** 
+     * the unique user identifier that the user logged in as
      */
-    userDetails: UserDetails;
+    userId : string;
+}
+
+/**
+ * the OAR Authentication web service message format for retrieving authentication information
+ */
+export interface AuthInfo {
+
+    userDetails : UserDetails;
 
     /**
-     * Update date
+     * the authentication token
      */
-    _updateDate: string;
+    token? : string;
+
+    /**
+     * the epoch date when these credentials (specifically, the token) are no longer valid.  
+     */
+    expires? : number;
+
+    /**
+     * the epoch date when these credentials (specifically, the token) are no longer valid.  
+     */
+    since? : number;
+
+    [prop: string]: any;
+}
+
+/**
+ * convert an OAR authentication web service message to a Credentials object
+ */
+export function messageToCredentials(message: AuthInfo) : Credentials {
+    if (! message.userDetails)
+        throw new Error("Unexpected authentication service response (missing userDetails): "+message);
+    let out : Credentials = {
+        userId: message.userDetails.userId,
+        userAttributes: deepCopy(message.userDetails)
+    }
+    if (out.userAttributes['userId'])
+        delete out.userAttributes['userId']
+    if (message.token)
+        out.token = message.token;
+    if (message.token)
+        out.token = message.token;
+    if (message.expires)
+        out.expires = new Date(message.expires);
+    if (message.since)
+        out.since = new Date(message.since);
+
+    for (const prop in message) {
+        if (! out.hasOwnProperty(prop) && prop != "userDetails")
+            out[prop] = deepCopy(message[prop])
+    }
+
+    return out;
 }
 
 /**
@@ -101,3 +194,5 @@ export function deepCopy(obj: any): any {
  
     throw new Error("Unable to copy obj! Its type isn't supported.");
 }
+
+export const MOCK_CREDENTIALS = new InjectionToken<Credentials>('mock-credentials');
