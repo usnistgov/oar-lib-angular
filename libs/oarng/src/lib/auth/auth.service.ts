@@ -204,7 +204,7 @@ export class OARAuthenticationService extends AuthenticationService {
             }),
             catchError((e) => {
                 if (e.status && e.status == 401) 
-                    return this.handleUnauthenticated((nologin) ? undefined : returnURL);
+                    return this.handleUnauthenticated(!nologin, returnURL);
                 return this.handleFetchError(e);
             })
         );
@@ -237,8 +237,8 @@ export class OARAuthenticationService extends AuthenticationService {
      *                       URL to return to after completing the process.
      * @return Observable<Credentials> 
      */
-    handleUnauthenticated(authReturnURL?: string) : Observable<Credentials> {
-        if (authReturnURL) 
+    handleUnauthenticated(dologin: boolean, authReturnURL?: string) : Observable<Credentials> {
+        if (dologin) 
             // this will cause the browser to redirect to login service,
             // terminating this application
             this.loginUser(authReturnURL);
