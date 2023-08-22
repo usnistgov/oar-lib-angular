@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, of, map, tap, catchError, throwError, Subscriber, EMPTY } from 'rxjs';
+import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY } from 'rxjs';
 
 import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
 import { Configuration, ConfigurationService } from '../config/config.module';
@@ -198,13 +198,14 @@ export class OARAuthenticationService extends AuthenticationService {
      */
     public fetchCredentials(nologin: boolean = false, returnURL?: string): Observable<Credentials> {
         return this.fetchCredentialsFrom(this.endpoint).pipe(
-            tap((c) => {
+            switchMap((c) => {
                 console.log("Credentials fetched for "+c.userId);
                 if (!nologin && ! AuthenticationService.authenticatedCreds(c))
                     // this will cause the browser to redirect to login service,
                     // terminating this application
                     if (this.loginUser(returnURL))
                         return EMPTY;
+                return of(c);
             }),
             catchError((e) => {
                 console.error("Credentials not available (status = "+e.status+")");
@@ -294,7 +295,7 @@ export class OARAuthenticationService extends AuthenticationService {
         let loginURL = this.getLoginURL(returnURL);
         console.log("To login user, redirecting to " + loginURL);
         window.location.assign(loginURL);
-        return True;
+        return true;
     }
 }
 
@@ -347,10 +348,11 @@ export class MockAuthenticationService extends AuthenticationService {
      *
      * This implementation does nothing.
      */
-    public loginUser(returnURL?: string): void {
+    public loginUser(returnURL?: string): boolean {
         if (! returnURL)
             returnURL = window.location.href;
         window.location.assign(returnURL);
+        return true;
     }
 }
 
