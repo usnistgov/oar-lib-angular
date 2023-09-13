@@ -262,7 +262,7 @@ export class OARAuthenticationService extends AuthenticationService {
      * @returns an Observable returned by throwError()
      */
     handleFetchError(error: any) {
-        if (error.status) {
+        if (error.status != undefined) {
             let message = null;
             if (error.status == 0) 
                 message = "Authentication Client/Communiction Error: " + error.error
