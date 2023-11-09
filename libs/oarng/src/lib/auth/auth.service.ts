@@ -208,6 +208,8 @@ export class OARAuthenticationService extends AuthenticationService {
                 return of(c);
             }),
             catchError((e) => {
+                console.error("Trouble fetching Credentials:");
+                console.error("Error: "+e);
                 console.error("Credentials not available (status = "+e.status+")");
                 if (e.status && e.status == 401) 
                     return this.handleUnauthenticated(!nologin, returnURL);
