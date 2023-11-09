@@ -48,7 +48,7 @@ import { NgModule } from '@angular/core';
 import { AuthModule } from 'oarng';
 
 @NgModule({
-    imports: [ ConfigModule ],
+    imports: [ AuthModule ],
     declarations:  [ MyComponent ],
     providers: [
        AppComponent,  // a component that requires information about the logged-in user
