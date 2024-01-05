@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, of, map, tap, catchError, throwError, Subscriber } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
+import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY, BehaviorSubject } from 'rxjs';
+
 import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
 import { Configuration, ConfigurationService } from '../config/config.module';
 
@@ -100,8 +100,10 @@ export abstract class AuthenticationService {
      * this application after the login process is complete.  
      * @param returnURL   the URL to redirect the browser to after a successful login to return to 
      *                    to the application.  If not provided, window.location.href will be used. 
+     * @return boolean  True if the implementation issued a browser redirect; False, otherwise. 
+     *                  This allows the caller to halt operations if redirection is imminent.  
      */
-    public abstract loginUser(returnURL?: string): void;
+    public abstract loginUser(returnURL?: string): boolean;
 }
 
 /**
@@ -213,16 +215,19 @@ export class OARAuthenticationService extends AuthenticationService {
     public fetchCredentials(nologin: boolean = false, returnURL?: string): Observable<Credentials> {
         console.log('this.endpoint', this.endpoint);
         return this.fetchCredentialsFrom(this.endpoint).pipe(
-            tap((c) => {
+            switchMap((c) => {
+                console.log("Credentials fetched for "+c.userId);
                 if (!nologin && ! AuthenticationService.authenticatedCreds(c))
                     // this will cause the browser to redirect to login service,
                     // terminating this application
-                    this.loginUser(returnURL);
+                    if (this.loginUser(returnURL))
+                        return EMPTY;
+                return of(c);
             }),
             catchError((e) => {
-                console.log("fetchCredentials error", e);
+                console.error("Credentials not available (status = "+e.status+")");
                 if (e.status && e.status == 401) 
-                    return this.handleUnauthenticated((nologin) ? undefined : returnURL);
+                    return this.handleUnauthenticated(!nologin, returnURL);
                 return this.handleFetchError(e);
             })
         );
@@ -255,11 +260,12 @@ export class OARAuthenticationService extends AuthenticationService {
      *                       URL to return to after completing the process.
      * @return Observable<Credentials> 
      */
-    handleUnauthenticated(authReturnURL?: string) : Observable<Credentials> {
-        if (authReturnURL) 
+    handleUnauthenticated(dologin: boolean, authReturnURL?: string) : Observable<Credentials> {
+        if (dologin) 
             // this will cause the browser to redirect to login service,
             // terminating this application
-            this.loginUser(authReturnURL);
+            if (this.loginUser(authReturnURL))
+                return EMPTY;
         return of(deepCopy(anonymousCreds));
     }
 
@@ -273,7 +279,7 @@ export class OARAuthenticationService extends AuthenticationService {
      * @returns an Observable returned by throwError()
      */
     handleFetchError(error: any) {
-        if (error.status) {
+        if (error.status != undefined) {
             let message = null;
             if (error.status == 0) 
                 message = "Authentication Client/Communiction Error: " + error.error
@@ -299,11 +305,14 @@ export class OARAuthenticationService extends AuthenticationService {
      * @param returnURL the URL that the login service should redirect to after a successful login
      *                  to return the browser to this application.  If not provided, the value
      *                  of window.location.href will be used.  
+     * @return boolean  True if the implementation issued a browser redirect; False, otherwise. 
+     *                  This allows the caller to halt operations if redirection is imminent.  
      */
-    public loginUser(returnURL?: string): void {
+    public loginUser(returnURL?: string): boolean {
         let loginURL = this.getLoginURL(returnURL);
         console.log("To login user, redirecting to " + loginURL);
         window.location.assign(loginURL);
+        return true;
     }
 }
 
@@ -356,10 +365,11 @@ export class MockAuthenticationService extends AuthenticationService {
      *
      * This implementation does nothing.
      */
-    public loginUser(returnURL?: string): void {
+    public loginUser(returnURL?: string): boolean {
         if (! returnURL)
             returnURL = window.location.href;
         window.location.assign(returnURL);
+        return true;
     }
 }
 

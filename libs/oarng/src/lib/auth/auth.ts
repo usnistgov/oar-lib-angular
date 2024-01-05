@@ -132,7 +132,8 @@ export interface AuthInfo {
  */
 export function messageToCredentials(message: AuthInfo) : Credentials {
     if (! message.userDetails)
-        throw new Error("Unexpected authentication service response (missing userDetails): "+message);
+        throw new Error("Unexpected authentication service response (missing userDetails): "+
+                        JSON.stringify(message));
     let out : Credentials = {
         userId: message.userDetails.userId,
         userAttributes: deepCopy(message.userDetails)
