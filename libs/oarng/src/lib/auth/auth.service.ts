@@ -6,8 +6,8 @@ import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredenti
 import { Configuration, ConfigurationService } from '../config/config.module';
 
 const anonymousCreds: Credentials = {
-    userId: "anon",
-    userAttributes: { userName: "Anonymous", userLastName: "Public" },
+    userId: "",
+    userAttributes: { userName: "", userLastName: "" },
     token: null
 };
 
