@@ -9,4 +9,16 @@
     </div>
     <div class="badge badge-pill" style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">{{appVersion}}</div>
 
+    <div (click)="$event.stopPropagation();toggleUserBlock()" style="float: right; vertical-align: bottom; color: #f0f0f0; margin-right: 2em; cursor: pointer;margin-top: 1em;">
+        <i class="fas fa-user-circle fa-xl"></i>
+        {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+    </div>
+</div>
+
+<div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
+    <div *ngIf="credential.userAttributes.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
+    <div *ngIf="credential.userAttributes.userGroup">Group: {{credential.userAttributes.userGroup}}</div>
+    <div *ngIf="credential.userAttributes.userDiv">Division: {{credential.userAttributes.userDiv}}</div>
+    <div *ngIf="credential.userAttributes.userDivNum">Division #: {{credential.userAttributes.userDivNum}}</div>
+    <div *ngIf="credential.userAttributes.userOU">OU: {{credential.userAttributes.userOU}}</div>
 </div>
