@@ -15,11 +15,7 @@ export class AppComponent {
     footbarHeight!: number;
     appVersion: string = "2.0";
 
-    @ViewChild('footbar') elementView!: ElementRef;
-
     constructor() { 
-        this.clientHeight = window.innerHeight; 
-        console.log("clientHeight", this.clientHeight)
     }
 
     ngOnInit(): void {
