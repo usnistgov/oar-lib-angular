@@ -9,12 +9,8 @@
     </div>
     <div class="badge badge-pill" style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">{{appVersion}}</div>
 
-    <div *ngIf="credential.userId != ''" (click)="$event.stopPropagation();toggleUserBlock()" style="float: right; vertical-align: bottom; color: #f0f0f0; margin-right: 2em; cursor: pointer;margin-top: 1em;">
-        <!-- <i class="faa fa-user-circle1"></i> -->
-        <span class="fa-stack">
-            <i class="faa faa-circle-o fa-stack-1x" aria-hidden="true"></i>
-            <i class="faa faa-user fa-stack-1x" aria-hidden="true"></i>
-        </span>
+    <div *ngIf="credential.userId != ''" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
+        <i class="faa faa-user" aria-hidden="true"></i>
         {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
     </div>
 </div>

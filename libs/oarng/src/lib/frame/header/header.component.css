@@ -26,15 +26,16 @@
     margin-right: 20px;
 }
 
+.user-icon {
+    float: right; 
+    vertical-align: bottom; 
+    color: #f0f0f0; 
+    margin-right: 2em; 
+    cursor: pointer;
+    margin-top: 15px;
+}
+
 .faa-user {
     font-size: 15px;
-    margin-top: 7px;
-}
-
-.faa-circle-o {
-    font-size: 25px;
-}
-
-.fa-stack {
-    margin: 0 -8px 0 0;
+    margin: 5px 3px 0 0;
 }
