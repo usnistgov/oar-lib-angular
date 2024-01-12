@@ -25,3 +25,15 @@
     overflow: hidden; 
     margin-right: 20px;
 }
+
+.fa-user {
+    font-size: 13px;
+}
+
+.fa-circle {
+    font-size: 20px;
+}
+
+.fa-stack {
+    margin: -4px -8px 0 0;
+}
