@@ -1,13 +1,13 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY } from 'rxjs';
+import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY, BehaviorSubject } from 'rxjs';
 
 import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
 import { Configuration, ConfigurationService } from '../config/config.module';
 
 const anonymousCreds: Credentials = {
-    userId: "anon",
-    userAttributes: { userName: "Anonymous", userLastName: "Public" },
+    userId: "",
+    userAttributes: { userName: "", userLastName: "" },
     token: null
 };
 
@@ -34,10 +34,22 @@ export abstract class AuthenticationService {
     set errorMessage(errMsg: string) { this._errorMessage = errMsg; }
     get errorMessage() { return this._errorMessage as string; }
 
+    //This variable tells the system which section user is interested (so it can scroll to the section).
+    _credential: BehaviorSubject<Credentials> = new BehaviorSubject<Credentials>({} as Credentials);
+    setCredential(val: Credentials){
+        this._cred = val;
+        this._credential.next(val);
+    }
+    public watchCredential(subscriber: any) {
+        this._credential.subscribe(subscriber);
+    }
+
     /**
      * construct the service
      */
-    constructor() { }
+    constructor() {
+        this._credential.next(this._cred);
+     }
 
     static authenticatedCreds(cred: Credentials) {
         return (!!cred && !!cred.token &&
@@ -64,7 +76,11 @@ export abstract class AuthenticationService {
             return of(deepCopy(this._cred));
 
         return this.fetchCredentials(nologin).pipe(
-            tap(c => this._cred = deepCopy(c))
+            tap(c => {
+                // this._cred = deepCopy(c);
+                console.log("fetchCredentials----", c);
+                this.setCredential(deepCopy(c));
+            })
         );
     }
 
@@ -197,6 +213,7 @@ export class OARAuthenticationService extends AuthenticationService {
      *                    of window.location.href will be used.  
      */
     public fetchCredentials(nologin: boolean = false, returnURL?: string): Observable<Credentials> {
+        console.log('this.endpoint', this.endpoint);
         return this.fetchCredentialsFrom(this.endpoint).pipe(
             switchMap((c) => {
                 console.log("Credentials fetched for "+c.userId);
@@ -227,7 +244,7 @@ export class OARAuthenticationService extends AuthenticationService {
         let url = endpoint;
         if (! url.endsWith('/')) url += '/';
         url += "auth/_tokeninfo";
-        console.debug("Authentication request url: ", url);
+        console.log("Authentication request url: ", url);
 
         return this.httpcli.get(url).pipe(
             map<any, Credentials>(messageToCredentials)

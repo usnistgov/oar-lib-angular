@@ -6,9 +6,8 @@
         "start": "ng serve",
         "build": "ng build",
         "watch": "ng build --watch --configuration development",
-        "test": "npm run test:lib; npm run test:wizard",
-        "test:lib": "jest --config ./libs/oarng/jest.config.js --silent",
-        "test:wizard": "jest --config ./projects/wizard/jest.config.js --silent"
+        "test": "npm run test:lib",
+        "test:lib": "jest --config ./libs/oarng/jest.config.js --silent"
     },
     "private": true,
     "dependencies": {

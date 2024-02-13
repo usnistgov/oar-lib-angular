@@ -14,3 +14,25 @@
     margin-left: 10px;
     cursor: pointer;
 }
+
+#user {
+    z-index: 999;
+    padding: 10px;
+    border-radius: 2px; 
+    background-color: rgba(255, 255, 255, 0.9);
+    position: absolute; 
+    right: 10px; 
+    overflow: hidden; 
+    margin-right: 20px;
+}
+
+.user-icon {
+    float: right; 
+    vertical-align: bottom; 
+    color: #f0f0f0; 
+    margin-right: 2em; 
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+

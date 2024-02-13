@@ -10,16 +10,7 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
     }
 })
 export class AppComponent {
-    title = 'OAR Module Demo: Wizard';
-    clientHeight: number = 500;
-    footbarHeight!: number;
-    appVersion: string = "2.0";
-
-    @ViewChild('footbar') elementView!: ElementRef;
-
     constructor() { 
-        this.clientHeight = window.innerHeight; 
-        console.log("clientHeight", this.clientHeight)
     }
 
     ngOnInit(): void {

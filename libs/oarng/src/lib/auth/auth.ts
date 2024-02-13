@@ -142,8 +142,6 @@ export function messageToCredentials(message: AuthInfo) : Credentials {
         delete out.userAttributes['userId']
     if (message.token)
         out.token = message.token;
-    if (message.token)
-        out.token = message.token;
     if (message.expires)
         out.expires = new Date(message.expires);
     if (message.since)
