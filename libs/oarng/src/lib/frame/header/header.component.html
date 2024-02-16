@@ -16,6 +16,7 @@
 </div>
 
 <div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
+    <div *ngIf="credential.userId">User ID: {{credential.userId}}</div>
     <div *ngIf="credential.userAttributes.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
     <div *ngIf="credential.userAttributes.userGroup">Group: {{credential.userAttributes.userGroup}}</div>
     <div *ngIf="credential.userAttributes.userDiv">Division: {{credential.userAttributes.userDiv}}</div>
