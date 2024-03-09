@@ -9,7 +9,7 @@
     </div>
     <div class="badge badge-pill" style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">{{appVersion}}</div>
 
-    <div *ngIf="credential.userId != ''" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
+    <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
         <i class="faa faa-user" aria-hidden="true"></i>
         {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
     </div>
@@ -17,9 +17,9 @@
 
 <div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
     <div *ngIf="credential.userId">User ID: {{credential.userId}}</div>
-    <div *ngIf="credential.userAttributes.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
-    <div *ngIf="credential.userAttributes.userGroup">Group: {{credential.userAttributes.userGroup}}</div>
-    <div *ngIf="credential.userAttributes.userDiv">Division: {{credential.userAttributes.userDiv}}</div>
-    <div *ngIf="credential.userAttributes.userDivNum">Division #: {{credential.userAttributes.userDivNum}}</div>
-    <div *ngIf="credential.userAttributes.userOU">OU: {{credential.userAttributes.userOU}}</div>
+    <div *ngIf="credential && credential.userAttributes?.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
+    <div *ngIf="credential && credential.userAttributes?.userGroup">Group: {{credential.userAttributes.userGroup}}</div>
+    <div *ngIf="credential && credential.userAttributes?.userDiv">Division: {{credential.userAttributes.userDiv}}</div>
+    <div *ngIf="credential && credential.userAttributes?.userDivNum">Division #: {{credential.userAttributes.userDivNum}}</div>
+    <div *ngIf="credential &&credential.userAttributes?.userOU">OU: {{credential.userAttributes.userOU}}</div>
 </div>
