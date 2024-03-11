@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostListener } from '@angular/core';
+import { Component, OnInit, Input, HostListener, Optional } from '@angular/core';
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -26,12 +26,18 @@ export class HeaderComponent implements OnInit {
     @Input() titleLn2: string = "DATA PUBLISHING";
 
 
-    constructor(public authService: AuthenticationService) {
-        this.authService.watchCredential((cred: Credentials) => {
-            console.log('cred', cred);
-            this.credential = cred;
-        })
+    constructor(@Optional() public authService: AuthenticationService) {
+        if (this.authService) {
+            this.authService.watchCredential((cred: Credentials) => {
+                console.log('cred', cred);
+                this.credential = cred;
+            });
+        } else {
+            // authService  not provided
+            console.log('AuthenticationService is not provided.');
+        }
     }
+    
 
     @HostListener('document:click', ['$event'])
     clickout() {
