@@ -1,7 +1,5 @@
 import { NgModule }     from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { SidebarModule } from 'ng-sidebar';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { PushingSidebarComponent } from './pushingsidebar.component';
 import { SlideoutColumnComponent } from './slideoutcol.component';
@@ -12,8 +10,7 @@ import { SlideoutColumnComponent } from './slideoutcol.component';
 @NgModule({
     imports: [
         CommonModule,
-        ScrollPanelModule,
-        SidebarModule.forRoot()
+        ScrollPanelModule
     ],
     declarations: [
         PushingSidebarComponent,
