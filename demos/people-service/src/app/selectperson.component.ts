@@ -29,6 +29,9 @@ export class SelectPersonComponent {
     // the full record for the selected person
     selected: any = null;
 
+    // the organizations that the selected person is a member of
+    selectedOrgs: any[]|null = null;
+
     json = JSON;
 
     constructor(private ps: StaffDirectoryService) { }
@@ -75,6 +78,18 @@ export class SelectPersonComponent {
         );
     }
 
+    showOrgs(ev: MouseEvent) {
+        if (this.selectedSuggestion) {
+            this.ps.getOrgsFor(this.selectedSuggestion.id).subscribe(
+                recs => {
+                    this.selectedOrgs = recs;
+                },
+                err => {
+                    console.error("Failed to resolve person id into org data");
+                }
+            );
+        }
+    }
 }
 
     

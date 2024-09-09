@@ -14,8 +14,18 @@
 
 </div>
 <div *ngIf="selected && selectedSuggestion" style="margin: 1em 0em 1em 1em;">
-<dl>
-  <dt> {{selectedSuggestion.display}}: </dt>
-  <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
-</dl>
+   <dl>
+     <dt> {{selectedSuggestion.display}}: </dt>
+     <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
+   </dl>
+
+   <p-button label="Fetch Selected Person's Orgs" (onClick)="showOrgs($event)"></p-button>
+
+   <div *ngIf="selectedOrgs" style="margin: 1em 0em 1em 1em;">
+      <dl>
+        <dt> Orgs for {{selectedSuggestion.display}}: </dt>
+        <dd> <pre>{{json.stringify(selectedOrgs, null, 2)}}</pre> </dd>
+      </dl>
+   </div>
+
 </div>

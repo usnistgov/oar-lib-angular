@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ButtonModule } from 'primeng/button';
 
 import { FrameModule } from 'oarng';
 import { StaffDirModule } from 'oarng';
@@ -27,8 +28,9 @@ import { SelectOrgComponent } from './selectorg.component';
         FormsModule,
         HttpClientModule,
         FrameModule,
-        StaffDirModule,
-        AutoCompleteModule
+        AutoCompleteModule,
+        ButtonModule,
+        StaffDirModule
     ],
     providers: [],
     bootstrap: [AppComponent]
