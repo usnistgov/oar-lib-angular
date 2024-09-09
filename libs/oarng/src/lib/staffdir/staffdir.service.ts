@@ -368,17 +368,21 @@ export class StaffDirectoryService {
     _addParentOrg(parentID: number, orgs: anyobj[]) : Observable<anyobj[]> {
         return this.getOrg(parentID).pipe(
             switchMap((r) => {
-                if (r == null || r[PARENT_ORG_ID] == null)
+                if (r == null)
                     return of(orgs);
 
-                if (r[PARENT_ORG_ID] == undefined) {
+                if (r['orG_ID'] == undefined) {
                     console.error("Unexpected Org record returned (id="+parentID+
-                                  "): missing parentT_ORG_ID")
+                                  "): missing orG_ID")
                     if (orgs.length == 0)
                         throw new Error("Unexpected Group record returned: missing parentT_ORG_ID");
                     console.info("Returning orgs found so far");
                     return of(orgs);
                 }
+
+                orgs.push(r);
+                if (! r[PARENT_ORG_ID])
+                    return of(orgs);
 
                 return this._addParentOrg(r[PARENT_ORG_ID], orgs)
             })
