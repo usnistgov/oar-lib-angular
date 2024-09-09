@@ -1,0 +1,5 @@
+{
+    "staffdir": {
+        "serviceEndpoint": "http://localhost:9091/midas/nsd/oar1"
+    }
+}

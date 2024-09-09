@@ -1,0 +1,21 @@
+<app-header [appVersion]="appVersion" titleLn1="MIDAS" titleLn2="DATA PUBLISHING"></app-header>
+
+<h2> Select a Person by First or Last Name </h2>
+
+This shows how to offer suggestions for people that match a few typed characters.
+The suggestions will include anyone whose first or last name starts with the typed string.
+(The match is case-insensitive.)
+
+<od-select-person></od-select-person>
+
+
+<h2> Select an Organization of any level </h2>
+
+This shows how to offer suggestions for organizations with in the org-chart that match a
+few typed characters.  The suggestions will be (case-insensitively) matched against the
+organization's name, abbreviation, or number.
+
+<od-select-org></od-select-org>
+
+<p>
+<app-footer></app-footer>
