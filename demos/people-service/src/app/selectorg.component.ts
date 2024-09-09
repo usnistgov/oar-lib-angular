@@ -75,6 +75,19 @@ export class SelectOrgComponent {
         );
     }
 
+
+    showAllOrgs(ev: MouseEvent) {
+        if (this.selectedSuggestion) {
+            this.ps.getParentOrgs(this.selectedSuggestion.id, true).subscribe(
+                recs => {
+                    this.selected = recs;
+                },
+                err => {
+                    console.error("Failed to resolve org id into org chain");
+                }
+            );
+        }
+    }
 }
 
     

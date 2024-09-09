@@ -14,8 +14,11 @@
 
 </div>
 <div *ngIf="selected && selectedSuggestion" style="margin: 1em 0em 1em 1em;">
-<dl>
-  <dt> {{selectedSuggestion.display}}: </dt>
-  <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
-</dl>
+
+   <p-button label="Expand Orgs" (onClick)="showAllOrgs($event)"></p-button>
+
+   <dl>
+     <dt> {{selectedSuggestion.display}}: </dt>
+     <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
+   </dl>
 </div>
