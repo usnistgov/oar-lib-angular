@@ -15,7 +15,6 @@ import { SDSConfiguration, SDSuggestion, SDSIndex, StaffDirectoryService } from 
     declarations: [
     ],
     providers: [
-        HttpClient,
         StaffDirectoryService
     ]
 })

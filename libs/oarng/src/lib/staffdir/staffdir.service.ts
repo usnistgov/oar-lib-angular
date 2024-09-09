@@ -2,7 +2,7 @@ import { Inject, Optional } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, Subject, throwError } from "rxjs";
-import { catchError, map, switchMap } from "rxjs/operators";
+import { catchError, map, switchMap, tap } from "rxjs/operators";
 import { of } from "rxjs";
 
 import { Configuration, ConfigurationService } from "../config/config.module";
@@ -130,7 +130,7 @@ export class SDSIndex {
     public getSuggestions(prompt: string) : SDSuggestion[] {
         let matched: idxrefs = {};
         for (let key in this.data) {
-            if (key.startsWith(prompt)) {
+            if (key.startsWith(prompt.toLowerCase())) {
                 for (let id in this.data[key]) 
                     matched[id] = this.data[key][id];
             }
@@ -199,7 +199,18 @@ export class StaffDirectoryService {
     }
 
     protected _get(relurl: string) : Observable<anyobj|anyobj[]> {
-        return this.httpcli.get(this._cfg.serviceEndpoint + relurl);
+        return this.httpcli.get(this._cfg.serviceEndpoint + relurl, { headers: this._headers() });
+        /*
+        return this.httpcli.get(this._cfg.serviceEndpoint + relurl, { headers: this._headers() }).pipe(
+            tap((r) => {
+                console.info("received response");
+            }),
+            catchError((e) => {
+                console.error("Problem getting url")
+                throw e;
+            })
+        );
+        */
     }
 
     protected _handleHTTPError(error: Error) : anyobj|anyobj[] {
@@ -286,7 +297,7 @@ export class StaffDirectoryService {
     public getPeopleIndexFor(prompt: string) : Observable<SDSIndex> {
         let url = StaffDirectoryService.PEOPLE_EP + "/index?like=" + prompt
         return this._get(url).pipe(
-            map<any, SDSIndex>((r) => new SDSIndex(r, this.getPerson)),
+            map<any, SDSIndex>((r) => new SDSIndex(r, id => this.getPerson(id))),
             catchError((e) => {
                 this._handleHTTPError(e);
                 throw "Unhandled error: "+e;
@@ -325,7 +336,7 @@ export class StaffDirectoryService {
     public getOrgsIndexFor(prompt: string) : Observable<SDSIndex> {
         let url = StaffDirectoryService.ORGS_EP + "/index?like=" + prompt
         return this._get(url).pipe(
-            map<any, SDSIndex>((r) => new SDSIndex(r, this.getOrg)),
+            map<any, SDSIndex>((r) => new SDSIndex(r, id => this.getOrg(id))),
             catchError((e) => {
                 this._handleHTTPError(e);
                 throw "unhandled error: "+e;
