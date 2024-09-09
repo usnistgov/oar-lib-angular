@@ -186,6 +186,87 @@ describe('StaffServiceService', () => {
         httpMock.expectOne(svcep+"/Orgs/5").flush(odata[1]);
         httpMock.expectOne(svcep+"/Orgs/3").flush(odata[2]);
     });
+
+    it('getParentOrgs()', async () => {
+        const odata = [
+          {
+            "orG_Name": "Bureau of Western Mythology", 
+            "parenT_ORG_ID": 5,
+            "parenT_ORG_CD": "100",
+            "orG_ID": 7, 
+            "orG_CD": "10000", 
+          }, 
+          {
+            "orG_Name": "Lost Electricity Reclamation Agency", 
+            "parenT_ORG_ID": 3,
+            "parenT_ORG_CD": "03",
+            "orG_ID": 5, 
+            "orG_CD": "100", 
+          }, 
+          {
+            "orG_Name": "Department of Failure", 
+            "parenT_ORG_ID": null,
+            "parenT_ORG_CD": null,
+            "orG_CD": "03", 
+            "orG_ID": 3, 
+          }
+        ];
+
+        const svcpromise = service.getParentOrgs(7, true).toPromise()
+
+        httpMock.expectOne(svcep+"/Orgs/7").flush(odata[0]);
+        httpMock.expectOne(svcep+"/Orgs/5").flush(odata[1]);
+        httpMock.expectOne(svcep+"/Orgs/3").flush(odata[2]);
+
+        let orgs = await svcpromise;
+
+        expect(orgs).not.toBeNull();
+        orgs = orgs as any[];
+        expect(orgs.length).toEqual(3);
+        expect(orgs[0]).toEqual(odata[0]);
+        expect(orgs[1]).toEqual(odata[1]);
+        expect(orgs[2]).toEqual(odata[2]);
+    });
+
+    it('getParentOrgs() without ref org', async () => {
+        const odata = [
+          {
+            "orG_Name": "Bureau of Western Mythology", 
+            "parenT_ORG_ID": 5,
+            "parenT_ORG_CD": "100",
+            "orG_ID": 7, 
+            "orG_CD": "10000", 
+          }, 
+          {
+            "orG_Name": "Lost Electricity Reclamation Agency", 
+            "parenT_ORG_ID": 3,
+            "parenT_ORG_CD": "03",
+            "orG_ID": 5, 
+            "orG_CD": "100", 
+          }, 
+          {
+            "orG_Name": "Department of Failure", 
+            "parenT_ORG_ID": null,
+            "parenT_ORG_CD": null,
+            "orG_CD": "03", 
+            "orG_ID": 3, 
+          }
+        ];
+
+        const svcpromise = service.getParentOrgs(7).toPromise();
+
+        httpMock.expectOne(svcep+"/Orgs/7").flush(odata[0]);
+        httpMock.expectOne(svcep+"/Orgs/5").flush(odata[1]);
+        httpMock.expectOne(svcep+"/Orgs/3").flush(odata[2]);
+        
+        let orgs = await svcpromise;
+
+        expect(orgs).not.toBeNull();
+        orgs = orgs as any[];
+        expect(orgs.length).toEqual(2);
+        expect(orgs[0]).toEqual(odata[1]);
+        expect(orgs[1]).toEqual(odata[2]);
+    });
 });
 
     

@@ -358,9 +358,34 @@ export class StaffDirectoryService {
                     return of<anyobj[]|null>(null);
 
                 if (r[GROUP_ID] == undefined)
-                    throw new Error("Unexpected Person record data: missing groupOrdID property");
+                    throw new Error("Unexpected Person record data: missing groupOrgID property");
 
                 return this._addParentOrg(r[GROUP_ID], []);
+            })
+        );
+    }
+
+    /**
+     * return a list of the full organization records for the line of organizations that contain
+     * the organization referenced by a given org identifier
+     */
+    public getParentOrgs(orgID: number, includeRefOrg: boolean = false) : Observable<anyobj[]|null> {
+        return this.getOrg(orgID).pipe(
+            switchMap((r) => {
+                if (r == null)
+                    return of<anyobj[]|null>(null);
+
+                if (r['orG_ID'] == undefined)
+                    throw new Error("Unexpected Org record data: missing orG_ID property");
+
+                let orgs = [];
+                if (includeRefOrg)
+                    orgs.push(r);
+
+                if (! r[PARENT_ORG_ID])
+                    return of(orgs);
+
+                return this._addParentOrg(r[PARENT_ORG_ID], orgs);
             })
         );
     }
