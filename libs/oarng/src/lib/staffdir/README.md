@@ -23,8 +23,14 @@ could be added in the future.
   - [Request an Index Asynchronously](#request-an-index-asynchronously)
   - [Look Up Full Record When User Selects a Suggestion](#look-up-full-record-when-user-selects-a-suggestion)
 - [Running with a Backend Server](#running-with-a-backend-server)
+  - [Configuring For Use With `oar-docker`](#configuring-for-use-with-oar-docker)
+  - [Configuring for a Stand-Alone MIDAS Server](#configuring-for-a-stand-alone-midas-server)
 - [Use Cases](#use-cases)
-
+  - [Provide User with Suggestions of Matching People or
+     Organizations](#provide-user-with-suggestions-of-matching-people-or-organizations)
+  - [Resolving a Suggestion to a Hierarchy of
+  - Organizations](#resolving-a-suggestion-to-a-hierarchy-of-organizations)
+- [Testing with `StaffDirectoryService`](#testing-with-staffdirectoryservice)
 
 ## Using the `StaffDirectoryService`
 
@@ -263,7 +269,7 @@ Even though the server, when you run it stand-alone in this way, does not requir
 authentication token, you will still need to have an `AuthenticationService` in your
 application.  To deal with this, you can either:
   * also run a stand-alone authentication server (provided by
-    ['oar-auth-py'](https://github.com/usnistgov/oar-auth-py), 
+    ['oar-auth-py'](https://github.com/usnistgov/oar-auth-py)), 
   * "hard-wire" a static token into your app for development purposes (such a token is
     available from [`oar-pdr-py` in the file
     `docker/midasserver/xytoken`](https://github.com/usnistgov/oar-pdr-py/blob/integration/docker/midasserver/xyztoken.txt)), or
@@ -295,8 +301,8 @@ This is the use case that is addressed via the integration instructions above.  
      index (`SDIndex`) for records that match 2 or 3 characters.
   2. extract suggestions (`SDSuggestion[]`) from the index based on the text typed so far via
      `SDIndex.getSuggestions()`.
-  3. Resolve the user's selection into the full detailed record by passing the suggestion's
-     identifier to the `SDSuggestion.getRecord()`.
+  3. Resolve the user's selection into the full detailed record by calling the selected
+     `SDSuggestion.getRecord()`.
 
 ### Resolving a Suggestion to a Hierarchy of Organizations
 
