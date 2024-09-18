@@ -29,7 +29,7 @@ could be added in the future.
   - [Provide User with Suggestions of Matching People or
      Organizations](#provide-user-with-suggestions-of-matching-people-or-organizations)
   - [Resolving a Suggestion to a Hierarchy of
-  - Organizations](#resolving-a-suggestion-to-a-hierarchy-of-organizations)
+     Organizations](#resolving-a-suggestion-to-a-hierarchy-of-organizations)
 - [Testing with `StaffDirectoryService`](#testing-with-staffdirectoryservice)
 
 ## Using the `StaffDirectoryService`
