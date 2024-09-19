@@ -214,7 +214,7 @@ method:
     );
 ```
 
-(See also [the `showFullRecord() method in `selectperson.component.ts` within the demo
+(See also [the `showFullRecord()` method in `selectperson.component.ts` within the demo
 app](../../../../../demos/people-service).)
 
 ## Running with a Backend Server
