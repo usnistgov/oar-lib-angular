@@ -78,7 +78,8 @@ export abstract class AuthenticationService {
         return this.fetchCredentials(nologin).pipe(
             tap(c => {
                 // this._cred = deepCopy(c);
-                console.log("fetchCredentials----", c);
+                // console.debug("fetchCredentials----", c);
+                console.debug("credentials fetched for user=", c.userId);
                 this.setCredential(deepCopy(c));
             })
         );

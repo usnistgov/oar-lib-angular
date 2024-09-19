@@ -29,8 +29,10 @@ export class HeaderComponent implements OnInit {
     constructor(@Optional() public authService: AuthenticationService) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
-                console.log('cred', cred);
+                // console.debug('cred', cred);
                 this.credential = cred;
+                if (cred) 
+                    console.debug('User identified:', cred.userId);
             });
         } else {
             // authService  not provided
