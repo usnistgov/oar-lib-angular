@@ -117,12 +117,12 @@ where you retrieve authentication credentials, add a call to the
 `StaffDirectoryService.setAuthToken()` function:
 
 ```javascript
-    return this.authsvc.getCredentials().subscribe(
+    this.authsvc.getCredentials().subscribe(
       creds => {
          ...
          if (creds.token) {
              this.authToken = creds.token
-             this.sdsvc.addAuthToken(creds.token)
+             this.sdsvc.setAuthToken(creds.token)
          }
          ...
       }

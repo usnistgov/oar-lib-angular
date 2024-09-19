@@ -77,11 +77,11 @@ suggestions do not come up but you only see the spinning icon, then there may be
 with the connection to the people server.  Check the browser's developer console for any
 error messages.
 
-You can use curl to test that your backend is working.  If are using the `midasserver` as
+You can use curl to test that your backend is working.  If are using the `peopleserver` as
 your backend, try this command to see if the service is working properly:
 
 ```bash
-curl -v http://localhost:9091/midas/nsd/oar1
+curl -v http://localhost:9091/oar1
 ```
 
 Note that this URL must correspond with what is set in the `config.json` file (see ["Running
@@ -96,5 +96,5 @@ should be a JSON object and an HTTP status of 200; if not, consider these failur
   *  if a JSON object is returned but the message indicates an error (like there are 0
      records loaded), there may have been an error loading the service database (such as
      specifying the wrong data directory or having a missing data file).  Check the server
-     log by running `docker logs midasserver` (or `docker logs peopleserver` if your are
-     running the `peopleserver`) and look for error messages.
+     log by running `docker logs peopleserver` (or `docker logs midasserver` if your are
+     running the `midasserver`) and look for error messages.

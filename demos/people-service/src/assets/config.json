@@ -1,5 +1,5 @@
 {
     "staffdir": {
-        "serviceEndpoint": "http://localhost:9091/midas/nsd/oar1"
+        "serviceEndpoint": "http://localhost:9092/oar1"
     }
 }
