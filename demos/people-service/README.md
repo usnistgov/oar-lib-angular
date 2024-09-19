@@ -23,8 +23,8 @@ stand-alone service are available in the
 [`oar-pdr-py` repository](https://github.com/usnistgov/oar-pdr-py) repository:
 `peopleserver`, which runs a directory service only, and `midasserver`, which runs the
 entire MIDAS DBIO back-end including a directory service.  See the README documents in the
-[`docker/peopleserver`](https://github.com/usnistgov/oar-pdr-py/blob/nsd/docker/peopleserver)
-and [`docker/midasserver`](https://github.com/usnistgov/oar-pdr-py/blob/nsd/docker/midasserver)
+[`docker/peopleserver`](https://github.com/usnistgov/oar-pdr-py/blob/feature/people-service/docker/peopleserver)
+and [`docker/midasserver`](https://github.com/usnistgov/oar-pdr-py/blob/feature/people-service/docker/midasserver)
 directories, respectively, for further details in running the server.
 
 You will need to adjust the demo app's configuration depending on which server your run.  The
@@ -96,5 +96,5 @@ should be a JSON object and an HTTP status of 200; if not, consider these failur
   *  if a JSON object is returned but the message indicates an error (like there are 0
      records loaded), there may have been an error loading the service database (such as
      specifying the wrong data directory or having a missing data file).  Check the server
-     log by running `docker logs midasserver` (or `docker logs midasserver` if your are
+     log by running `docker logs midasserver` (or `docker logs peopleserver` if your are
      running the `peopleserver`) and look for error messages.
