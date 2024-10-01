@@ -56,7 +56,7 @@ information to your configuration data.  In particular, add this `staffdir` prop
 
 ```javascript
    "staffdir": {
-       "serviceEndpoint":  "http://localhost:9091/midas/nds/oar1",
+       "serviceEndpoint":  "http://localhost:9091/midas/nsd/oar1",
        "requireAuthToken": true
    }
 ```
@@ -168,7 +168,7 @@ enter it.  Once 2 or 3 characters have been typed, use either the `getPeopleInde
 ```javascript
    if (typed.length >= 2) {
       if (! this.index) {
-          this.ps.getPeopleIndexFor(typed).subscribe(
+          this.sdsvc.getPeopleIndexFor(typed).subscribe(
              idx => {
                  // save it to use with subsequent typing
                  this.index = idx;
