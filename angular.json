@@ -123,6 +123,108 @@
                     }
                 }
             }
+        },
+        "people-service": {
+            "projectType": "application",
+            "schematics": {
+                "@schematics/angular:application": {
+                    "strict": true
+                }
+            },
+            "root": "demos/people-service",
+            "sourceRoot": "demos/people-service/src",
+            "prefix": "app",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:browser",
+                    "options": {
+                        "outputPath": "dist/people-service",
+                        "index": "demos/people-service/src/index.html",
+                        "main": "demos/people-service/src/main.ts",
+                        "polyfills": "demos/people-service/src/polyfills.ts",
+                        "tsConfig": "demos/people-service/tsconfig.app.json",
+                        "assets": [
+                            "demos/people-service/src/favicon.ico",
+                            "demos/people-service/src/assets"
+                        ],
+                        "styles": [
+                            "demos/people-service/src/styles.css"
+                            "node_modules/primeng/resources/primeng.css",
+                            "node_modules/primeicons/primeicons.css",
+                            "node_modules/primeflex/primeflex.css",
+                            "node_modules/primeng/resources/themes/saga-blue/theme.css",
+                        ],
+                        "scripts": []
+                    },
+                    "configurations": {
+                        "production": {
+                            "budgets": [
+                                {
+                                    "type": "initial",
+                                    "maximumWarning": "500kb",
+                                    "maximumError": "1mb"
+                                },
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "2kb",
+                                    "maximumError": "4kb"
+                                }
+                            ],
+                            "fileReplacements": [
+                                {
+                                    "replace": "demos/people-service/src/environments/environment.ts",
+                                    "with": "demos/people-service/src/environments/environment.prod.ts"
+                                }
+                            ],
+                            "outputHashing": "all"
+                        },
+                        "development": {
+                            "buildOptimizer": false,
+                            "optimization": false,
+                            "vendorChunk": true,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "namedChunks": true
+                        }
+                    },
+                    "defaultConfiguration": "production"
+                },
+                "serve": {
+                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "configurations": {
+                        "production": {
+                            "browserTarget": "people-service:build:production"
+                        },
+                        "development": {
+                            "browserTarget": "people-service:build:development"
+                        }
+                    },
+                    "defaultConfiguration": "development"
+                },
+                "extract-i18n": {
+                    "builder": "@angular-devkit/build-angular:extract-i18n",
+                    "options": {
+                        "browserTarget": "people-service:build"
+                    }
+                },
+                "test": {
+                    "builder": "@angular-devkit/build-angular:karma",
+                    "options": {
+                        "main": "demos/people-service/src/test.ts",
+                        "polyfills": "demos/people-service/src/polyfills.ts",
+                        "tsConfig": "demos/people-service/tsconfig.spec.json",
+                        "karmaConfig": "demos/people-service/karma.conf.js",
+                        "assets": [
+                            "demos/people-service/src/favicon.ico",
+                            "demos/people-service/src/assets"
+                        ],
+                        "styles": [
+                            "demos/people-service/src/styles.css"
+                        ],
+                        "scripts": []
+                    }
+                }
+            }
         }
     }
 }

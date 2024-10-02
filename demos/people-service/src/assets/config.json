@@ -1,0 +1,5 @@
+{
+    "staffdir": {
+        "serviceEndpoint": "http://localhost:9092/oar1"
+    }
+}

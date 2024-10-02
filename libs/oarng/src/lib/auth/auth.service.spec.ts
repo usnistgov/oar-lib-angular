@@ -4,6 +4,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Configuration, CONFIG_URL } from '../config/config.model';
 import { ConfigurationService } from '../config/config.service';
 import { AuthModule, AuthenticationService, OARAuthenticationService } from './auth.module';
+import { MockAuthenticationService } from './auth.service';
+import { Credentials } from './auth';
 import { environment } from '../../environments/environment';
 
 describe('AuthService', () => {
@@ -103,3 +105,32 @@ describe('AuthService', () => {
         }
     });
 });
+
+describe("MockAuthenticationService", () => {
+    let service: AuthenticationService;
+
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: AuthenticationService, useClass: MockAuthenticationService }
+            ]
+        }).compileComponents();
+
+        service = TestBed.inject(AuthenticationService);
+    }));
+
+    it('should be created', () => {
+        expect(service).toBeTruthy();
+        expect(service instanceof MockAuthenticationService).toBeTruthy();
+    });
+
+    it('should fetch fake credentials', async () => {
+        const credpromise = service.fetchCredentials(true).toPromise();
+
+        const creds: Credentials = (await credpromise) as Credentials;
+        expect(creds).toBeTruthy();
+        expect(creds.userId).toEqual("anon");
+        expect(creds.token).toEqual("fake jwt token");
+    });
+});
+

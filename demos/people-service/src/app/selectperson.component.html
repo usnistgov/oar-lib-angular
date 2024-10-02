@@ -1,0 +1,31 @@
+<div style="margin: 2em 1em 2em 1em;">
+
+  <span class="p-float-label">
+    <p-autoComplete 
+      [(ngModel)]="selectedSuggestion" 
+      [suggestions]="suggestions" 
+      (completeMethod)="set_suggestions($event)"
+      (onSelect)="showFullRecord($event)"
+      field="display"
+      inputId="person"
+    />
+    <label for="person">Start typing a name</label>
+  </span>
+
+</div>
+<div *ngIf="selected && selectedSuggestion" style="margin: 1em 0em 1em 1em;">
+   <dl>
+     <dt> {{selectedSuggestion.display}}: </dt>
+     <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
+   </dl>
+
+   <p-button label="Fetch Selected Person's Orgs" (onClick)="showOrgs($event)"></p-button>
+
+   <div *ngIf="selectedOrgs" style="margin: 1em 0em 1em 1em;">
+      <dl>
+        <dt> Orgs for {{selectedSuggestion.display}}: </dt>
+        <dd> <pre>{{json.stringify(selectedOrgs, null, 2)}}</pre> </dd>
+      </dl>
+   </div>
+
+</div>

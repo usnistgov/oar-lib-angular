@@ -1,7 +1,8 @@
 import { NgModule, APP_INITIALIZER }     from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { AuthenticationService, OARAuthenticationService } from './auth.service';
+import { AuthenticationService, OARAuthenticationService,
+         MockAuthenticationService } from './auth.service';
 import { ConfigModule } from '../config/config.module';
 
 /**
@@ -21,4 +22,4 @@ import { ConfigModule } from '../config/config.module';
 })
 export class AuthModule { }
 
-export { AuthenticationService, OARAuthenticationService }
+export { AuthenticationService, OARAuthenticationService, MockAuthenticationService }

@@ -1,0 +1,24 @@
+<div style="margin: 2em 1em 2em 1em;">
+
+  <span class="p-float-label">
+    <p-autoComplete 
+      [(ngModel)]="selectedSuggestion" 
+      [suggestions]="suggestions" 
+      (completeMethod)="set_suggestions($event)"
+      (onSelect)="showFullRecord($event)"
+      field="display"
+      inputId="group"
+    />
+    <label for="org">Start typing an org name, number, or Abbreviation</label>
+  </span>
+
+</div>
+<div *ngIf="selected && selectedSuggestion" style="margin: 1em 0em 1em 1em;">
+
+   <p-button label="Expand Orgs" (onClick)="showAllOrgs($event)"></p-button>
+
+   <dl>
+     <dt> {{selectedSuggestion.display}}: </dt>
+     <dd> <pre>{{json.stringify(selected, null, 2)}}</pre> </dd>
+   </dl>
+</div>
