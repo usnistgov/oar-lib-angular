@@ -3,7 +3,7 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
 
 /**
  * A Panel that includes a sidebar that can be opened and closed.  When it is opened,
- * it pushes content out of the way (as opposed to covering over it).  
+ * it pushes content out of the way (as opposed to covering over it).
  */
 @Component({
     selector: 'oar-pushing-sidebar',
@@ -44,12 +44,11 @@ export class PushingSidebarComponent {
     constructor(private chref: ChangeDetectorRef) { }
 
     /**
-     * toggle whether the sidebar is visible.  When this is called, a change in 
+     * toggle whether the sidebar is visible.  When this is called, a change in
      * in the visiblity of the sidebar will be animated (either opened or closed).
      */
     toggleSbarView() {
         this._sbarvisible = ! this._sbarvisible;
-        console.log("toggling view: " + this._sbarvisible);
         this.chref.detectChanges();
     }
 
