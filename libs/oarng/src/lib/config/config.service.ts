@@ -5,6 +5,7 @@ import { Observable, Subject, throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 
 import { Configuration, ReleaseInfo, RELEASE_INFO, CONFIG_URL } from "./config.model";
+import { NamedParameters, AnyObj } from "../data/namedparams";
 import { environment } from "../../environments/environment";
 
 /**
@@ -36,7 +37,7 @@ export class ConfigurationService {
             this.config.componentRelease = this.relInfo
 
         let r: ReleaseInfo|undefined = this.config.componentRelease;
-        let msg = "app configuration loaded for ";
+        let msg = "app configuration loaded";
         if (r) msg += " for "+r.component+", version "+r.version
         console.log(msg);
     }
@@ -71,6 +72,26 @@ export class ConfigurationService {
         return (this.config ?? { }) as T;
     }
 
+    /**
+     * extract a named parameter from the (already loaded) configuration data using its
+     * hierarchical (dot-delimited) name.
+     * 
+     * This function accomplishes two things:  first, it provides a bit of syntactic 
+     * sugar for getting at deep values in the parameter hierarchy.  That is, 
+     * `cfg.get("links.orgHome")` is equivalent to `cfg.getConfig()["links"]["orgHome"]`.  
+     *
+     * The second bit of functionality is the optional parameter that allows the caller 
+     * to set the default value to return if the value is not set.  If the stored value
+     * is null or undefined, the default value is returned.  
+     * 
+     * @param param    the name of the desired parameter
+     * @param default  the default value to return if a parameter with the given name
+     *                 is not set or is null.  
+     */
+    get<T>(param: string, defval?: T | null): T | null | undefined {
+        return (new NamedParameters(this.getConfig<AnyObj>())).get(param, defval);
+    }
+    
     /**
      * Handle the HTTP errors.
      * @param error The error object.

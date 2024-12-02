@@ -14,6 +14,9 @@ describe('ConfigurationService', () => {
     // Mock configuration object
     const mockConfig: Configuration = {
         PDRDMP: 'https://oardev.nist.gov/od/ds/rpa',
+        daptool: {
+            editEnabled: true
+        }
     };
 
     beforeEach(() => {
@@ -66,6 +69,14 @@ describe('ConfigurationService', () => {
         const actualConfig: Configuration = service.getConfig();
         expect(actualConfig).toBeDefined();
         expect(actualConfig['PDRDMP']).toEqual(mockConfig['PDRDMP']);
+    });
+
+    it('should return configuration parameter', () => {
+        service.config = mockConfig;
+        expect(service.get('PDRDMP', 'unconfigured')).toEqual(mockConfig['PDRDMP']);
+        expect(service.get('daptool', 'unconfigured')).toEqual(mockConfig['daptool']);
+        expect(service.get('daptool.editEnabled')).toBe(true);
+        expect(service.get('daptool.endpoint', 'unconfigured')).toBe('unconfigured');
     });
 
 })
