@@ -1,7 +1,7 @@
 /**
  * Utilities for managing various data structures
  */
-import { NgModule } form '@angular/core';
+import { NgModule } from '@angular/core';
 
 import { NamedParameters } from './namedparams';
 import { AnyObj } from './types';
