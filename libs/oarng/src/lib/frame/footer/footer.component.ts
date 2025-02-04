@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import * as footerlinks from '../../../assets/site-constants/footer-links.json';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-footer',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.css']
 })
@@ -20,9 +25,9 @@ export class FooterComponent implements OnInit {
     // Footer link line #2
     footerLinks02: any[];
 
-    constructor() { 
+    constructor() {
         // For some reason, footerlinks does not have "default" field in unit test
-        // So we have to use following condition to make both production and unit test work. 
+        // So we have to use following condition to make both production and unit test work.
         if((footerlinks as any).default)
             this.footerLinks = (footerlinks as any).default;
         else
@@ -38,8 +43,8 @@ export class FooterComponent implements OnInit {
     }
 
     /**
-     * The classes for the first and last items are different from the items in the link array. 
-     * This function return different class name based on the index of an item. 
+     * The classes for the first and last items are different from the items in the link array.
+     * This function return different class name based on the index of an item.
      * @param index - index number of the given array
      * @param linkArray - the link array. The array's length is used to decide the position of the given index.
      * @returns class name

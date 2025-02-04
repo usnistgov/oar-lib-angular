@@ -2,9 +2,16 @@ import { Component, OnInit, Input, HostListener, Optional } from '@angular/core'
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
+import { HeaderPubComponent } from './header-pub/header-pub.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-header',
+    standalone: true,
+    imports: [
+      CommonModule,
+      HeaderPubComponent
+    ],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
     animations: [
@@ -25,13 +32,12 @@ export class HeaderComponent implements OnInit {
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
 
-
     constructor(@Optional() public authService: AuthenticationService) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
                 // console.debug('cred', cred);
                 this.credential = cred;
-                if (cred) 
+                if (cred)
                     console.debug('User identified:', cred.userId);
             });
         } else {
@@ -39,7 +45,7 @@ export class HeaderComponent implements OnInit {
             console.log('AuthenticationService is not provided.');
         }
     }
-    
+
 
     @HostListener('document:click', ['$event'])
     clickout() {
@@ -60,6 +66,6 @@ export class HeaderComponent implements OnInit {
     }
 
     goHome() {
-        
+
     }
 }
