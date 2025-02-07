@@ -61,3 +61,6 @@ m2repo
 # Visual Studio
 .vscode
 
+node_modules
+.angular
+package-lock.json

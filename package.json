@@ -9,7 +9,9 @@
     "test": "npm run test:lib",
     "test:lib": "jest --config ./libs/oarng/jest.config.js --silent",
     "build-ps-demo": "npm run build people-service --prefix ./demos/people-service",
-    "start-ps-demo": "npm run start people-service --prefix ./demos/people-service"
+    "start-ps-demo": "npm run start people-service --prefix ./demos/people-service",
+    "build-rpm-demo": "npm run build record-permissions --prefix ./demos/record-permissions",
+    "start-rpm-demo": "npm run start record-permissions --prefix ./demos/record-permissions"
   },
   "private": true,
   "dependencies": {
