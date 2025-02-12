@@ -4,11 +4,14 @@ import { WizardModule } from './wizard/wizard.module';
 import { FrameModule } from './frame/frame.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from './config/config.module';
+import { RecordPermissionsModule } from './record-permissions/record-permissions.module';
 
 @NgModule({
-    declarations: [],
+    declarations: [
+    
+  ],
     imports: [
-        WizardModule, CommonModule, FrameModule, ConfigModule, AuthModule
+        WizardModule, CommonModule, FrameModule, ConfigModule, AuthModule, RecordPermissionsModule
     ],
     providers: [
     ],
