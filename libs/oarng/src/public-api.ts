@@ -18,3 +18,6 @@ export * from './lib/auth/auth';
 export * from './lib/config/config.module';
 export * from './lib/auth/auth.module';
 export * from './lib/staffdir/staffdir.module';
+
+export * from './lib/record-permissions/record-permissions.module';
+export * from './lib/record-permissions/permissions-widget/permissions-widget.component'
