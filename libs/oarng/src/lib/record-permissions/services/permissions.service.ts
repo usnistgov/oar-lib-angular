@@ -41,7 +41,7 @@ export class PermissionsService {
     return { headers: new HttpHeaders(hdrs) };
   };
 
-  fetchMIDASRecord(recordID:string|null, recordTYPE:string|null)  {
+  fetchAcls(recordID:string|null, recordTYPE:string|null)  {
     /**
      * get MIDAS record from API
      * return the ACLs currently set for this DMP get

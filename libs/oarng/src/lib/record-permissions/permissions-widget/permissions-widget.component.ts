@@ -44,7 +44,7 @@ export class PermissionsWidgetComponent implements OnInit{
     console.log(this.recordTYPE);
 
     // Fetch initial data from the backend
-    this.midas_record_service.fetchMIDASRecord(this.recordID, this.recordTYPE).subscribe({
+    this.midas_record_service.fetchAcls(this.recordID, this.recordTYPE).subscribe({
       next: data =>{
         this.acls = data;
 
