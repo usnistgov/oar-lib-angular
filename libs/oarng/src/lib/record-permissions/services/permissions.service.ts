@@ -13,8 +13,8 @@ import { Acls } from '../types/acls.type';
 @Injectable(
   {  providedIn: 'root'  }
 )
-export class MidasRecordService {
-  PDR_API = "http://localhost:9091/midas/dmp/mdm1"//https://mdsdev.nist.gov
+export class PermissionsService {
+  PDR_API = "http://localhost:9091/midas/dmp/mdm1"//https://mdsdev.nist.gov/  id/acls
   // dmpsAPI = "http://127.0.0.1:5000/dmps"
 
   private new_midas_record: Acls = {
@@ -26,8 +26,7 @@ export class MidasRecordService {
   }
 
   constructor(
-    private http: HttpClient, 
-    // private configService: ConfigurationService, 
+    private http: HttpClient,
     private authService: AuthenticationService) {
 
       console.log("MidasService Constructor");

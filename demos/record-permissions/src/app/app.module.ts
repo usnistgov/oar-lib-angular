@@ -26,7 +26,8 @@ import { MockAuthenticationService } from 'libs/oarng/src/public-api';
     BrowserModule,
     AppRoutingModule,
     RecordPermissionsModule,
-    HttpClientModule
+    HttpClientModule,
+    ConfigModule
   ],
   providers: [
     // remove line below to switch to OARAuthenticationService for normal operation

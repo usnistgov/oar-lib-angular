@@ -3,8 +3,10 @@ import { Component, OnInit, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormBuilder } from '@angular/forms';
 // import { SDSuggestion, SDSIndex, StaffDirectoryService } from 'oarng';
 import { SDSuggestion, SDSIndex, StaffDirectoryService } from '../../staffdir/staffdir.service';
+import { ConfigurationService } from '../../config/config.service';
+import { AuthenticationService } from '../../auth/auth.service';
 import { Acls } from '../types/acls.type';
-import { MidasRecordService } from '../services/record.service';
+import { PermissionsService } from '../services/permissions.service';
 
 
 @Component({
@@ -16,8 +18,9 @@ export class PermissionsWidgetComponent implements OnInit{
   
   constructor(
     private fb: UntypedFormBuilder,
-    private midas_record_service: MidasRecordService
-    // private sdsvc: StaffDirectoryService
+    private midas_record_service: PermissionsService,
+    private configService: ConfigurationService, 
+    private authService: AuthenticationService
   ){    
     console.log("PermissionsWidgetComponent Constructor");
   }

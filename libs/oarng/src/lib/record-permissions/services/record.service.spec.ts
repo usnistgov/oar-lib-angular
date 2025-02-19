@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { RecordService } from './record.service';
+import { RecordService } from './permissions.service';
 
 describe('RecordService', () => {
   let service: RecordService;
