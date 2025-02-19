@@ -60,19 +60,20 @@ export class PermissionsService {
       apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDAP;
     }
     else{
-
-    }
-    
+      // an error should be thrown here
+      return throwError(() => new Error('Invalid Record Type Passed'));
+    }    
     
     if (recordID !==null){
       apiAddress += "/" + recordID + "/acls";
     }
-    // console.log("fetchMIDASRecord: pre get");
-    //return this.http.get<any>(apiAddress, this.getHttpOptions(creds));
+    else{
+      return throwError(() => new Error('Missing Record ID'));
+    }
     return this.authService.getCredentials().pipe(
       switchMap(creds => {
         if (! creds)
-          throwError(new Error("Authentication Failed"));
+          return throwError(() => new Error('Authentication Failed'));
         return this.http.get<any>(apiAddress, this.getHttpOptions(creds))
       })
     );
