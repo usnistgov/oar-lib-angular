@@ -1,12 +1,10 @@
 {
   "PDRDMP":"http://localhost:9091/midas/dmp/mdm1",
+  "PDRDAP":"http://localhost:9091/midas/dap/mds3",
   "auth": {
     "serviceEndpoint": "https://localhost/sso/"
   },
   "staffdir": {
       "serviceEndpoint": "http://localhost:9091/midas/nsd/oar1"
-  },
-  "beezo":{
-    "foo":"bar"
   }
 }
