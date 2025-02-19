@@ -1,7 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+
 import { MatAutocompleteModule}  from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { PermissionsWidgetComponent } from './permissions-widget/permissions-widget.component';
 
@@ -9,7 +12,11 @@ import { PermissionsWidgetComponent } from './permissions-widget/permissions-wid
   
   imports: [
     CommonModule,
-    MatAutocompleteModule
+    FormsModule,
+    ReactiveFormsModule,
+    
+    MatAutocompleteModule,
+    MatFormFieldModule
   ],
   declarations: [
     PermissionsWidgetComponent
