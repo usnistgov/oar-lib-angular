@@ -7,6 +7,7 @@ import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 
 import { Acls } from '../types/acls.type';
+import { EndPointsConfiguration } from './config.model';
 // import { PermissionsConfig } from '../types/permissions-config.model';
 
 
@@ -14,9 +15,6 @@ import { Acls } from '../types/acls.type';
   {  providedIn: 'root'  }
 )
 export class PermissionsService {
-  PDR_API = "http://localhost:9091/midas/dmp/mdm1"//https://mdsdev.nist.gov/  id/acls
-  // dmpsAPI = "http://127.0.0.1:5000/dmps"
-
   private new_midas_record: Acls = {
     read:   [],
     write:  [],
@@ -27,6 +25,7 @@ export class PermissionsService {
 
   constructor(
     private http: HttpClient,
+    private configService: ConfigurationService, 
     private authService: AuthenticationService) {
 
       console.log("MidasService Constructor");
@@ -42,14 +41,31 @@ export class PermissionsService {
     return { headers: new HttpHeaders(hdrs) };
   };
 
-  fetchMIDASRecord(recordID:string|null) {
+  fetchMIDASRecord(recordID:string|null, recordTYPE:string|null)  {
     /**
      * get MIDAS record from API
+     * return the ACLs currently set for this DMP get
+     * https://localhost/midas/dmp/mdm1/{projid}/acls
      */
+
+
+    let apiAddress:string = ""; 
+
+    if (recordTYPE === "DMP"){
+      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDMP);
+      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDMP;
+    }
+    else if(recordTYPE === "DAP"){
+      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDAP);
+      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDAP;
+    }
+    else{
+
+    }
     
-    let apiAddress:string = this.PDR_API; //this.configService.getConfig<PermissionsConfig>().PDRMIDAS;
+    
     if (recordID !==null){
-      apiAddress += "/" + recordID;
+      apiAddress += "/" + recordID + "/acls";
     }
     // console.log("fetchMIDASRecord: pre get");
     //return this.http.get<any>(apiAddress, this.getHttpOptions(creds));

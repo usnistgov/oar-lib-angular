@@ -3,11 +3,11 @@ import { Component, OnInit, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormBuilder } from '@angular/forms';
 // import { SDSuggestion, SDSIndex, StaffDirectoryService } from 'oarng';
 import { SDSuggestion, SDSIndex, StaffDirectoryService } from '../../staffdir/staffdir.service';
-import { ConfigurationService } from '../../config/config.service';
-import { AuthenticationService } from '../../auth/auth.service';
+// import { ConfigurationService } from '../../config/config.service';
+// import { AuthenticationService } from '../../auth/auth.service';
+
 import { Acls } from '../types/acls.type';
 import { PermissionsService } from '../services/permissions.service';
-
 
 @Component({
   selector: 'app-permissions-widget',
@@ -19,8 +19,8 @@ export class PermissionsWidgetComponent implements OnInit{
   constructor(
     private fb: UntypedFormBuilder,
     private midas_record_service: PermissionsService,
-    private configService: ConfigurationService, 
-    private authService: AuthenticationService
+    
+    // private authService: AuthenticationService
   ){    
     console.log("PermissionsWidgetComponent Constructor");
   }
@@ -43,11 +43,10 @@ export class PermissionsWidgetComponent implements OnInit{
     console.log(this.recordID);
     console.log(this.recordTYPE);
 
-    
     // Fetch initial data from the backend
-    this.midas_record_service.fetchMIDASRecord(this.recordID).subscribe({
+    this.midas_record_service.fetchMIDASRecord(this.recordID, this.recordTYPE).subscribe({
       next: data =>{
-        this.acls = data.acls;
+        this.acls = data;
 
       },
       error: error => {
