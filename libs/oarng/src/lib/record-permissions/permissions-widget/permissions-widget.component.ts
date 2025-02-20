@@ -34,7 +34,19 @@ export class PermissionsWidgetComponent implements OnInit{
     }
   );
 
-  acls?: Acls;
+  // We want to load the initial data via service and provide it to the child components. 
+  // Assuming that we have an Acls object I call that property initAcls:
+  /**
+   * The initial data received from the backend.
+   * Remove this if you don't have any initial form data.
+   */
+  initAcls?: Acls;
+
+  /**
+   * The current form data, provided by the child forms.
+   * This will be sent to the backend when submitting the form.
+   */
+  currAcls?: Acls;
 
   @Input() recordID: string = "";
   @Input() recordTYPE: string = "";
@@ -46,22 +58,17 @@ export class PermissionsWidgetComponent implements OnInit{
     // Fetch initial data from the backend
     this.midas_record_service.fetchAcls(this.recordID, this.recordTYPE).subscribe({
       next: data =>{
-        this.acls = data;
+        this.initAcls = data;
+        this.currAcls = data;
 
       },
       error: error => {
         console.log(error.message);
       }
 
-  });
-    
+    });
 
   }
-  /**
-   * The initial data received from the backend.
-   * Remove this if you don't have any initial form data.
-   */
-  initialACLS?: Acls;
 
   displaySelectedSDSuggestion(name:SDSuggestion):string{
     var res = name && name.display ? name.display : '';
