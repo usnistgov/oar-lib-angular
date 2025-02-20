@@ -2,7 +2,7 @@
 <p>before form</p>
 <form *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
   inside form
-
+  <pre>{{ currAcls | json }}</pre>
 
 </form>
 
