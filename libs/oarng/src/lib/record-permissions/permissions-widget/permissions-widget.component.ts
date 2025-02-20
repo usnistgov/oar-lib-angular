@@ -1,5 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { KeyValue } from '@angular/common';
 import { UntypedFormControl, UntypedFormBuilder } from '@angular/forms';
 // import { SDSuggestion, SDSIndex, StaffDirectoryService } from 'oarng';
 import { SDSuggestion, SDSIndex, StaffDirectoryService } from '../../staffdir/staffdir.service';
@@ -8,20 +7,60 @@ import { SDSuggestion, SDSIndex, StaffDirectoryService } from '../../staffdir/st
 
 import { Acls } from '../types/acls.type';
 import { PermissionsService } from '../services/permissions.service';
-import { elementAt } from 'rxjs';
 
 
-interface aclsProperties{
+interface userPermissions{
+  userID: string
   read:boolean;
   write:boolean;
   admin:boolean;
   delete:boolean;
 }
 
-interface userPermissions{
-  usrID: string
-  permissions: aclsProperties
-}
+// Schema for Contributors data table
+const CONTRIB_COL_SCHEMA = [
+
+  // {
+  //   key: 'firstName',
+  //   type: 'text',
+  //   label: 'Name',
+  // },
+  // {
+  //   key: 'lastName',
+  //   type: 'text',
+  //   label: 'Surname',
+  // },
+  {
+    key: 'userID',
+    type: 'text',
+    label: 'User ID',
+  },
+  {
+    key: 'read',
+    type: 'isSelected',
+    label: 'Read',
+    checked: false
+  },
+  {
+    key: 'write',
+    type: 'isSelected',
+    label: 'Write',
+    checked: false
+  },
+  {
+    key: 'admin',
+    type: 'isSelected',
+    label: 'Admin',
+    checked: false
+  },
+  {
+    key: 'delete',
+    type: 'isSelected',
+    label: 'Delete',
+    checked: false
+  },
+  
+]
 
 @Component({
   selector: 'app-permissions-widget',
@@ -38,6 +77,9 @@ export class PermissionsWidgetComponent implements OnInit{
   ){    
     console.log("PermissionsWidgetComponent Constructor");
   }
+
+  contrib_dispCols: string[] = CONTRIB_COL_SCHEMA.map((col) => col.key);
+  contrib_colSchema: any = CONTRIB_COL_SCHEMA;
 
   personelForm = this.fb.group(
     {
@@ -80,45 +122,45 @@ export class PermissionsWidgetComponent implements OnInit{
         //============== READ ==============
         data.read.forEach((element:string) => {
           // setup initial permissions
-          this.aclsProperties.push({usrID:element, permissions:{read:true, write:false, admin:false, delete:false}})
+          this.aclsProperties.push({userID:element, read:true, write:false, admin:false, delete:false})
         });
 
         //============== WRITE ==============
         data.write.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.usrID === element)
+          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
           if (index === -1){
             // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({usrID:element, permissions:{read:false, write:true, admin:false, delete:false}})            
+            this.aclsProperties.push({userID:element, read:false, write:true, admin:false, delete:false})
           }
           else{
             // setup read permissions for already initialized users
-            this.aclsProperties[index].permissions.write=true;
+            this.aclsProperties[index].write=true;
           }
         });
 
         //============== ADMIN ==============
         data.admin.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.usrID === element)
+          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
           if (index === -1){
             // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({usrID:element, permissions:{read:false, write:false, admin:true, delete:false}})            
+            this.aclsProperties.push({userID:element, read:false, write:false, admin:true, delete:false})            
           }
           else{
             // setup read permissions for already initialized users
-            this.aclsProperties[index].permissions.admin=true;
+            this.aclsProperties[index].admin=true;
           }
         });
 
         //============== DELTE ==============
         data.delete.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.usrID === element)
+          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
           if (index === -1){
             // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({usrID:element, permissions:{read:false, write:false, admin:false, delete:true}})
+            this.aclsProperties.push({userID:element, read:false, write:false, admin:false, delete:true})
           }
           else{
             // setup read permissions for already initialized users
-            this.aclsProperties[index].permissions.delete=true;
+            this.aclsProperties[index].delete=true;
           }
         });
         

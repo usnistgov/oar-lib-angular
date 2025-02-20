@@ -2,6 +2,46 @@
 <p>before form</p>
 <form *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
   inside form
+  <table mat-table [dataSource]="aclsProperties" class="mat-elevation-z8 contribTbl">
+      <!-- 
+        iterate over columns 
+      -->
+      <ng-container [matColumnDef]="col.key" *ngFor="let col of contrib_colSchema">
+        <!-- 
+          table headers 
+        -->
+        <th mat-header-cell *matHeaderCellDef>  {{ col.label }} </th>
+        <!-- 
+          table cells 
+        -->
+        <td mat-cell *matCellDef="let element">  
+          <!-- table cell display default cell display -->
+          <div [ngSwitch]="col.type" *ngIf="!element.isEdit">
+            <!-- Switch if the column isSelected to display the checkbox in the table cell -->
+            <ng-container *ngSwitchCase="'isSelected'" >
+              <mat-checkbox class="dmp_chk_bx"
+                (change)="element.isSelected = $event.checked" *ngIf="element[col.key]" checked
+              ></mat-checkbox>
+
+              <mat-checkbox class="dmp_chk_bx"
+                (change)="element.isSelected = $event.checked" *ngIf="!element[col.key]" 
+              ></mat-checkbox>
+
+            </ng-container>
+            
+            <!-- default cell -->
+            <span *ngSwitchDefault>
+              {{ element[col.key] }}
+            </span>
+          </div>  
+          
+  
+        </td>
+      </ng-container>
+    
+      <tr mat-header-row *matHeaderRowDef="contrib_dispCols"></tr>
+      <tr mat-row *matRowDef="let row; columns: contrib_dispCols;"></tr>
+  </table>
   <pre>{{ currAcls | json }}</pre>
 
 </form>

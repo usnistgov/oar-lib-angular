@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
-import { MatAutocompleteModule}  from '@angular/material/autocomplete';
+import { MatAutocompleteModule }  from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTableModule } from '@angular/material/table';
 
 import { PermissionsWidgetComponent } from './permissions-widget/permissions-widget.component';
+
 
 @NgModule({
   
@@ -16,7 +19,9 @@ import { PermissionsWidgetComponent } from './permissions-widget/permissions-wid
     ReactiveFormsModule,
     
     MatAutocompleteModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatCheckboxModule,
+    MatTableModule
   ],
   declarations: [
     PermissionsWidgetComponent
