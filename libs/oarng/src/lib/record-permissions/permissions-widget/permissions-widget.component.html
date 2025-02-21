@@ -42,6 +42,9 @@
       <tr mat-header-row *matHeaderRowDef="contrib_dispCols"></tr>
       <tr mat-row *matRowDef="let row; columns: contrib_dispCols;"></tr>
   </table>
+  <button mat-button type="button" class="btn_draft" (click)="saveAcls()">
+    Save Draft
+  </button>
   <pre>{{ currAcls | json }}</pre>
 
 </form>

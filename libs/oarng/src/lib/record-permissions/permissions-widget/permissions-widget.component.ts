@@ -71,7 +71,7 @@ export class PermissionsWidgetComponent implements OnInit{
   
   constructor(
     private fb: UntypedFormBuilder,
-    private midas_record_service: PermissionsService,
+    private record_permissions_service: PermissionsService,
     
     // private authService: AuthenticationService
   ){    
@@ -102,7 +102,7 @@ export class PermissionsWidgetComponent implements OnInit{
    * The current form data, provided by the child forms.
    * This will be sent to the backend when submitting the form.
    */
-  currAcls?: Acls;
+  currAcls: Acls = {read:[], write:[], admin:[], delete:[]};
 
   aclsProperties: Array<userPermissions> = []
 
@@ -114,10 +114,9 @@ export class PermissionsWidgetComponent implements OnInit{
     console.log(this.recordTYPE);
 
     // Fetch initial data from the backend
-    this.midas_record_service.fetchAcls(this.recordID, this.recordTYPE).subscribe({
+    this.record_permissions_service.fetchAcls(this.recordID, this.recordTYPE).subscribe({
       next: data =>{
         this.initAcls = data;
-        this.currAcls = data;
         this.initiateAclsProperties(data);
 
       },
@@ -209,6 +208,51 @@ export class PermissionsWidgetComponent implements OnInit{
       this.aclsProperties[index].delete=checked;
     }
 
+  }
+
+  /**
+   * Converts acls permissions to the required format
+   */
+  convertAcls(){
+    this.currAcls = {read:[], write:[], admin:[], delete:[]};
+    this.aclsProperties.forEach(
+      (user)=>{
+        if (user.read){
+          this.currAcls?.read.push(user.userID);
+        }
+
+        if (user.write){
+          this.currAcls?.write.push(user.userID);
+        }
+
+        if (user.admin){
+          this.currAcls?.admin.push(user.userID);
+        }
+
+        if (user.delete){
+          this.currAcls?.delete.push(user.userID);
+        }
+      }
+    );
+
+  }
+
+  saveAcls(){
+    this.convertAcls();
+    console.log(this.currAcls);
+    this.record_permissions_service.updateAcls(this.recordID, this.recordTYPE, this.currAcls).subscribe(
+      {
+        next: data => {
+          //try to reload the page to read the saved dmp from mongodb
+          // this.router.navigate(['edit', this.id]);
+          alert("Successfuly saved record permissions");
+        },
+        error: error => {
+          console.log(error.message);
+        }
+        
+      }
+    );
   }
 
   onSubmit(){}

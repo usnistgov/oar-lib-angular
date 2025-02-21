@@ -15,13 +15,6 @@ import { EndPointsConfiguration } from './config.model';
   {  providedIn: 'root'  }
 )
 export class PermissionsService {
-  private new_midas_record: Acls = {
-    read:   [],
-    write:  [],
-    admin:  [],
-    delete: []
-
-  }
 
   constructor(
     private http: HttpClient,
@@ -49,17 +42,9 @@ export class PermissionsService {
      */
 
 
-    let apiAddress:string = ""; 
+    let apiAddress:string = this.constructEndpointAddress(recordTYPE); 
 
-    if (recordTYPE === "DMP"){
-      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDMP);
-      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDMP;
-    }
-    else if(recordTYPE === "DAP"){
-      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDAP);
-      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDAP;
-    }
-    else{
+    if (apiAddress === ""){
       // an error should be thrown here
       return throwError(() => new Error('Invalid Record Type Passed'));
     }    
@@ -78,6 +63,42 @@ export class PermissionsService {
       })
     );
     
+  }
+
+  constructEndpointAddress(recordTYPE:string|null){
+    let apiAddress =  "";
+    if (recordTYPE === "DMP"){
+      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDMP);
+      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDMP;
+    }
+    else if(recordTYPE === "DAP"){
+      console.log(this.configService.getConfig<EndPointsConfiguration>().PDRDAP);
+      apiAddress = this.configService.getConfig<EndPointsConfiguration>().PDRDAP;
+    }
+    return apiAddress;
+
+  }
+
+  updateAcls(recordID:string|null, recordTYPE:string|null, acls:Acls)  {
+    let apiAddress:string = this.constructEndpointAddress(recordTYPE); 
+
+    if (apiAddress === ""){
+      // an error should be thrown here
+      return throwError(() => new Error('Invalid Record Type Passed'));
+    }    
     
+    if (recordID !==null){
+      apiAddress += "/" + recordID + "/acls";
+    }
+    else{
+      return throwError(() => new Error('Missing Record ID'));
+    }
+    return this.authService.getCredentials().pipe(
+      switchMap(creds => {
+        if (! creds)
+          return throwError(() => new Error('Authentication Failed'));
+        return this.http.put<any>(apiAddress, JSON.stringify(acls), this.getHttpOptions(creds))
+      })
+    );
   }
 }
