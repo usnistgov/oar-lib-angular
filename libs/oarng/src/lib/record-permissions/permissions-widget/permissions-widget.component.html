@@ -20,11 +20,11 @@
             <!-- Switch if the column isSelected to display the checkbox in the table cell -->
             <ng-container *ngSwitchCase="'isSelected'" >
               <mat-checkbox class="dmp_chk_bx"
-                (change)="element.isSelected = $event.checked" *ngIf="element[col.key]" checked
+              (click)="updateAclsProperties(element.userID, element.isSelected, col.key)" (change)="element.isSelected = $event.checked" *ngIf="element[col.key]" checked 
               ></mat-checkbox>
 
               <mat-checkbox class="dmp_chk_bx"
-                (change)="element.isSelected = $event.checked" *ngIf="!element[col.key]" 
+              (click)="updateAclsProperties(element.userID, element.isSelected, col.key)" (change)="element.isSelected = $event.checked" *ngIf="!element[col.key]" 
               ></mat-checkbox>
 
             </ng-container>

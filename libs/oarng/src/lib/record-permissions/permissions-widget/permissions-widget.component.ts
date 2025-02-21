@@ -118,52 +118,7 @@ export class PermissionsWidgetComponent implements OnInit{
       next: data =>{
         this.initAcls = data;
         this.currAcls = data;
-
-        //============== READ ==============
-        data.read.forEach((element:string) => {
-          // setup initial permissions
-          this.aclsProperties.push({userID:element, read:true, write:false, admin:false, delete:false})
-        });
-
-        //============== WRITE ==============
-        data.write.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
-          if (index === -1){
-            // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({userID:element, read:false, write:true, admin:false, delete:false})
-          }
-          else{
-            // setup read permissions for already initialized users
-            this.aclsProperties[index].write=true;
-          }
-        });
-
-        //============== ADMIN ==============
-        data.admin.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
-          if (index === -1){
-            // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({userID:element, read:false, write:false, admin:true, delete:false})            
-          }
-          else{
-            // setup read permissions for already initialized users
-            this.aclsProperties[index].admin=true;
-          }
-        });
-
-        //============== DELTE ==============
-        data.delete.forEach( (element:string) =>{
-          const index = this.aclsProperties.findIndex( (id) => id.userID === element)
-          if (index === -1){
-            // the permissions for this user have not been set up yet so initialize them
-            this.aclsProperties.push({userID:element, read:false, write:false, admin:false, delete:true})
-          }
-          else{
-            // setup read permissions for already initialized users
-            this.aclsProperties[index].delete=true;
-          }
-        });
-        
+        this.initiateAclsProperties(data);
 
       },
       error: error => {
@@ -174,9 +129,85 @@ export class PermissionsWidgetComponent implements OnInit{
 
   }
 
+  initiateAclsProperties(data:Acls){
+    //============== READ ==============
+    data.read.forEach((element:string) => {
+      // setup initial permissions
+      this.aclsProperties.push({userID:element, read:true, write:false, admin:false, delete:false});
+    });
+
+    //============== WRITE ==============
+    data.write.forEach( (element:string) =>{
+      const index = this.aclsProperties.findIndex( (id) => id.userID === element);
+      if (index === -1){
+        // the permissions for this user have not been set up yet so initialize them
+        this.aclsProperties.push({userID:element, read:false, write:true, admin:false, delete:false});
+      }
+      else{
+        // setup read permissions for already initialized users
+        this.aclsProperties[index].write=true;
+      }
+    });
+
+    //============== ADMIN ==============
+    data.admin.forEach( (element:string) =>{
+      const index = this.aclsProperties.findIndex( (id) => id.userID === element);
+      if (index === -1){
+        // the permissions for this user have not been set up yet so initialize them
+        this.aclsProperties.push({userID:element, read:false, write:false, admin:true, delete:false});      
+      }
+      else{
+        // setup read permissions for already initialized users
+        this.aclsProperties[index].admin=true;
+      }
+    });
+
+    //============== DELTE ==============
+    data.delete.forEach( (element:string) =>{
+      const index = this.aclsProperties.findIndex( (id) => id.userID === element);
+      if (index === -1){
+        // the permissions for this user have not been set up yet so initialize them
+        this.aclsProperties.push({userID:element, read:false, write:false, admin:false, delete:true})
+      }
+      else{
+        // setup read permissions for already initialized users
+        this.aclsProperties[index].delete=true;
+      }
+    });
+
+  }
+
   displaySelectedSDSuggestion(name:SDSuggestion):string{
     var res = name && name.display ? name.display : '';
     return res;
+
+  }
+
+  updateAclsProperties(usr:string, checked:boolean, permission:string){
+    var index = this.aclsProperties.findIndex( (id) => id.userID === usr);
+    console.log(usr);
+    console.log(permission);
+    console.log(checked);
+    if (index === -1){
+      //added new user so initialize new entry and set all permissions to false
+      this.aclsProperties.push({userID:usr, read:false, write:false, admin:false, delete:true})
+      
+      //get index of newly inserted user
+      index = this.aclsProperties.findIndex( (id) => id.userID === usr);      
+    }    
+    
+    if (permission === "read"){
+      this.aclsProperties[index].read=checked;
+    }
+    else if(permission === "write"){
+      this.aclsProperties[index].write=checked;
+    }
+    else if(permission === "admin"){
+      this.aclsProperties[index].admin=checked;
+    }
+    else if(permission === "delete"){
+      this.aclsProperties[index].delete=checked;
+    }
 
   }
 
