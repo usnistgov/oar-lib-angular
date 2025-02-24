@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -24,10 +25,12 @@ import { MockAuthenticationService } from 'libs/oarng/src/public-api';
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     RecordPermissionsModule,
     HttpClientModule,
-    ConfigModule
+    ConfigModule,
+    StaffDirModule
   ],
   providers: [
     // remove line below to switch to OARAuthenticationService for normal operation
