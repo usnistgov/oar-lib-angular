@@ -30,6 +30,13 @@ const CONTRIB_COL_SCHEMA = [
   //   type: 'text',
   //   label: 'Surname',
   // },
+
+  // Edit button column
+  {
+    key: 'isEdit',
+    type: 'isEdit',
+    label: '',
+  },
   {
     key: 'userID',
     type: 'text',
@@ -253,6 +260,16 @@ export class PermissionsWidgetComponent implements OnInit{
         
       }
     );
+  }
+
+  removeRow(id:userPermissions) {
+    const result = confirm("Are you sure you want to remove all privileges from "+ id.userID + " for this record?");
+    console.log(id);
+    if (result) {
+      this.aclsProperties = this.aclsProperties.filter(
+        (row) => row.userID !== id.userID        
+      );
+    }
   }
 
   onSubmit(){}
