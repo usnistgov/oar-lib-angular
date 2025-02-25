@@ -7,6 +7,7 @@ import { MatAutocompleteModule }  from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
+import { MatInputModule } from '@angular/material/input';
 
 import { PermissionsWidgetComponent } from './permissions-widget/permissions-widget.component';
 
@@ -21,7 +22,8 @@ import { PermissionsWidgetComponent } from './permissions-widget/permissions-wid
     MatAutocompleteModule,
     MatFormFieldModule,
     MatCheckboxModule,
-    MatTableModule
+    MatTableModule,
+    MatInputModule
   ],
   declarations: [
     PermissionsWidgetComponent

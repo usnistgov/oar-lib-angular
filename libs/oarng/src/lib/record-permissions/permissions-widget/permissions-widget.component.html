@@ -2,22 +2,24 @@
 <p>before form</p>
 <form *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
   inside form
-  <div [formGroup]="personelForm">
+  <mat-form-field class="example-full-width" appearance="fill" style="width:300px;">
+    <!-- <mat-label>NIST Contributor</mat-label> -->
     <input type="text"
           placeholder="Type to search ..."
           aria-label="Nist Contributor"
           style="background-color: rgb(252, 252, 252);"
           matInput
-          formControlName="dmp_contributor"
+          [formControl]="personelForm.controls['dmp_contributor']"
           [matAutocomplete]="dmp_contributor">
-    
-    <mat-autocomplete #dmp_contributor="matAutocomplete"  [displayWith]="displaySelectedSDSuggestion"
+    <mat-autocomplete 
+      #dmp_contributor="matAutocomplete"
+      [displayWith]="displaySelectedSDSuggestion"
     >
       <mat-option *ngFor="let contrib of fltr_NIST_Contributor | async" [value]="contrib">
         {{contrib.display}}
       </mat-option>
     </mat-autocomplete>
-  </div>
+  </mat-form-field>
 
   <table mat-table [dataSource]="aclsProperties" class="mat-elevation-z8 contribTbl">
       <!-- 
