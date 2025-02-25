@@ -70,7 +70,7 @@ const CONTRIB_COL_SCHEMA = [
 @Component({
   selector: 'app-permissions-widget',
   templateUrl: './permissions-widget.component.html',
-  styleUrls: ['./permissions-widget.component.css']
+  styleUrls: ['./permissions-widget.component.scss']
 })
 export class PermissionsWidgetComponent implements OnInit{
   
@@ -379,6 +379,10 @@ export class PermissionsWidgetComponent implements OnInit{
         (row) => row.userID !== id.userID        
       );
     }
+  }
+
+  addUser(){
+
   }
 
   onSubmit(){}

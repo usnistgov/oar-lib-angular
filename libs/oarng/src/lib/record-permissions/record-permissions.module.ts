@@ -9,6 +9,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 
+
 import { PermissionsWidgetComponent } from './permissions-widget/permissions-widget.component';
 
 
@@ -33,4 +34,4 @@ import { PermissionsWidgetComponent } from './permissions-widget/permissions-wid
     PermissionsWidgetComponent
   ]
 })
-export class RecordPermissionsModule { }
+export class RecordPermissionsModule {}

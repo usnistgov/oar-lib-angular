@@ -254,7 +254,8 @@
                             "demos/record-permissions/src/assets"
                         ],
                         "styles": [
-                            "demos/record-permissions/src/styles.scss"
+                            "node_modules/@angular/material/prebuilt-themes/deeppurple-amber.css",
+                            "demos/record-permissions/src/styles.scss"                            
                         ],
                         "scripts": []
                     },

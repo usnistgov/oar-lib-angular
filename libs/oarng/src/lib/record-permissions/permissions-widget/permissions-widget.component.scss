@@ -1,0 +1,23 @@
+$button_red: #B20000;
+
+.ns{
+  color: black;
+  font-weight:600
+}
+
+.button-add-row {
+  line-height: 20px;
+  background: #1b2f9e;
+  color: #ffffff;
+}
+
+.button-remove {
+  line-height: 20px;
+  color: $button_red;
+}
+
+:disabled{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #575656;
+}

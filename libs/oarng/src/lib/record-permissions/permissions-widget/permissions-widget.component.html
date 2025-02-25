@@ -1,8 +1,7 @@
-<p>permissions widget</p>
-<p>before form</p>
 <form *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
-  inside form
-  <mat-form-field class="example-full-width" appearance="fill" style="width:300px;">
+  <span class="n1">inside form</span> <br>
+  <span class="ns">Search for NIST staff meber:</span> <br>
+  <mat-form-field  appearance="fill" style="width:300px;">
     <!-- <mat-label>NIST Contributor</mat-label> -->
     <input type="text"
           placeholder="Type to search ..."
@@ -20,6 +19,9 @@
       </mat-option>
     </mat-autocomplete>
   </mat-form-field>
+
+  <br>
+  <button type="button" class="button-add-row" mat-button (click)="addUser()" [disabled]="disableAdd">Add</button>
 
   <table mat-table [dataSource]="aclsProperties" class="mat-elevation-z8 contribTbl">
       <!-- 
@@ -79,5 +81,3 @@
   <pre>{{ currAcls | json }}</pre>
 
 </form>
-
-<p>outside form</p>
