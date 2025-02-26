@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { FormsModule, FormBuilder, ReactiveFormsModule, UntypedFormControl, UntypedFormBuilder, FormControl } from '@angular/forms';
+import { FormsModule, FormBuilder, ReactiveFormsModule, UntypedFormControl, UntypedFormBuilder, FormControl, DefaultValueAccessor } from '@angular/forms';
 import { Observable, switchMap, map, catchError } from 'rxjs';
 
 import { SDSuggestion, SDSIndex, StaffDirectoryService } from '../../staffdir/staffdir.service';
@@ -75,7 +75,7 @@ const CONTRIB_COL_SCHEMA = [
 export class PermissionsWidgetComponent implements OnInit{
   
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private record_permissions_service: PermissionsService,    
     private sdsvc: StaffDirectoryService
   ){    
@@ -89,7 +89,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
   personelForm = this.fb.group(
     {
-      dmp_contributor:            new FormControl ()
+      dmp_contributor:            new FormControl(''),
     }
   );
 
@@ -110,6 +110,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
   crntContribName:string = '';
   crntContribSurname:string  = '';
+  crntContribUserName:string  = '';
   
   fltr_NIST_Contributor!: Observable<SDSuggestion[]>;
 
@@ -193,6 +194,11 @@ export class PermissionsWidgetComponent implements OnInit{
       }
     });
 
+    this.personelForm.setValue({
+      dmp_contributor:'',
+    });
+    
+
   }
 
   getNistContactsFromAPI(){
@@ -213,8 +219,8 @@ export class PermissionsWidgetComponent implements OnInit{
           return usrInput.getRecord().pipe(
             map((rec:any) =>{ // typecast return of getRecord as 'any' since we're expecting an object type there
               this.crntContribName = rec.firstName;
-              this.crntContribSurname = rec.lastName;            
-              
+              this.crntContribSurname = rec.lastName;          
+              this.crntContribUserName = rec.nistUsername;
 
               // clear sarch suggestions since the user has selected an option from drop down menu
               this.sd_index = null;
@@ -382,7 +388,26 @@ export class PermissionsWidgetComponent implements OnInit{
   }
 
   addUser(){
+    console.log("add User");
+    // add write priviledge by default
+    const newRow = {userID:this.crntContribUserName, read:true, write:false, admin:false, delete:true}
+    
+    // create a new array using an existing array as one part of it 
+    // using the spread operator '...'
+    this.aclsProperties = [newRow, ...this.aclsProperties];
+    this.resetContributorFields();
 
+  }
+
+  /**
+   * Resets form fields for Contributor personnel
+   */
+  private resetContributorFields(){
+    this.crntContribName = '';
+    this.crntContribSurname = '';
+    this.crntContribUserName = '';
+    this.personelForm.controls['dmp_contributor'].setValue("");
+    this.disableAdd = true;
   }
 
   onSubmit(){}

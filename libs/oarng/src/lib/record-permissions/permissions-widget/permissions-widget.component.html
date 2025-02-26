@@ -1,4 +1,4 @@
-<form *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
+<form [formGroup]="personelForm" *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
   <span class="n1">inside form</span> <br>
   <span class="ns">Search for NIST staff meber:</span> <br>
   <mat-form-field  appearance="fill" style="width:300px;">
@@ -8,7 +8,7 @@
           aria-label="Nist Contributor"
           style="background-color: rgb(252, 252, 252);"
           matInput
-          [formControl]="personelForm.controls['dmp_contributor']"
+          formControlName="dmp_contributor"
           [matAutocomplete]="dmp_contributor">
     <mat-autocomplete 
       #dmp_contributor="matAutocomplete"
