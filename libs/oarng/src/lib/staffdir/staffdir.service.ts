@@ -290,6 +290,31 @@ export class StaffDirectoryService {
     }
 
     /**
+     * return the metadata describing a staff person given its ORCID identifier or null 
+     * if the identifier is not found.
+     */
+    public getPersonByUserName(username: string) : Observable<anyobj|null> {
+        let url = StaffDirectoryService.PEOPLE_EP + "?with_nistUsername=" + username
+        return this._get(url).pipe(
+            map<any, anyobj>((r) => {
+                if (r instanceof Array) {
+                    if (r.length > 0)
+                        return r[0];
+                    return null;
+                }
+
+                let msg = "Unexpected response from staff service: not an array"
+                console.error(msg);
+                throw new Error(msg);
+            }),
+            catchError((e) => {
+                this._handleHTTPError(e);
+                throw "Unhandled error: "+e;
+            })
+        );
+    }
+
+    /**
      * return an index for person records that match a given prompt.  The items in the index
      * reference records where the last name or first name of the person starts with the 
      * prompt string.  
