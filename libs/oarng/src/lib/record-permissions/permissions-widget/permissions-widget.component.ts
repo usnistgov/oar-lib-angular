@@ -78,8 +78,7 @@ export class PermissionsWidgetComponent implements OnInit{
     private fb: UntypedFormBuilder,
     private record_permissions_service: PermissionsService,    
     private sdsvc: StaffDirectoryService
-  ){    
-    console.log("PermissionsWidgetComponent Constructor");
+  ){
     this.getNistContactsFromAPI();
     
   }
@@ -130,8 +129,6 @@ export class PermissionsWidgetComponent implements OnInit{
   @Input() recordTYPE: string = "";
 
   ngOnInit(): void {
-    console.log(this.recordID);
-    console.log(this.recordTYPE);
 
     // Fetch initial data from the backend
     this.record_permissions_service.fetchAcls(this.recordID, this.recordTYPE).subscribe({
@@ -306,9 +303,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
   updateAclsProperties(usr:string, checked:boolean, permission:string){
     var index = this.aclsProperties.findIndex( (id) => id.userID === usr);
-    console.log(usr);
-    console.log(permission);
-    console.log(checked);
+
     if (index === -1){
       //added new user so initialize new entry and set all permissions to false
       this.aclsProperties.push({userID:usr, read:false, write:false, admin:false, delete:true})
@@ -361,7 +356,6 @@ export class PermissionsWidgetComponent implements OnInit{
 
   saveAcls(){
     this.convertAcls();
-    console.log(this.currAcls);
     this.record_permissions_service.updateAcls(this.recordID, this.recordTYPE, this.currAcls).subscribe(
       {
         next: data => {
@@ -379,7 +373,6 @@ export class PermissionsWidgetComponent implements OnInit{
 
   removeRow(id:userPermissions) {
     const result = confirm("Are you sure you want to remove all privileges from "+ id.userID + " for this record?");
-    console.log(id);
     if (result) {
       this.aclsProperties = this.aclsProperties.filter(
         (row) => row.userID !== id.userID        
@@ -388,21 +381,20 @@ export class PermissionsWidgetComponent implements OnInit{
   }
 
   addUser(){
-    console.log("add User");
     // add write priviledge by default
-    const newRow = {userID:this.crntContribUserName, read:true, write:false, admin:false, delete:true}
+    const newRow = {userID:this.crntContribUserName, read:true, write:false, admin:false, delete:false}
     
     // create a new array using an existing array as one part of it 
     // using the spread operator '...'
     this.aclsProperties = [newRow, ...this.aclsProperties];
-    this.resetContributorFields();
+    this.resetFormFields();
 
   }
 
   /**
-   * Resets form fields for Contributor personnel
+   * Resets form fields
    */
-  private resetContributorFields(){
+  private resetFormFields(){
     this.crntContribName = '';
     this.crntContribSurname = '';
     this.crntContribUserName = '';
