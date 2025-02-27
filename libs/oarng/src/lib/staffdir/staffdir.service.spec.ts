@@ -75,6 +75,23 @@ describe('StaffServiceService', () => {
         expect(person).toEqual(pdata);
     });
 
+    it('getPersonByUserName()', async () => {
+        const pdata = {
+            peopleID: 3,
+            lastName: "Cranston",
+            firstName: "Gurn",
+            orcid: "0000",
+            nistUsername: "grc0"
+        };
+        const svcpromise = service.getPersonByUserName("grc0").toPromise();
+        const req = httpMock.expectOne(svcep+"/People?with_nistUsername="+pdata.nistUsername);
+        expect(req.request.method).toBe('GET');
+        req.flush([pdata]);
+
+        const person = await svcpromise;
+        expect(person).toEqual(pdata);
+    });
+
     it('getPeopleIndexFor()', async () => {
         const pdata = {
             peopleID: 3,
