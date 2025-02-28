@@ -1,5 +1,5 @@
 <form [formGroup]="personelForm" *ngIf="initAcls" (ngSubmit)="onSubmit()"  method="post">
-  <span class="n1">inside form</span> <br>
+  
   <span class="ns">Search for NIST staff member:</span> <br>
   <mat-form-field  appearance="fill" style="width:300px;">
     <!-- <mat-label>NIST Contributor</mat-label> -->
@@ -76,8 +76,8 @@
       <tr mat-row *matRowDef="let row; columns: contrib_dispCols;"></tr>
   </table>
   <button mat-button type="button" class="btn_draft" (click)="saveAcls()">
-    Save Draft
+    Save Changes
   </button>
-  <pre>{{ currAcls | json }}</pre>
+  <!-- <pre>{{ currAcls | json }}</pre> -->
 
 </form>

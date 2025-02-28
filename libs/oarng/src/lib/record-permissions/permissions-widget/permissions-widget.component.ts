@@ -99,7 +99,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
   crntContribName:string = '';
   //crntContribSurname:string  = '';
-  crntContribUserName:string  = '';
+  nistUsername:string  = '';
   
   fltr_NIST_Contributor!: Observable<SDSuggestion[]>;
 
@@ -126,7 +126,7 @@ export class PermissionsWidgetComponent implements OnInit{
         this.initAcls = data;
         this.initiateAclsProperties(data);
         this.setUserNames();
-
+        
       },
       error: error => {
         console.log(error.message);
@@ -188,23 +188,31 @@ export class PermissionsWidgetComponent implements OnInit{
         this.sdsvc.getPersonByUserName(person.userID).subscribe(
           {
             next:(usrInfo:any) => {
-              var usrName:string = '';
               if(usrInfo !== null){
-                if (usrInfo['altFirstname'] || usrInfo['altFirstName'] !== ''){
-                  usrName = usrInfo['altFirstName'];
-                }
-                else{
-                  usrName = usrInfo['firstName'];
-                }
-      
-                usrName += ", "+ usrInfo['lastName'];
-                person.name = usrName;
+                person.name = this.makeFullUserName(usrInfo);
+                // Sort by name in ascending order
+                this.aclsProperties =this.aclsProperties.slice().sort((a, b) =>  a.name.localeCompare(b.name));
               }
             }
           }
         );
       }
     );
+  }
+
+  makeFullUserName(rec:any):string{
+    // ==================================================================
+    // use below if we want to display alternate first name
+    // ==================================================================
+
+    // var usrName:string = '';
+    // if (typeof rec['altFirstName'] === 'string' && rec['altFirstName'] !== ''){
+    //   usrName = rec['lastName'] + " "+ rec['altFirstName'];
+    // }
+    // else{
+    //   usrName = rec['lastName'] + " "+ rec['firstName'];
+    // }
+    return rec['lastName'] + ", "+ rec['firstName'];
   }
   
 
@@ -225,9 +233,9 @@ export class PermissionsWidgetComponent implements OnInit{
           this.presonID = usrInput.id;
           return usrInput.getRecord().pipe(
             map((rec:any) =>{ // typecast return of getRecord as 'any' since we're expecting an object type there
-              this.crntContribName = rec.firstName;
+              this.crntContribName = this.makeFullUserName(rec);
                  
-              this.crntContribUserName = rec.nistUsername;
+              this.nistUsername = rec.nistUsername;
 
               // clear sarch suggestions since the user has selected an option from drop down menu
               this.sd_index = null;
@@ -393,13 +401,25 @@ export class PermissionsWidgetComponent implements OnInit{
   }
 
   addUser(){
-    // add write priviledge by default
-    const newRow = {userID:this.crntContribUserName, name:'', read:true, write:false, admin:false, delete:false}
+    // check if user is already in the list
+    const index = this.aclsProperties.findIndex( (id) => id.userID === this.nistUsername);
+    if (index === -1){
+      // the permissions for this user have not been set up yet so initialize them
+      // add write priviledge by default
+      const newRow = {userID:this.nistUsername, name:this.crntContribName, read:true, write:false, admin:false, delete:false}
+      
+      // create a new array using an existing array as one part of it 
+      // using the spread operator '...'
+      this.aclsProperties = [newRow, ...this.aclsProperties];
+      // Sort by name in ascending order
+      this.aclsProperties =this.aclsProperties.slice().sort((a, b) =>  a.name.localeCompare(b.name));
+      this.resetFormFields();
+    }
+    else{
+      // send alert that this user is already in the table
+      alert("This has already been assigned privileges for this record. You can change them by clicking on check boxes.")
+    }
     
-    // create a new array using an existing array as one part of it 
-    // using the spread operator '...'
-    this.aclsProperties = [newRow, ...this.aclsProperties];
-    this.resetFormFields();
 
   }
 
@@ -409,7 +429,7 @@ export class PermissionsWidgetComponent implements OnInit{
   private resetFormFields(){
     this.crntContribName = '';
     // this.crntContribSurname = '';
-    this.crntContribUserName = '';
+    this.nistUsername = '';
     this.personelForm.controls['dmp_contributor'].setValue("");
     this.disableAdd = true;
   }
