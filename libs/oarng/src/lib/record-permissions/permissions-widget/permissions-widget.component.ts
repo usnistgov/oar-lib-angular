@@ -9,6 +9,7 @@ import { PermissionsService } from '../services/permissions.service';
 
 interface userPermissions{
   userID: string
+  name:string
   read:boolean;
   write:boolean;
   admin:boolean;
@@ -18,17 +19,6 @@ interface userPermissions{
 // Schema for Contributors data table
 const CONTRIB_COL_SCHEMA = [
 
-  // {
-  //   key: 'firstName',
-  //   type: 'text',
-  //   label: 'Name',
-  // },
-  // {
-  //   key: 'lastName',
-  //   type: 'text',
-  //   label: 'Surname',
-  // },
-
   // Edit button column
   {
     key: 'isEdit',
@@ -36,9 +26,9 @@ const CONTRIB_COL_SCHEMA = [
     label: '',
   },
   {
-    key: 'userID',
+    key: 'name',
     type: 'text',
-    label: 'User ID',
+    label: 'User Name',
   },
   {
     key: 'read',
@@ -108,7 +98,7 @@ export class PermissionsWidgetComponent implements OnInit{
   aclsProperties: Array<userPermissions> = []
 
   crntContribName:string = '';
-  crntContribSurname:string  = '';
+  //crntContribSurname:string  = '';
   crntContribUserName:string  = '';
   
   fltr_NIST_Contributor!: Observable<SDSuggestion[]>;
@@ -135,6 +125,7 @@ export class PermissionsWidgetComponent implements OnInit{
       next: data =>{
         this.initAcls = data;
         this.initiateAclsProperties(data);
+        this.setUserNames();
 
       },
       error: error => {
@@ -142,14 +133,13 @@ export class PermissionsWidgetComponent implements OnInit{
       }
 
     });
-
   }
 
   initiateAclsProperties(data:Acls){
     //============== READ ==============
-    data.read.forEach((element:string) => {
+     data.read.forEach((element:string) => {
       // setup initial permissions
-      this.aclsProperties.push({userID:element, read:true, write:false, admin:false, delete:false});
+      this.aclsProperties.push({userID:element, name:'', read:true, write:false, admin:false, delete:false});
     });
 
     //============== WRITE ==============
@@ -157,7 +147,7 @@ export class PermissionsWidgetComponent implements OnInit{
       const index = this.aclsProperties.findIndex( (id) => id.userID === element);
       if (index === -1){
         // the permissions for this user have not been set up yet so initialize them
-        this.aclsProperties.push({userID:element, read:false, write:true, admin:false, delete:false});
+        this.aclsProperties.push({userID:element, name:'', read:false, write:true, admin:false, delete:false});
       }
       else{
         // setup read permissions for already initialized users
@@ -170,7 +160,7 @@ export class PermissionsWidgetComponent implements OnInit{
       const index = this.aclsProperties.findIndex( (id) => id.userID === element);
       if (index === -1){
         // the permissions for this user have not been set up yet so initialize them
-        this.aclsProperties.push({userID:element, read:false, write:false, admin:true, delete:false});      
+        this.aclsProperties.push({userID:element, name:'', read:false, write:false, admin:true, delete:false});
       }
       else{
         // setup read permissions for already initialized users
@@ -178,25 +168,45 @@ export class PermissionsWidgetComponent implements OnInit{
       }
     });
 
-    //============== DELTE ==============
+    // ============== DELTE ==============
     data.delete.forEach( (element:string) =>{
       const index = this.aclsProperties.findIndex( (id) => id.userID === element);
       if (index === -1){
         // the permissions for this user have not been set up yet so initialize them
-        this.aclsProperties.push({userID:element, read:false, write:false, admin:false, delete:true})
+        this.aclsProperties.push({userID:element, name:'', read:false, write:false, admin:false, delete:true});
       }
       else{
         // setup read permissions for already initialized users
         this.aclsProperties[index].delete=true;
       }
     });
-
-    this.personelForm.setValue({
-      dmp_contributor:'',
-    });
-    
-
   }
+
+  setUserNames(){
+    this.aclsProperties.forEach(
+      (person)=>{
+        this.sdsvc.getPersonByUserName(person.userID).subscribe(
+          {
+            next:(usrInfo:any) => {
+              var usrName:string = '';
+              if(usrInfo !== null){
+                if (usrInfo['altFirstname'] || usrInfo['altFirstName'] !== ''){
+                  usrName = usrInfo['altFirstName'];
+                }
+                else{
+                  usrName = usrInfo['firstName'];
+                }
+      
+                usrName += ", "+ usrInfo['lastName'];
+                person.name = usrName;
+              }
+            }
+          }
+        );
+      }
+    );
+  }
+  
 
   getNistContactsFromAPI(){
     this.fltr_NIST_Contributor = this.personelForm.controls['dmp_contributor'].valueChanges.pipe(
@@ -204,7 +214,7 @@ export class PermissionsWidgetComponent implements OnInit{
         // clear values until the user has picked a selection. 
         // This forces the form to accept only values that were selected from the dropdown menu
         this.crntContribName = '';
-        this.crntContribSurname = '';
+        // this.crntContribSurname = '';
 
         const val = typeof usrInput === 'string'; //checks the type of input value
         if (!val){ 
@@ -216,7 +226,7 @@ export class PermissionsWidgetComponent implements OnInit{
           return usrInput.getRecord().pipe(
             map((rec:any) =>{ // typecast return of getRecord as 'any' since we're expecting an object type there
               this.crntContribName = rec.firstName;
-              this.crntContribSurname = rec.lastName;          
+                 
               this.crntContribUserName = rec.nistUsername;
 
               // clear sarch suggestions since the user has selected an option from drop down menu
@@ -295,6 +305,8 @@ export class PermissionsWidgetComponent implements OnInit{
     );
   }
 
+ 
+
   displaySelectedSDSuggestion(name:SDSuggestion):string{
     var res = name && name.display ? name.display : '';
     return res;
@@ -306,7 +318,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
     if (index === -1){
       //added new user so initialize new entry and set all permissions to false
-      this.aclsProperties.push({userID:usr, read:false, write:false, admin:false, delete:true})
+      this.aclsProperties.push({userID:usr, name:'', read:false, write:false, admin:false, delete:true})
       
       //get index of newly inserted user
       index = this.aclsProperties.findIndex( (id) => id.userID === usr);      
@@ -382,7 +394,7 @@ export class PermissionsWidgetComponent implements OnInit{
 
   addUser(){
     // add write priviledge by default
-    const newRow = {userID:this.crntContribUserName, read:true, write:false, admin:false, delete:false}
+    const newRow = {userID:this.crntContribUserName, name:'', read:true, write:false, admin:false, delete:false}
     
     // create a new array using an existing array as one part of it 
     // using the spread operator '...'
@@ -396,7 +408,7 @@ export class PermissionsWidgetComponent implements OnInit{
    */
   private resetFormFields(){
     this.crntContribName = '';
-    this.crntContribSurname = '';
+    // this.crntContribSurname = '';
     this.crntContribUserName = '';
     this.personelForm.controls['dmp_contributor'].setValue("");
     this.disableAdd = true;
