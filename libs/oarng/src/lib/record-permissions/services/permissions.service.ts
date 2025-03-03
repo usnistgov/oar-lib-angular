@@ -97,6 +97,8 @@ export class PermissionsService {
       switchMap(creds => {
         if (! creds)
           return throwError(() => new Error('Authentication Failed'));
+        console.log(JSON.stringify(acls));
+        let a = JSON.stringify(acls);
         return this.http.put<any>(apiAddress, JSON.stringify(acls), this.getHttpOptions(creds))
       })
     );
