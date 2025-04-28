@@ -8,6 +8,12 @@
       </div>
     </div>
     <div class="badge badge-pill" style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">{{appVersion}}</div>
+    <div class="back-to-portal" (click)="goHome()">
+        <button class="back-button">
+            <i class="faa faa-external-link" aria-hidden="true"></i>
+          Back to Portal
+        </button>
+      </div>
 
     <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
         <i class="faa faa-user" aria-hidden="true"></i>

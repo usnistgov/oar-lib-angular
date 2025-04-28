@@ -34,9 +34,23 @@ export class HeaderComponent implements OnInit {
                 if (cred) 
                     console.debug('User identified:', cred.userId);
             });
+            this.credential = {
+                userId: 'testUser',
+                userAttributes: {
+                    userEmail: 'test.user@example.com',
+                    userGroup: 'Test Group',
+                    userDiv: 'Test Division',
+                    userDivNum: '123',
+                    userOU: 'Test OU',
+                    userLastName: 'User',
+                    userName: 'Test',
+                },
+                token: 'hardcoded-token'
+            } as Credentials;
         } else {
             // authService  not provided
             console.log('AuthenticationService is not provided.');
+            
         }
     }
     
@@ -62,4 +76,8 @@ export class HeaderComponent implements OnInit {
     goHome() {
         
     }
+
+    backToPortal() {
+    }
+
 }
