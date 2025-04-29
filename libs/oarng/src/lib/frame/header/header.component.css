@@ -26,41 +26,29 @@
     margin-right: 20px;
 }
 
-.back-to-portal {
+.header-actions {
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end; 
+    gap: 10px; 
     position: absolute;
-    top: 10px; /* Align to the top */
-    right: 10px; /* Align to the right */
-    z-index: 1000; /* Ensure it stays above other elements */
-  }
-  
-  .back-button {
-    display: inline-block;
-    position: relative;
-    background-color: white; /* Button background color */
-    color: black; /* Button text color */
-    border: none;
-    padding: 2px 4px; /* Adjust padding for button size */
-    font-size:14px;
-    font-weight: bold;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 2px 0 0 2px; /* Rounded corners on the left */
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .back-button:hover {
-    background-color: white; /* Button hover background color */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
-  }
-  
-
-.user-icon {
-    float: right; 
-    vertical-align: bottom; 
-    color: #f0f0f0; 
-    margin-right: 2.5em; 
-    cursor: pointer;
-    margin-top: 20px;
+    top: 30px; 
+    right: 2em;
+    z-index: 1000; 
 }
 
+.user-icon {
+    color: #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center; 
+    gap: 5px; 
+}
+
+.back-to-portal {
+    color: #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center; /* Vertically align the icon */
+}
 
