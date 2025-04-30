@@ -1,4 +1,44 @@
-<lib-header-pub
+<div class="header-container">
+  <div
+    title="NIST Public Data Repository"
+    class="header__logo-link header-logo"
+    style="display:inline-block;"
+    rel="home">
+    <!-- Logo -->
+    <div class="logo-container">
+      <div class="image-container">
+      <img src="assets/images/f_nist-logo-brand-white_nist-logo-brand-white.png" alt="Your Image" class="scaled-image" />
+      </div>
+    </div>
+
+    <div style="display:inline-block;font-weight: bolder;">
+          <div class="logo-text">{{title_line01}} </div>
+          <div class="logo-text">{{title_line02}}</div>
+    </div>
+  </div>
+
+  <div class="badge badge-pill version">
+    {{appVersion}}
+  </div>
+
+  <!-- <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
+      <i class="faa faa-user" aria-hidden="true"></i>
+      {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+  </div> -->
+
+  <div
+    *ngIf="showUserIcon && credential && credential.userId"
+    (click)="$event.stopPropagation();toggleUserBlock()"
+    class="user-icon ">
+
+    <i class="faa faa-user" aria-hidden="true"></i>
+    {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+  </div>
+
+  <ng-content select=".custom-navbar"></ng-content>
+</div>
+
+<!-- <lib-header-pub
     [appVersion]="appVersion"
     titleLn1="MIDAS"
     titleLn2="DATA PUBLISHING"
@@ -12,15 +52,9 @@
     {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
   </div>
 
-  <!-- <div class="bar-right daptool-navbar" style="float: right; margin: 15px 10px 0 0;color: white !important;">
-    <a href="/pdr/about" target="_blank"><b style="color: white !important;">About</b></a> |
-    <a href="" target="_blank" style="color: white !important;"><b>Help</b></a> |
-    <a href="" target="_blank" style="color: white !important;"><b>Search</b></a> |
-    <a href="/datacart/global_datacart" style="color: white !important;"><b>Cart</b><i
-        class="faa faa-shopping-cart faa-1x"></i><span
-        class="w3-badge badge-notify">{{cartLength}}</span></a>
-  </div> -->
-</lib-header-pub>
+  <ng-content select=".custom-navbar"></ng-content>
+
+</lib-header-pub> -->
 
 <!-- <div style="background-color: #000000;width: 100%;min-height: 4em;padding-top: 1em;">
     <div id="logo" (click)="goHome()">
@@ -41,7 +75,7 @@
     <ng-content select=".daptool-navbar"></ng-content>
 </div> -->
 
-<!-- @if(!isPublicSite) { -->
+@if(showUserIcon) {
   <div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
       <div *ngIf="credential.userId">User ID: {{credential.userId}}</div>
       <div *ngIf="credential && credential.userAttributes?.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
@@ -50,4 +84,4 @@
       <div *ngIf="credential && credential.userAttributes?.userDivNum">Division #: {{credential.userAttributes.userDivNum}}</div>
       <div *ngIf="credential && credential.userAttributes?.userOU">OU: {{credential.userAttributes.userOU}}</div>
   </div>
-<!-- } -->
+}

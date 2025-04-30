@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostListener, Optional } from '@angular/core';
+import { Component, OnInit, Input, HostListener, Optional, ChangeDetectorRef } from '@angular/core';
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -31,8 +31,11 @@ export class HeaderComponent implements OnInit {
     @Input() appVersion: string = "1.0";
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
+    @Input() showUserIcon: boolean = true;
 
-    constructor(@Optional() public authService: AuthenticationService) {
+    constructor(
+      @Optional() public authService: AuthenticationService,
+      private chref: ChangeDetectorRef,) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
                 // console.debug('cred', cred);
@@ -55,6 +58,8 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
+        console.log("showUserIcon", this.showUserIcon);
+        this.chref.detectChanges();
     }
 
     toggleUserBlock() {
