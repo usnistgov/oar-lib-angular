@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
+import { NistLogoComponent } from '../nist-logo/nist-logo.component';
 
 @Component({
   selector: 'lib-header-pub',
   standalone: true,
-  imports: [],
+  imports: [ NistLogoComponent ],
   templateUrl: './header-pub.component.html',
   styleUrl: './header-pub.component.css'
 })

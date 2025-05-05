@@ -42,6 +42,15 @@
     margin-top: 15px;
 }
 
+.home-icon {
+  float: right;
+  vertical-align: bottom;
+  color: #f0f0f0;
+  cursor: pointer;
+  margin-top: 12px;
+  margin-right: 1em;
+}
+
 .bar-right {
   float: right;
 }
@@ -115,11 +124,11 @@ text-decoration: none;
   transition: transform 0.3s ease-in-out; /* Smooth transition for scale */
 }
 
-/* .logo-text {
-  font-weight: bolder;
-  font-size:14px;
-  margin-bottom: -4px;
-} */
+.customNavbar {
+  float: right;
+  margin: 10px 10px 10px 0;
+  color: white;
+}
 
 .version {
   display:inline-block;
@@ -129,4 +138,8 @@ text-decoration: none;
   margin-left: 3em;
   font-size:10px;
   margin-top:-4px;
+}
+
+.home-button{
+  display: inline-block;
 }

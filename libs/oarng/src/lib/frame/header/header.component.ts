@@ -4,13 +4,14 @@ import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { HeaderPubComponent } from './header-pub/header-pub.component';
 import { CommonModule } from '@angular/common';
+import { NistLogoComponent } from './nist-logo/nist-logo.component';
 
 @Component({
     selector: 'app-header',
     standalone: true,
     imports: [
       CommonModule,
-      HeaderPubComponent
+      NistLogoComponent
     ],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
@@ -32,6 +33,7 @@ export class HeaderComponent implements OnInit {
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
     @Input() showUserIcon: boolean = true;
+    @Input() homeButtonLink: string = "";
 
     constructor(
       @Optional() public authService: AuthenticationService,
@@ -58,7 +60,7 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
-        console.log("showUserIcon", this.showUserIcon);
+        this.homeButtonLink = "https://data.nist.gov";
         this.chref.detectChanges();
     }
 
@@ -70,7 +72,7 @@ export class HeaderComponent implements OnInit {
         }
     }
 
-    goHome() {
+    backToPortal() {
 
     }
 }

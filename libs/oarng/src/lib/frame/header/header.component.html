@@ -1,10 +1,10 @@
-<div class="header-container">
+<!-- <div class="header-container">
   <div
     title="NIST Public Data Repository"
     class="header__logo-link header-logo"
     style="display:inline-block;"
     rel="home">
-    <!-- Logo -->
+
     <div class="logo-container">
       <div class="image-container">
       <img src="assets/images/f_nist-logo-brand-white_nist-logo-brand-white.png" alt="Your Image" class="scaled-image" />
@@ -21,10 +21,10 @@
     {{appVersion}}
   </div>
 
-  <!-- <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
+  <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
       <i class="faa faa-user" aria-hidden="true"></i>
       {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
-  </div> -->
+  </div>
 
   <div
     *ngIf="showUserIcon && credential && credential.userId"
@@ -36,6 +36,32 @@
   </div>
 
   <ng-content select=".custom-navbar"></ng-content>
+</div> -->
+<div class="header-container">
+  <!-- Logo -->
+  <lib-nist-logo
+    [titleLn1]="title_line01"
+    [titleLn2]="title_line02">
+  </lib-nist-logo>
+
+  <div
+    *ngIf="credential && credential.userId"
+    (click)="$event.stopPropagation();toggleUserBlock()"
+    class="user-icon ">
+
+    <i class="faa faa-user" aria-hidden="true"></i>
+    {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+  </div>
+
+  <div class="customNavbar">
+    <ng-content select=".custom-navbar"></ng-content>
+  </div>  
+  
+  <div class="header-actions">
+    <div *ngIf="homeButtonLink != ''" class="back-to-portal" (click)="backToPortal()">
+        <i class="faa faa-home" aria-hidden="true"></i>
+    </div>
+  </div>
 </div>
 
 <!-- <lib-header-pub
@@ -52,9 +78,23 @@
     {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
   </div>
 
+  <div class="header-actions">
+    <div *ngIf="homeButtonLink != ''" class="back-to-portal" (click)="backToPortal()">
+        <i class="faa faa-home" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="home-icon" *ngIf="homeButtonLink != ''" (click)="backToPortal()">
+    <a href="/" target="_blank">
+      <b><i class="faa faa-home" style="font-size: 23px;"></i></b>
+    </a>
+  </div>
+
+
   <ng-content select=".custom-navbar"></ng-content>
 
 </lib-header-pub> -->
+
 
 <!-- <div style="background-color: #000000;width: 100%;min-height: 4em;padding-top: 1em;">
     <div id="logo" (click)="goHome()">

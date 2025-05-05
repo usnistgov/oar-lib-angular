@@ -11,7 +11,11 @@
     style="display:inline-block;"
     rel="home">
     <!-- Logo -->
-    <div class="logo-container">
+     <lib-nist-logo
+      [titleLn1]="title_line01"
+      [titleLn2]="title_line02">
+    </lib-nist-logo>
+    <!-- <div class="logo-container">
       <div class="image-container">
       <img src="assets/images/f_nist-logo-brand-white_nist-logo-brand-white.png" alt="Your Image" class="scaled-image" />
       </div>
@@ -20,7 +24,7 @@
     <div style="display:inline-block;font-weight: bolder;">
           <div class="logo-text">{{title_line01}} </div>
           <div class="logo-text">{{title_line02}}</div>
-    </div>
+    </div> -->
   </div>
 
   <div class="badge badge-pill version">
@@ -33,6 +37,7 @@
   </div> -->
 
   <ng-content select=".user-icon"></ng-content>
+  <ng-content select=".home-icon"></ng-content>
 
   <ng-content select=".custom-navbar"></ng-content>
 </div>
