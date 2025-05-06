@@ -1,10 +1,10 @@
-import { Component, OnInit, Input, HostListener, Optional, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, HostListener, Optional, ChangeDetectorRef, Inject } from '@angular/core';
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { HeaderPubComponent } from './header-pub/header-pub.component';
 import { CommonModule } from '@angular/common';
 import { NistLogoComponent } from './nist-logo/nist-logo.component';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
     selector: 'app-header',
@@ -37,6 +37,7 @@ export class HeaderComponent implements OnInit {
 
     constructor(
       @Optional() public authService: AuthenticationService,
+      @Inject(DOCUMENT) private document: Document,
       private chref: ChangeDetectorRef,) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
@@ -60,7 +61,6 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
-        this.homeButtonLink = "https://data.nist.gov";
         this.chref.detectChanges();
     }
 
@@ -73,6 +73,6 @@ export class HeaderComponent implements OnInit {
     }
 
     backToPortal() {
-
+      this.document.location.href = this.homeButtonLink;
     }
 }
