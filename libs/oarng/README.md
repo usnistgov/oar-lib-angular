@@ -69,7 +69,7 @@ MIDAS
 DATA PUBLISHING
 ```
 The right side of the top bar will display like this:
-🏠  About | Help | Search | Cart 🛒 | 👤[last name], [first name]
+`🏠  About | Help | Search | Cart 🛒 | 👤[last name], [first name]`
 
 
 ## Using footer
