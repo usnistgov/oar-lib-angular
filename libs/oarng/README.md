@@ -22,7 +22,7 @@ headLn2 - this is the second line of text right next to the NIST logo. Will be c
 showUserIcon (MIDAS side only) - this is the switch that allow user to turn on/off the user icon. By default it's on (true).
 homeButtonLink - this is the URL of the home hutton. If provided, the home hutton will show up to the left side of the top-right menu. Otherwise the home button will be hidden.
 ```
-Both headers allow calling component to add a custom menu next to the home nutton. The menu content must use class name "custom-navbar".
+Both headers allow the calling component to add a custom menu next to the home nutton. The menu content must use class name "custom-navbar".
 
 HTML code example:
 ```
@@ -48,7 +48,7 @@ HTML code example:
     [appVersion]="appVersion" 
     titleLn1="MIDAS" 
     titleLn2="DATA Publishing"
-    [homeButtonLink]="homeButtonLink"
+    [showUserIcon]="showUserIcon"
     [homeButtonLink]="homeButtonLink">
     
     <div class="custom-navbar">
