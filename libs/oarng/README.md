@@ -11,7 +11,7 @@ Run `ng generate component component-name --project oarng` to generate a new com
 
 There are two type of headers: one for public side and one for MIDAS side. Public side header does not handle user info while MIDAS side does.
 
-Public side header uses selector <app-header-pub> and takes four parameters: appVersion, headLn1, headLn2 and homeButtonLink.
+Public side header uses selector `<app-header-pub>` and takes four parameters: appVersion, headLn1, headLn2 and homeButtonLink.
 
 MIDAS side header uses selector <app-header> and takes five parameters: appVersion, headLn1, headLn2, showUserIcon and homeButtonLink.
 
