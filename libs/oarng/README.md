@@ -13,7 +13,7 @@ There are two type of headers: one for public side and one for MIDAS side. Publi
 
 Public side header uses selector `<app-header-pub>` and takes four parameters: appVersion, headLn1, headLn2 and homeButtonLink.
 
-MIDAS side header uses selector <app-header> and takes five parameters: appVersion, headLn1, headLn2, showUserIcon and homeButtonLink.
+MIDAS side header uses selector `<app-header>` and takes five parameters: appVersion, headLn1, headLn2, showUserIcon and homeButtonLink.
 
 ```
 appVersion - the version of the current application.
