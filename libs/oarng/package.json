@@ -2,12 +2,12 @@
     "name": "oarng",
     "version": "0.0.1",
     "peerDependencies": {
-        "@angular/common": "^13.3.0",
-        "@angular/core": "^13.3.0",
+        "@angular/common": "^18.2.13",
+        "@angular/core": "^18.2.13",
         "ng-sidebar": "^9.1.1",
-        "primeflex": "^3.1.2",
-        "primeicons": "^5.0.0",
-        "primeng": "^13.3.3"
+        "primeflex": "^3.3.1",
+        "primeicons": "^7.0.0",
+        "primeng": "^17.3.3"
     },
     "dependencies": {
         "tslib": "^2.3.0"
