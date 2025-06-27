@@ -1,0 +1,25 @@
+<div class="header-container">
+    <!-- Logo -->
+    <lib-nist-logo
+      [titleLn1]="title_line01"
+      [titleLn2]="title_line02">
+    </lib-nist-logo>
+  
+    <!-- App version -->
+    <div class="badge badge-pill version">
+      {{appVersion}}
+    </div>
+  
+    <!-- Right side menu -->
+    <div class="bar-right-pub">
+        <!-- Home button (left) -->
+        <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="goHome()">
+            <i class="faa faa-home" aria-hidden="true"></i>
+        </div>
+
+        <!-- Custom menu (right) -->
+        <div class="customNavbar">
+            <ng-content select=".custom-navbar"></ng-content>
+        </div>
+    </div>
+</div>

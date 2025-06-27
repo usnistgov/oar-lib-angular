@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync, async  } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync  } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Configuration, CONFIG_URL } from '../config/config.model';
@@ -159,25 +159,25 @@ describe('StaffServiceService', () => {
     it('getOrgsFor()', () => {
         const odata = [
           {
-            "orG_Name": "Bureau of Western Mythology", 
+            "orG_Name": "Bureau of Western Mythology",
             "parenT_ORG_ID": 5,
             "parenT_ORG_CD": "100",
-            "orG_ID": 7, 
-            "orG_CD": "10000", 
-          }, 
+            "orG_ID": 7,
+            "orG_CD": "10000",
+          },
           {
-            "orG_Name": "Lost Electricity Reclamation Agency", 
+            "orG_Name": "Lost Electricity Reclamation Agency",
             "parenT_ORG_ID": 3,
             "parenT_ORG_CD": "03",
-            "orG_ID": 5, 
-            "orG_CD": "100", 
-          }, 
+            "orG_ID": 5,
+            "orG_CD": "100",
+          },
           {
-            "orG_Name": "Department of Failure", 
+            "orG_Name": "Department of Failure",
             "parenT_ORG_ID": null,
             "parenT_ORG_CD": null,
-            "orG_CD": "03", 
-            "orG_ID": 3, 
+            "orG_CD": "03",
+            "orG_ID": 3,
           }
         ];
         const pdata = {
@@ -207,25 +207,25 @@ describe('StaffServiceService', () => {
     it('getParentOrgs()', async () => {
         const odata = [
           {
-            "orG_Name": "Bureau of Western Mythology", 
+            "orG_Name": "Bureau of Western Mythology",
             "parenT_ORG_ID": 5,
             "parenT_ORG_CD": "100",
-            "orG_ID": 7, 
-            "orG_CD": "10000", 
-          }, 
+            "orG_ID": 7,
+            "orG_CD": "10000",
+          },
           {
-            "orG_Name": "Lost Electricity Reclamation Agency", 
+            "orG_Name": "Lost Electricity Reclamation Agency",
             "parenT_ORG_ID": 3,
             "parenT_ORG_CD": "03",
-            "orG_ID": 5, 
-            "orG_CD": "100", 
-          }, 
+            "orG_ID": 5,
+            "orG_CD": "100",
+          },
           {
-            "orG_Name": "Department of Failure", 
+            "orG_Name": "Department of Failure",
             "parenT_ORG_ID": null,
             "parenT_ORG_CD": null,
-            "orG_CD": "03", 
-            "orG_ID": 3, 
+            "orG_CD": "03",
+            "orG_ID": 3,
           }
         ];
 
@@ -248,25 +248,25 @@ describe('StaffServiceService', () => {
     it('getParentOrgs() without ref org', async () => {
         const odata = [
           {
-            "orG_Name": "Bureau of Western Mythology", 
+            "orG_Name": "Bureau of Western Mythology",
             "parenT_ORG_ID": 5,
             "parenT_ORG_CD": "100",
-            "orG_ID": 7, 
-            "orG_CD": "10000", 
-          }, 
+            "orG_ID": 7,
+            "orG_CD": "10000",
+          },
           {
-            "orG_Name": "Lost Electricity Reclamation Agency", 
+            "orG_Name": "Lost Electricity Reclamation Agency",
             "parenT_ORG_ID": 3,
             "parenT_ORG_CD": "03",
-            "orG_ID": 5, 
-            "orG_CD": "100", 
-          }, 
+            "orG_ID": 5,
+            "orG_CD": "100",
+          },
           {
-            "orG_Name": "Department of Failure", 
+            "orG_Name": "Department of Failure",
             "parenT_ORG_ID": null,
             "parenT_ORG_CD": null,
-            "orG_CD": "03", 
-            "orG_ID": 3, 
+            "orG_CD": "03",
+            "orG_ID": 3,
           }
         ];
 
@@ -275,7 +275,7 @@ describe('StaffServiceService', () => {
         httpMock.expectOne(svcep+"/Orgs/7").flush(odata[0]);
         httpMock.expectOne(svcep+"/Orgs/5").flush(odata[1]);
         httpMock.expectOne(svcep+"/Orgs/3").flush(odata[2]);
-        
+
         let orgs = await svcpromise;
 
         expect(orgs).not.toBeNull();
@@ -286,4 +286,4 @@ describe('StaffServiceService', () => {
     });
 });
 
-    
+

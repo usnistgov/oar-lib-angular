@@ -112,7 +112,7 @@ build and test this software.
 
 To install the Typescript compiler and all required Javascript modules, type:
 ```
-  npm install
+  npm install --legacy-peer-deps
 ```
 
 This only needs to be done ncec, unless dependencies (as recorded in the `package.json` file) change.

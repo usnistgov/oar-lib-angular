@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { AutoCompleteCompleteEvent, AutoCompleteOnSelectEvent } from 'primeng/autocomplete';
+import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { tap, catchError } from "rxjs/operators";
 
 import { SDSuggestion, SDSIndex, StaffDirectoryService } from 'oarng';
@@ -66,7 +66,7 @@ export class SelectPersonComponent {
         }
     }
 
-    showFullRecord(ev: AutoCompleteOnSelectEvent) {
+    showFullRecord(ev: AutoCompleteSelectEvent) {
         let sugg = ev.value as SDSuggestion;
         sugg.getRecord().subscribe(
             rec => { 

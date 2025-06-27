@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { AutoCompleteCompleteEvent, AutoCompleteOnSelectEvent } from 'primeng/autocomplete';
+import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { tap, catchError } from "rxjs/operators";
 
 import { SDSuggestion, SDSIndex, StaffDirectoryService, AuthenticationService } from 'oarng';
