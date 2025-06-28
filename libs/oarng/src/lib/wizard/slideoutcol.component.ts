@@ -3,7 +3,7 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
 
 /**
  * A Panel that includes a sidebar that can be opened and closed.  When it is opened,
- * it pushes content out of the way (as opposed to covering over it).  
+ * it pushes content out of the way (as opposed to covering over it).
  */
 @Component({
     selector: 'oar-slideout-col',
@@ -54,12 +54,11 @@ A 201 response MAY contain an ETag response header field indicating the current 
     ]})
 export class SlideoutColumnComponent {
     private _helpvisible : boolean = false;
-    
+
     constructor(private chref: ChangeDetectorRef) { }
-    
+
     toggleHelpView() {
         this._helpvisible = ! this._helpvisible;
-        console.log("toggling view: " + this._helpvisible);
         this.chref.detectChanges();
     }
 
