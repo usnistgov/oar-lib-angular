@@ -9,8 +9,8 @@
 }
 
 #logo {
-    display:inline-block; 
-    background-color: #000000; 
+    display:inline-block;
+    background-color: #000000;
     margin-left: 10px;
     cursor: pointer;
 }
@@ -18,21 +18,67 @@
 #user {
     z-index: 999;
     padding: 10px;
-    border-radius: 2px; 
+    border-radius: 2px;
     background-color: rgba(255, 255, 255, 0.9);
-    position: absolute; 
-    right: 10px; 
-    overflow: hidden; 
+    position: absolute;
+    right: 10px;
+    /* float: right; */
+    overflow: hidden;
     margin-right: 20px;
 }
 
 .user-icon {
-    float: right; 
-    vertical-align: bottom; 
-    color: #f0f0f0; 
-    margin-right: 2em; 
+    float: right;
+    vertical-align: bottom;
+    color: #f0f0f0;
+    margin-right: 2em;
     cursor: pointer;
     margin-top: 15px;
 }
 
+.bar-right {
+  float: right;
+}
 
+.badgesm {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  padding: 3px 7px;
+  vertical-align: 50%;
+  height:20px;
+  width:20px;
+  min-width: 10px;
+  z-index: 10;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  background-color: #777;
+  border-radius: 10px;
+}
+
+.badge-notify {
+  background-color: green;
+  color: white;
+  position: relative;
+  top: -10px;
+  left: -5px;
+  font-size: 9px;
+  height: 20px;
+  width: 20px;
+  padding: 5px 3px 3px 3px ;
+}
+
+a:link, a:hover, a:visited{
+color: white;
+background-color: transparent;
+text-decoration: none;
+}
+
+.badge-style {
+  background-color: var(--nist-green-default);
+  color: white;
+  border-radius: 100%;
+  padding: 2px 2px 2px 2px;
+  font-size: small;
+}

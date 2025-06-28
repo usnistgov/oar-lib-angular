@@ -1,0 +1,25 @@
+<div style="background-color: #000000;width: 100%;min-height: 4em;padding-top: 1em;">
+  <div id="logo">
+      <img src="./assets/images/nist_logo_reverse.png"
+      alt="NIST Science Data Portal" title="NIST Science Data Portal" style="float: left; margin-left: 1em;">
+      <div style="display:inline-block;">
+          <div class="logo-text">{{title_line01}} </div>
+          <div class="logo-text">{{title_line02}}</div>
+    </div>
+  </div>
+  
+  <div
+    class="badge badge-pill"
+    style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">
+    {{appVersion}}
+  </div>
+
+  <!-- <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
+      <i class="faa faa-user" aria-hidden="true"></i>
+      {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+  </div> -->
+
+  <ng-content select=".user-icon"></ng-content>
+
+  <ng-content select=".daptool-navbar"></ng-content>
+</div>

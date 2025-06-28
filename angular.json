@@ -38,12 +38,15 @@
             "prefix": "app",
             "architect": {
                 "build": {
-                    "builder": "@angular-devkit/build-angular:browser",
+                    "builder": "@angular-devkit/build-angular:application",
                     "options": {
-                        "outputPath": "dist/wizard",
+                        "outputPath": {
+                          "base": "dist/wizard"
+                        },
                         "index": "projects/wizard/src/index.html",
-                        "main": "projects/wizard/src/main.ts",
-                        "polyfills": "projects/wizard/src/polyfills.ts",
+                        "polyfills": [
+                          "projects/wizard/src/polyfills.ts"
+                        ],
                         "tsConfig": "projects/wizard/tsconfig.app.json",
                         "assets": [
                             "projects/wizard/src/favicon.ico",
@@ -53,9 +56,9 @@
                                 "input": "./libs/oarng/src/lib/assets",
                                 "output": "./assets/images"
                               }
-                            
+
                         ],
-                        "styles": [                            
+                        "styles": [
                             "node_modules/bootstrap/dist/css/bootstrap.css",
                             "node_modules/primeng/resources/primeng.css",
                             "node_modules/primeicons/primeicons.css",
@@ -69,7 +72,8 @@
                         ],
                         "scripts": [
                             "node_modules/bootstrap/dist/js/bootstrap.js"
-                        ]
+                        ],
+                        "browser": "projects/wizard/src/main.ts"
                     },
                     "configurations": {
                         "production": {
@@ -94,9 +98,7 @@
                             "outputHashing": "all"
                         },
                         "development": {
-                            "buildOptimizer": false,
-                            "optimization": false,
-                            "vendorChunk": true,
+                          "optimization": false,
                             "extractLicenses": false,
                             "sourceMap": true,
                             "namedChunks": true
@@ -108,10 +110,10 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                            "browserTarget": "step-wizard:build:production"
+                          "buildTarget": "step-wizard:build:production"
                         },
                         "development": {
-                            "browserTarget": "step-wizard:build:development"
+                          "buildTarget": "step-wizard:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
@@ -119,7 +121,7 @@
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",
                     "options": {
-                        "browserTarget": "wizard:build"
+                      "buildTarget": "wizard:build"
                     }
                 }
             }
@@ -136,25 +138,29 @@
             "prefix": "app",
             "architect": {
                 "build": {
-                    "builder": "@angular-devkit/build-angular:browser",
+                    "builder": "@angular-devkit/build-angular:application",
                     "options": {
-                        "outputPath": "dist/people-service",
+                        "outputPath": {
+                          "base": "dist/people-service"
+                        },
                         "index": "demos/people-service/src/index.html",
-                        "main": "demos/people-service/src/main.ts",
-                        "polyfills": "demos/people-service/src/polyfills.ts",
+                        "polyfills": [
+                          "demos/people-service/src/polyfills.ts"
+                        ],
                         "tsConfig": "demos/people-service/tsconfig.app.json",
                         "assets": [
                             "demos/people-service/src/favicon.ico",
                             "demos/people-service/src/assets"
                         ],
                         "styles": [
-                            "demos/people-service/src/styles.css"
+                            "demos/people-service/src/styles.css",
                             "node_modules/primeng/resources/primeng.css",
                             "node_modules/primeicons/primeicons.css",
                             "node_modules/primeflex/primeflex.css",
                             "node_modules/primeng/resources/themes/saga-blue/theme.css",
                         ],
-                        "scripts": []
+                        "scripts": [],
+                        "browser": "demos/people-service/src/main.ts"
                     },
                     "configurations": {
                         "production": {
@@ -162,7 +168,7 @@
                                 {
                                     "type": "initial",
                                     "maximumWarning": "500kb",
-                                    "maximumError": "1mb"
+                                    "maximumError": "2mb"
                                 },
                                 {
                                     "type": "anyComponentStyle",
@@ -179,9 +185,7 @@
                             "outputHashing": "all"
                         },
                         "development": {
-                            "buildOptimizer": false,
-                            "optimization": false,
-                            "vendorChunk": true,
+                          "optimization": false,
                             "extractLicenses": false,
                             "sourceMap": true,
                             "namedChunks": true
@@ -193,10 +197,10 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                            "browserTarget": "people-service:build:production"
+                          "buildTarget": "people-service:build:production"
                         },
                         "development": {
-                            "browserTarget": "people-service:build:development"
+                          "buildTarget": "people-service:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
@@ -204,7 +208,7 @@
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",
                     "options": {
-                        "browserTarget": "people-service:build"
+                      "buildTarget": "people-service:build"
                     }
                 },
                 "test": {
