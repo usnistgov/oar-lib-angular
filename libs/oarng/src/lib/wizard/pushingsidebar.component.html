@@ -1,22 +1,8 @@
-<div class="oar-psidebar-panel-root">
-    <div class="oar-psidebar-container" [@togglesbar]="isSbarVisible() ? 'sbarvisible' : 'sbarhidden'">
-        <div>
-            <div style="float: right; margin: 0px 5px 5px 5px;">
-                <a (click)="toggleSbarView()" aria-label="Close Help" title="Close Help"><i
-                        class="faa faa-times-circle faa-lg" aria-hidden="true"
-                        style="color: orange; cursor: pointer;"></i></a>
-            </div>
-            <div class="oar-psidebar-title">
-                <ng-content select=".sidebar-title"></ng-content>
-            </div>
-        </div>
-        <div class="oar-psidebar-frame">
-            <!-- <p-scrollPanel [style]="{width: '100%', height: '90%'}" styleClass="oar-psidebar-content"> -->
-                <ng-content select=".sidebar-content"></ng-content>
-            <!-- </p-scrollPanel> -->
-        </div>
-    </div>
-    <div class="oar-psidebar-main" [@togglesbar]="isSbarVisible() ? 'mainsquished' : 'mainexpanded'">
+<div class="oar-psidebar-panel-root" [ngStyle]="{'margin-left':marginLeft+'px', 'margin-right':marginLeft+'px'}">
+    <!-- <div class="oar-psidebar-main" [style.width.px]="leftWidth" [@togglesbar]="isSbarVisible() ? 'mainsquished' : 'mainexpanded'"> -->
+    <div class="oar-psidebar-main" 
+        [style.width.px]="leftWidth"  
+        [@togglesbar]="{value: mainPanelState, params:{prevSplitterPosition:prevSplitterPosition-marginLeft}}">
         <div class="oar-psidebar-slider" *ngIf="!isSbarVisible()">
             <span style="line-height: 100%">
                 <a (click)="toggleSbarView()" aria-label="Help"
@@ -30,4 +16,28 @@
             <ng-content select=".main-content"></ng-content>
         </div>
     </div>
+
+    <div *ngIf="isSbarVisible()" class="splitter" (mousedown)="startResize($event)">
+        <div id="separator">||</div>
+    </div>
+
+    <!-- <div class="oar-psidebar-container" [@togglesbar]="isSbarVisible() ? 'sbarvisible' : 'sbarhidden'"> -->
+    <div class="oar-psidebar-container" [@togglesbar]="isSbarVisible() ? 'sbarvisible' : 'sbarhidden'">
+        <div>
+            <div style="float: right; margin: 0px 5px 5px 5px;">
+                <a (click)="toggleSbarView()" aria-label="Close Help" title="Close Help">
+                    <i
+                        class="faa faa-times-circle faa-lg" aria-hidden="true"
+                        style="color: orange; cursor: pointer;"></i></a>
+            </div>
+            <div class="oar-psidebar-title">
+                <ng-content select=".sidebar-title"></ng-content>
+            </div>
+        </div>
+        <div class="oar-psidebar-frame">
+            <!-- <p-scrollPanel [style]="{width: '100%', height: '90%'}" styleClass="oar-psidebar-content"> -->
+                <ng-content select=".sidebar-content"></ng-content>
+            <!-- </p-scrollPanel> -->
+        </div>
+    </div>    
 </div>

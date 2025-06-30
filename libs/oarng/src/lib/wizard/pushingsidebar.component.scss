@@ -1,10 +1,14 @@
 .oar-psidebar-panel-root {
-    width: 100%;
+    /* width: 100%;
     height: 100%;
     position: relative;
     left: 0px;
     top: 0px;
+    overflow: hidden; */
+    display: flex;
+    /* height: 100vh; */
     overflow: hidden;
+    height: 100%;
 }
 
 .oar-psidebar-frame {
@@ -12,15 +16,17 @@
 }
 
 .oar-psidebar-container {
-    width: 35%;
+    // width: 35%;
     height: fit-content;
+    margin-top: 40px;
     max-height: 90%;
     border: 3px solid orange; 
     border-radius: 10px;
     background-color:  #f7f7f7;
-    padding-bottom: 5px;
-    padding-top: 5px;
+    // padding-bottom: 5px;
+    // padding-top: 5px;
     overflow: auto;
+    flex: 1;
 }
 
 #left-container {
@@ -72,10 +78,11 @@
 }
 
 .oar-psidebar-main {
-    height: fit-content;
-    position: relative;
-    left: 0px;
-    top: 0px;
+    height: 100%;
+    padding-top: 40px;
+    // position: relative;
+    // left: 0px;
+    // top: 0px;
 }
 
 .oar-psidebar-main-content {
@@ -123,4 +130,19 @@
 .sidebar-frame {
     height: fit-content;
     overflow: scroll;
+}
+
+.splitter {
+    display: flex;
+    width: 12px;
+    cursor: col-resize;
+    // background-color: #ccc;
+    margin-right: 20px;
+    background-color: var(--background-light-grey);
+}
+
+#separator {
+    padding-left: 2px;
+    opacity: .3;
+    align-self: center;
 }

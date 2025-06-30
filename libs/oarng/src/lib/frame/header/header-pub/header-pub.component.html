@@ -1,25 +1,25 @@
-<div style="background-color: #000000;width: 100%;min-height: 4em;padding-top: 1em;">
-  <div id="logo">
-      <img src="./assets/images/nist_logo_reverse.png"
-      alt="NIST Science Data Portal" title="NIST Science Data Portal" style="float: left; margin-left: 1em;">
-      <div style="display:inline-block;">
-          <div class="logo-text">{{title_line01}} </div>
-          <div class="logo-text">{{title_line02}}</div>
-    </div>
-  </div>
+<div class="header-container">
+    <!-- Logo -->
+    <lib-nist-logo
+      [titleLn1]="title_line01"
+      [titleLn2]="title_line02">
+    </lib-nist-logo>
   
-  <div
-    class="badge badge-pill"
-    style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">
-    {{appVersion}}
-  </div>
+    <!-- App version -->
+    <div class="badge badge-pill version">
+      {{appVersion}}
+    </div>
+  
+    <!-- Right side menu -->
+    <div class="bar-right-pub">
+        <!-- Home button (left) -->
+        <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="goHome()">
+            <i class="faa faa-home" aria-hidden="true"></i>
+        </div>
 
-  <!-- <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
-      <i class="faa faa-user" aria-hidden="true"></i>
-      {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
-  </div> -->
-
-  <ng-content select=".user-icon"></ng-content>
-
-  <ng-content select=".daptool-navbar"></ng-content>
+        <!-- Custom menu (right) -->
+        <div class="customNavbar">
+            <ng-content select=".custom-navbar"></ng-content>
+        </div>
+    </div>
 </div>

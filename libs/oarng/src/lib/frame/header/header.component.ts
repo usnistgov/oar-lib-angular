@@ -1,16 +1,17 @@
-import { Component, OnInit, Input, HostListener, Optional } from '@angular/core';
+import { Component, OnInit, Input, HostListener, Optional, ChangeDetectorRef, Inject } from '@angular/core';
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { HeaderPubComponent } from './header-pub/header-pub.component';
 import { CommonModule } from '@angular/common';
+import { NistLogoComponent } from './nist-logo/nist-logo.component';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
     selector: 'app-header',
     standalone: true,
     imports: [
       CommonModule,
-      HeaderPubComponent
+      NistLogoComponent
     ],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
@@ -31,8 +32,13 @@ export class HeaderComponent implements OnInit {
     @Input() appVersion: string = "1.0";
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
+    @Input() showUserIcon: boolean = true;
+    @Input() homeButtonLink: string = "";
 
-    constructor(@Optional() public authService: AuthenticationService) {
+    constructor(
+      @Optional() public authService: AuthenticationService,
+      @Inject(DOCUMENT) private document: Document,
+      private chref: ChangeDetectorRef,) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
                 // console.debug('cred', cred);
@@ -55,6 +61,7 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
+        this.chref.detectChanges();
     }
 
     toggleUserBlock() {
@@ -65,7 +72,7 @@ export class HeaderComponent implements OnInit {
         }
     }
 
-    goHome() {
-
+    backToPortal() {
+      this.document.location.href = this.homeButtonLink;
     }
 }

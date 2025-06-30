@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener, Input, ElementRef } from '@angular/core';
 import { state, style, trigger, transition, animate } from '@angular/animations';
 
 /**
@@ -8,29 +8,26 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
 @Component({
     selector: 'oar-pushing-sidebar',
     templateUrl: 'pushingsidebar.component.html',
-    styleUrls: ['pushingsidebar.component.css'],
+    styleUrls: ['pushingsidebar.component.scss'],
     animations: [
         trigger("togglesbar", [
             state('sbarvisible', style({
-                position: 'absolute',
-                right: '0%',
-                top: "0%",
-                bottom: "100%"
+                opacity: 1,
+                "height": "*"
             })),
             state('sbarhidden', style({
-                position: 'absolute',
-                right: '-35%',
-                top: "0%",
-                bottom: "100%"
+                opacity: 0,
+                "height": "0px",
+                "overflow": "auto"
             })),
             transition('sbarvisible <=> sbarhidden', [
                 animate('0.1s')
             ]),
             state('mainsquished', style({
-                "margin-right": "35%"
-            })),
+                "width": "{{prevSplitterPosition}}px"
+            }), { params: { prevSplitterPosition: 500 } }),
             state('mainexpanded', style({
-                "margin-right": "0%"
+                "width": "100%"
             })),
             transition('mainsquished <=> mainexpanded', [
                 animate('0.1s')
@@ -39,9 +36,19 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     ]
 })
 export class PushingSidebarComponent {
-    private _sbarvisible : boolean = true;
+    @Input() marginLeft: number = 20;
 
-    constructor(private chref: ChangeDetectorRef) { }
+    private _sbarvisible : boolean = true;
+    private isResizing = false;
+    private leftRatio = 0.7;
+    currentSplitterPosition: number = window.innerWidth / 2 + this.marginLeft;
+    prevSplitterPosition: number = this.currentSplitterPosition;
+
+    constructor(private chref: ChangeDetectorRef, private el: ElementRef) { }
+
+    ngAfterViewInit() {
+        this.updateLeftWidth();
+    }
 
     /**
      * toggle whether the sidebar is visible.  When this is called, a change in
@@ -54,5 +61,43 @@ export class PushingSidebarComponent {
 
     isSbarVisible() {
         return this._sbarvisible
+    }
+
+    get mainPanelState() {
+        return this.isSbarVisible() ? 'mainsquished' : 'mainexpanded';
+    }
+
+    get leftWidth() {
+        return this.currentSplitterPosition - this.marginLeft;
+    }
+
+    startResize(event: MouseEvent) {
+        this.isResizing = true;
+        event.preventDefault();
+    }
+
+    @HostListener('document:mousemove', ['$event'])
+    onMouseMove(event: MouseEvent) {
+      if (this.isResizing) {
+        this.currentSplitterPosition = event.clientX;
+        this.prevSplitterPosition = this.currentSplitterPosition;
+        this.leftRatio = this.currentSplitterPosition / this.el.nativeElement.querySelector('.oar-psidebar-panel-root').clientWidth;
+      }
+    }
+  
+    @HostListener('document:mouseup')
+    stopResize() {
+      this.isResizing = false;
+    }
+
+    @HostListener('window:resize')
+    onWindowResize() {
+      this.updateLeftWidth();
+    }
+  
+    private updateLeftWidth() {
+        const containerWidth = this.el.nativeElement.querySelector('.oar-psidebar-panel-root').clientWidth;
+        this.currentSplitterPosition = containerWidth * this.leftRatio;
+        this.prevSplitterPosition = this.currentSplitterPosition;
     }
 }
