@@ -48,6 +48,7 @@ export class ConfigurationService {
      */
     public fetchConfig(configURL: string | null = null): Observable<Configuration> {
         const url = configURL ?? this.configUrl;
+        console.log("Fetch Config UR:", url);
         return this.http.get<Configuration>(url, { responseType: 'json' }).pipe(
             catchError(this.handleError),
             tap(cfg => this.loadConfig(cfg))
@@ -98,6 +99,7 @@ export class ConfigurationService {
      * @returns An observable containing the error message.
      */
     protected handleError(error: any) {
+        console.log("Handle error");
         let errorMessage = '';
         if (error.error instanceof ErrorEvent) {
             // Get client-side error
