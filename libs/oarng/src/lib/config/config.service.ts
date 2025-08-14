@@ -99,7 +99,7 @@ export class ConfigurationService {
      */
     protected handleError(error: any) {
         let errorMessage = '';
-        if (error.error instanceof ErrorEvent) {
+        if (error.error && error.error.message) {
             // Get client-side error
             errorMessage = error.error.message;
         } else {
