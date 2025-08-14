@@ -5,7 +5,7 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './nist-logo.component.html',
-  styleUrl: './nist-logo.component.css'
+  styleUrls: ['./nist-logo.component.css']
 })
 export class NistLogoComponent {
   @Input() titleLn1: string = "MIDAS";
