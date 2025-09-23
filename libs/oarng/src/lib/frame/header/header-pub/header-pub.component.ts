@@ -11,22 +11,22 @@ import { DOCUMENT } from '@angular/common';
   styleUrls: ['./header-pub.component.css','../header.component.css']
 })
 export class HeaderPubComponent {
-  title_line01: string = "MIDAS";
-  title_line02: string = "DATA PUBLISHING";
+    title_line01: string = "MIDAS";
+    title_line02: string = "DATA PUBLISHING";
+    
+    @Input() appVersion: string = "1.0";
+    @Input() titleLn1: string = "MIDAS";
+    @Input() titleLn2: string = "DATA PUBLISHING";
+    @Input() homeButtonLink: string = "";
 
-  @Input() appVersion: string = "1.0";
-  @Input() titleLn1: string = "MIDAS";
-  @Input() titleLn2: string = "DATA PUBLISHING";
-  @Input() homeButtonLink: string = "";
+    constructor(@Inject(DOCUMENT) private document: Document) { }
+    
+    ngOnInit() {
+        this.title_line01 = this.titleLn1.toUpperCase();
+        this.title_line02 = this.titleLn2.toUpperCase();
+    }
 
-  constructor( @Inject(DOCUMENT) private document: Document) {}
-  
-  ngOnInit() {
-    this.title_line01 = this.titleLn1.toUpperCase();
-    this.title_line02 = this.titleLn2.toUpperCase();
-  }
-
-  goHome() {
-    this.document.location.href = this.homeButtonLink;
-  }
+    goHome() {
+        this.document.location.href = this.homeButtonLink;
+    }
 }
