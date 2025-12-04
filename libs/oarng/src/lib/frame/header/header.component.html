@@ -36,57 +36,6 @@
     </div>
 </div>
 
-<!-- <lib-header-pub
-    [appVersion]="appVersion"
-    titleLn1="MIDAS"
-    titleLn2="DATA PUBLISHING"
-  >
-  <div
-    *ngIf="credential && credential.userId"
-    (click)="$event.stopPropagation();toggleUserBlock()"
-    class="user-icon ">
-
-    <i class="faa faa-user" aria-hidden="true"></i>
-    {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
-  </div>
-
-  <div class="header-actions">
-    <div *ngIf="homeButtonLink != ''" class="back-to-portal" (click)="backToPortal()">
-        <i class="faa faa-home" aria-hidden="true"></i>
-    </div>
-  </div>
-
-  <div class="home-icon" *ngIf="homeButtonLink != ''" (click)="backToPortal()">
-    <a href="/" target="_blank">
-      <b><i class="faa faa-home" style="font-size: 23px;"></i></b>
-    </a>
-  </div>
-
-
-  <ng-content select=".custom-navbar"></ng-content>
-
-</lib-header-pub> -->
-
-
-<!-- <div style="background-color: #000000;width: 100%;min-height: 4em;padding-top: 1em;">
-    <div id="logo" (click)="goHome()">
-        <img src="./assets/images/nist_logo_reverse.png"
-        alt="NIST Science Data Portal" title="NIST Science Data Portal" style="float: left; margin-left: 1em;">
-        <div style="display:inline-block;">
-            <div class="logo-text">{{title_line01}} </div>
-            <div class="logo-text">{{title_line02}}</div>
-      </div>
-    </div>
-    <div class="badge badge-pill" style="display:inline-block;color:black;background-color:#f0f0f0;vertical-align: text-top; margin-left: 3em; font-size:10px; margin-top:-16px;">{{appVersion}}</div>
-
-    <div *ngIf="credential && credential.userId" (click)="$event.stopPropagation();toggleUserBlock()" class="user-icon">
-        <i class="faa faa-user" aria-hidden="true"></i>
-        {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
-    </div>
-
-    <ng-content select=".daptool-navbar"></ng-content>
-</div> -->
-
 @if(showUserIcon) {
   <div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
       <div *ngIf="credential.userId">User ID: {{credential.userId}}</div>
