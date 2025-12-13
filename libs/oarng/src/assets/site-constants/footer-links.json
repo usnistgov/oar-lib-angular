@@ -1,9 +1,9 @@
 { 
     "socialMediaList": [
         {   
-            "name": "twitter", 
-            "url": "https://twitter.com/nist",
-            "icon": "faa faa-twitter" 
+            "name": "x-twitter", 
+            "url": "https://x.com/NIST",
+            "icon": "pi pi-twitter" 
         },
         { 
             "name": "facebook", 

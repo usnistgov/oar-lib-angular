@@ -5,14 +5,7 @@
             <div class="item-list">
                 <ul>
                     <li *ngFor="let socialMedia of socialMediaList; let i = index">
-                      <div *ngIf="i==1" class="x-icon">
-                        <a href=" https://x.com/NIST" target="_blank">
-                            <div  class="nist-social nist-social--x-white" style="background-image:url(assets/images/x_white.svg)">
-                            </div>
-                        </a>
-                      </div>
-
-                      <a *ngIf="i>1" [href]="socialMedia.url" target="_blank" class="social-btn social-btn--large extlink ext"><i [class]="socialMedia.icon"><span
+                      <a [href]="socialMedia.url" target="_blank" class="social-btn social-btn--large extlink ext"><i [class]="socialMedia.icon"><span
                             class="element-invisible">{{socialMedia.name}}</span></i><span class="ext"><span class="element-invisible"> (link
                             is external)</span></span></a>
                     </li>

@@ -20,7 +20,7 @@
     height: fit-content;
     margin-top: 40px;
     max-height: 90%;
-    border: 3px solid orange; 
+    border: 3px solid orange;
     border-radius: 10px;
     background-color:  #f7f7f7;
     // padding-bottom: 5px;
@@ -112,8 +112,21 @@
 
 .oar-psidebar-title {
     font-size: larger;
+    padding: 5px 0px 5px 10px;
+    color: rgb(0, 0, 0);
+    background-color: #e9e9e9;
+}
+
+.control-btn {
     color: orange;
-    padding-left: 10px;
+    background-color: transparent;
+    padding: 10px;
+}
+
+.control-btn-hidden {
+    color: orange;
+    background-color: transparent;
+    // padding: 10px;
 }
 
 .oar-psidebar-content .ui-scrollpanel-bar-x {
@@ -143,6 +156,6 @@
 
 #separator {
     padding-left: 2px;
-    opacity: .3;
+    opacity: .8;
     align-self: center;
 }
