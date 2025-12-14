@@ -5,6 +5,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 import { CommonModule } from '@angular/common';
 import { NistLogoComponent } from './nist-logo/nist-logo.component';
 import { DOCUMENT } from '@angular/common';
+import { ConfigurationService } from '../../config/config.service';
 
 @Component({
     selector: 'app-header',
@@ -28,17 +29,19 @@ export class HeaderComponent implements OnInit {
     title_line02: string = "DATA PUBLISHING";
     credential: Credentials = {} as Credentials;
     userBlockStatus: string = 'collapsed';
-
+    homeButtonLink: string = "https://data.nist.gov";
+    
     @Input() appVersion: string = "1.0";
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
     @Input() showUserIcon: boolean = true;
-    @Input() homeButtonLink: string = "";
+    // @Input() homeButtonLink: string = "";
 
     constructor(
       @Optional() public authService: AuthenticationService,
-      @Inject(DOCUMENT) private document: Document,
-      private chref: ChangeDetectorRef,) {
+        @Inject(DOCUMENT) private document: Document,
+        private cfg: ConfigurationService,
+        private chref: ChangeDetectorRef,) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
                 // console.debug('cred', cred);
@@ -61,6 +64,9 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
+
+        let url = this.cfg.get("links.portalBase", "/");
+        this.homeButtonLink = url? url : "";        
         this.chref.detectChanges();
     }
 
