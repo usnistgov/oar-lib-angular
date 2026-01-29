@@ -36,7 +36,7 @@
         class="block menu--footer-menu last even block--menu block--menu-menu-footer-menu-3" role="navigation">
             <ul class="menu">
                 <li *ngFor="let link of footerLinks02; let i = index" [ngClass]="getLinkClass(i, footerLinks02)">
-                    <a [href]="link.url" target="_blank" class="menu__link">{{link.title}} </a>
+                    <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="menu__link">{{link.title}} </a>
                 </li>
             </ul>
         </div>
