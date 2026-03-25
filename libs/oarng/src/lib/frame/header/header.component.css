@@ -34,13 +34,22 @@
     margin-right: 20px;
 }
 
-.user-icon {
+.user-icon-wrapper{
     /* float: right; */
     display: inline-block;
     vertical-align: bottom;
     color: #f0f0f0;
     cursor: pointer;
     margin-bottom: 3px;
+}
+
+.user-icon {
+    position: relative;
+    top: -1px;
+}
+
+.user-icon-wrapper:hover {
+    color: rgb(0, 221, 255);
 }
 
 .home-icon {
@@ -51,6 +60,10 @@
     margin-top: -6px;
     margin-right: 16px;
     font-size: x-large;
+}
+
+.home-icon:hover {
+    color: rgb(0, 221, 255);
 }
 
 .customNavbar {

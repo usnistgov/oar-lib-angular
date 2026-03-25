@@ -5,9 +5,29 @@
             <div class="item-list">
                 <ul>
                     <li *ngFor="let socialMedia of socialMediaList; let i = index">
-                      <a [href]="socialMedia.url" target="_blank" rel="noopener noreferrer" class="social-btn social-btn--large extlink ext"><i [class]="socialMedia.icon"><span
-                            class="element-invisible">{{socialMedia.name}}</span></i><span class="ext"><span class="element-invisible"> (link
-                            is external)</span></span></a>
+                        <a [href]="socialMedia.url" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="social-btn social-btn--large extlink ext">
+
+                            <fa-icon 
+                                *ngIf="useNewIcons" 
+                                [icon]="[socialMedia.prefix, socialMedia.icon]" 
+                                class="social-icon"
+                                [style.--hover-bg-color]="socialMedia.hover">
+                                <span class="element-invisible">{{socialMedia.name}}</span>
+                            </fa-icon>
+
+                            <i *ngIf="!useNewIcons" [class]="socialMedia.icon">
+                                <span class="element-invisible">{{socialMedia.name}}</span>
+                            </i>
+
+                            <span class="ext">
+                                <span class="element-invisible"> 
+                                    (link is external)
+                                </span>
+                            </span>
+                        </a>
                     </li>
                 </ul>
             </div>

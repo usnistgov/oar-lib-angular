@@ -7,8 +7,18 @@
             <span style="line-height: 100%">
                 <a (click)="toggleSbarView()" aria-label="Help"
                     title="{{(isSbarVisible()) ? 'Close Help' : 'Open Help'}}">
-                    <i class="faa faa-question-circle-o faa-lg control-btn-hidden" aria-hidden="true"
-                        style="cursor: pointer;"></i>
+                    <!-- <i class="faa faa-question-circle-o faa-lg control-btn-hidden" aria-hidden="true"
+                        style="cursor: pointer;"></i> -->
+                    <fa-icon 
+                        *ngIf="faCircleQuestion"
+                        [icon]="faCircleQuestion"
+                        size="lg"
+                        class="control-btn-hidden"
+                        aria-hidden="true"
+                        style="cursor: pointer;"
+                        ngbTooltip="Help"
+                        tooltipPosition="top">
+                    </fa-icon>
                 </a>
             </span>
         </div>
@@ -27,9 +37,20 @@
         <div>
             <div style="float: right; margin: 0px 5px 5px 5px;">
                 <a (click)="toggleSbarView()" aria-label="Close Help" title="Close Help">
-                    <i
+                    <!-- <i
                         class="faa faa-times-circle faa-lg control-btn" aria-hidden="true"
-                        style="cursor: pointer;"></i></a>
+                        style="cursor: pointer;"></i> -->
+                    <fa-icon 
+                        *ngIf="faCircleXmark"
+                        [icon]="faCircleXmark"
+                        size="lg"
+                        class="control-btn"
+                        aria-hidden="true"
+                        style="cursor: pointer;"
+                        ngbTooltip="Close Help"
+                        tooltipPosition="top">
+                    </fa-icon>
+                </a>
             </div>
             <div class="oar-psidebar-title">
                 <ng-content select=".sidebar-title"></ng-content>

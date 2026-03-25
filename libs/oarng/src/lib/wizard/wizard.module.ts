@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { PushingSidebarComponent } from './pushingsidebar.component';
 import { SlideoutColumnComponent } from './slideoutcol.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 /**
  * a module providing components used to build a wizard interface.
@@ -10,7 +11,8 @@ import { SlideoutColumnComponent } from './slideoutcol.component';
 @NgModule({
     imports: [
         CommonModule,
-        ScrollPanelModule
+        ScrollPanelModule,
+        FontAwesomeModule
     ],
     declarations: [
         PushingSidebarComponent,

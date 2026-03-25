@@ -14,7 +14,12 @@
     <div class="bar-right-pub">
         <!-- Home button (left) -->
         <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="goHome()">
-            <i class="faa faa-home" aria-hidden="true"></i>
+            @if(useNewIcons) {
+                <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
+            }
+            @else {
+                <i class="faa faa-home" aria-hidden="true"></i>
+            }
         </div>
 
         <!-- Custom menu (right) -->
