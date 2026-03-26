@@ -41,7 +41,6 @@ export class HeaderComponent implements OnInit {
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
     @Input() showUserIcon: boolean = true;
-    @Input() useNewIcons: boolean = false;
     // @Input() homeButtonLink: string = "";
 
     constructor(

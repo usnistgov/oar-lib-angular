@@ -378,37 +378,9 @@ ul, menu, dir {
 
 .social-btn fa-icon:hover {
     color: #fff;
-    background: gray;
+    background: var(--hover-bg-color);
     height: 40px;
     line-height: 40px;
     text-align: center;
     display: inline-block;
-}
-
-.social-btn fa-icon.facebook:hover {
-    background: #3a5897;
-}
-
-.social-btn fa-icon.linkedin:hover {
-    background: #04669A;
-}
-
-.social-btn fa-icon.instagram:hover {
-    background: rgb(182, 1, 253);
-}
-
-.social-btn fa-icon.x-twitter:hover {
-    background: #49c9f2;
-}
-
-.social-btn fa-icon.youtube:hover {
-    background: #e52d27;
-}
-
-.social-btn fa-icon.rss:hover {
-    background: #fd8f00;
-}
-
-.social-btn fa-icon.envelope:hover {
-    background: #e6e6e6;
 }

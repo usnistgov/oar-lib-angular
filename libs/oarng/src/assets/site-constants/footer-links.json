@@ -3,51 +3,51 @@
         {   
             "name": "x-twitter", 
             "url": "https://x.com/NIST",
-            "icon": "pi pi-twitter", 
+            "icon": "x-twitter", 
             "prefix": "fab",
             "hover": "lightgray"
         },
         { 
             "name": "facebook", 
             "url": "https://www.facebook.com/NIST/",
-            "icon": "faa faa-facebook",
+            "icon": "facebook",
             "prefix": "fab",
-            "hover": "#3a5897" 
+            "hover": "#039BE5" 
         },
         { 
             "name": "linkedin", 
             "url": "https://www.linkedin.com/company/nist",
-            "icon": "faa faa-linkedin",
+            "icon": "linkedin",
             "prefix": "fab",
-            "hover": "#04669A" 
+            "hover": "#0288D1" 
         },
         { 
             "name": "Instagram", 
             "url": "https://www.instagram.com/nist/",
-            "icon": "faa faa-instagram",
+            "icon": "instagram",
             "prefix": "fab",
-            "hover": "rgb(182, 1, 253)" 
+            "hover": "#C2185B" 
         },
         { 
             "name": "youtube", 
             "url": "https://www.youtube.com/nist",
-            "icon": "faa faa-youtube",
+            "icon": "youtube",
             "prefix": "fab",
-            "hover": "#e52d27" 
+            "hover": "#FF3D00" 
         },
         { 
             "name": "rss", 
             "url": "https://www.nist.gov/news-events/nist-rss-feeds",
-            "icon": "faa faa-rss",
+            "icon": "rss",
             "prefix": "fas",
-            "hover": "#fd8f00" 
+            "hover": "#FF9800" 
         },
         { 
             "name": "govdelivery", 
             "url": "https://service.govdelivery.com/accounts/USNIST/subscriber/new",
-            "icon": "faa faa-envelope",
+            "icon": "envelope",
             "prefix": "fas",
-            "hover": "gray" 
+            "hover": "#009122" 
         }
     ],   
     "footerLinks01": [

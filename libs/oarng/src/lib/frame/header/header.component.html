@@ -15,13 +15,7 @@
         <!-- Home button (Third right) -->
         <!-- <div class="home-icon"> -->
             <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="backToPortal()">
-                @if(useNewIcons) {
-                    <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
-                }
-                @else {
-                    <i class="faa faa-home" aria-hidden="true"></i>
-                }
-
+                <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
             </div>
         <!-- </div> -->
 
@@ -36,12 +30,7 @@
             (click)="$event.stopPropagation();toggleUserBlock()"
             class="user-icon-wrapper ">
 
-            @if(useNewIcons) {
-                <fa-icon [icon]="faUser" aria-hidden="true" class="user-icon"></fa-icon>
-            }
-            @else {
-                <i class="faa faa-user" aria-hidden="true"></i>
-            }
+            <fa-icon [icon]="faUser" aria-hidden="true" class="user-icon"></fa-icon>
 
             {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
         </div>

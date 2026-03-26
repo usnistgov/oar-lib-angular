@@ -31,8 +31,6 @@ export class FooterComponent implements OnInit {
     // Footer link line #2
     footerLinks02: any[];
 
-    @Input() useNewIcons: boolean = false;
-
     constructor(public iconLibrary: FaIconLibrary) {
         iconLibrary.addIcons(
             faXTwitter, faFacebook, faLinkedin, faInstagram, faEnvelope, faYoutube, faRss
@@ -53,31 +51,6 @@ export class FooterComponent implements OnInit {
     }
 
     ngOnInit() {
-        if (this.useNewIcons) {
-            this.replaceSocialMediaIcons();    
-        }
-    }
-
-    replaceSocialMediaIcons() {
-        for (let i = 0; i < this.socialMediaList.length; i++) {
-            let character = "-";
-            let newSocialMediaIcon = "";
-
-            // Find the index of the character
-            const startIndex = this.socialMediaList[i].icon.indexOf(character);
-
-            // Check if the character was found
-            if (startIndex !== -1) {
-            // Get the substring starting one position after the character
-                newSocialMediaIcon = this.socialMediaList[i].icon.substring(startIndex + 1);
-            } 
-
-            if(newSocialMediaIcon == "twitter") {
-                newSocialMediaIcon = "x-twitter";
-            } 
-
-            this.socialMediaList[i].icon = newSocialMediaIcon;
-        }
     }
 
     /**

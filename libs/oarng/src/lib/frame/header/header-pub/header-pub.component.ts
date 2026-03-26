@@ -22,7 +22,6 @@ export class HeaderPubComponent {
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
     @Input() homeButtonLink: string = "";
-    @Input() useNewIcons: boolean = false;
 
     constructor(@Inject(DOCUMENT) private document: Document) { }
     
