@@ -10,11 +10,19 @@
                             rel="noopener noreferrer" 
                             class="social-btn social-btn--large extlink ext">
 
-                            <fa-icon 
+                            <!-- <fa-icon 
                                 *ngIf="useNewIcons" 
                                 [icon]="[socialMedia.prefix, socialMedia.icon]" 
                                 class="social-icon"
                                 [style.--hover-bg-color]="socialMedia.hover">
+                                <span class="element-invisible">{{socialMedia.name}}</span>
+                            </fa-icon> -->
+
+                            <fa-icon 
+                                *ngIf="useNewIcons" 
+                                [icon]="[socialMedia.prefix, socialMedia.icon]" 
+                                [class]="socialMedia.icon"
+                                class="social-icon">
                                 <span class="element-invisible">{{socialMedia.name}}</span>
                             </fa-icon>
 

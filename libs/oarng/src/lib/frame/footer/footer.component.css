@@ -351,10 +351,64 @@ ul, menu, dir {
 }
 
 .social-icon {
-    font-size: 25px;
-    margin-right: 5px;
+    font-size: 22px;
+    line-height: 40px;
+    height: 40px;
+    width: 40px;
+    text-align: center;
+    display: inline-block;
 }
 
-.social-icon:hover {
+/* .social-icon:hover {
     background-color: var(--hover-bg-color);
+} */
+
+/* .social-btn fa-icon:before {
+    font-size: 22px;
+    line-height: 40px;
+    height: 40px;
+    width: 40px;
+    text-align: center;
+    display: inline-block;
+} */
+
+.social-btn fa-icon {
+    transition: background-color 300ms ease;
+}
+
+.social-btn fa-icon:hover {
+    color: #fff;
+    background: gray;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    display: inline-block;
+}
+
+.social-btn fa-icon.facebook:hover {
+    background: #3a5897;
+}
+
+.social-btn fa-icon.linkedin:hover {
+    background: #04669A;
+}
+
+.social-btn fa-icon.instagram:hover {
+    background: rgb(182, 1, 253);
+}
+
+.social-btn fa-icon.x-twitter:hover {
+    background: #49c9f2;
+}
+
+.social-btn fa-icon.youtube:hover {
+    background: #e52d27;
+}
+
+.social-btn fa-icon.rss:hover {
+    background: #fd8f00;
+}
+
+.social-btn fa-icon.envelope:hover {
+    background: #e6e6e6;
 }
