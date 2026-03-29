@@ -40,12 +40,12 @@
     vertical-align: bottom;
     color: #f0f0f0;
     cursor: pointer;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
 }
 
 .user-icon {
     position: relative;
-    top: -1px;
+    top: -2px;
 }
 
 .user-icon-wrapper:hover {
