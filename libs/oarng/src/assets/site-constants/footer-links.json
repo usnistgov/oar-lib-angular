@@ -90,9 +90,7 @@
         {
             "title": "Information Quality Standards",
             "url": "https://www.nist.gov/nist-information-quality-standards"
-        }
-    ],
-    "footerLinks02": [
+        },
         {
             "title": "Commerce.gov",
             "url": "https://www.commerce.gov/"
@@ -104,6 +102,6 @@
         {
             "title": "USA.gov",
             "url": "http://www.usa.gov/"
-        }
+        }        
     ]
 }

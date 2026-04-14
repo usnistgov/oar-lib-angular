@@ -28,9 +28,6 @@ export class FooterComponent implements OnInit {
     // Footer link line #1
     footerLinks01: any[];
 
-    // Footer link line #2
-    footerLinks02: any[];
-
     constructor(public iconLibrary: FaIconLibrary) {
         iconLibrary.addIcons(
             faXTwitter, faFacebook, faLinkedin, faInstagram, faEnvelope, faYoutube, faRss
@@ -47,7 +44,6 @@ export class FooterComponent implements OnInit {
         this.socialMediaList = this.footerLinks.socialMediaList;
 
         this.footerLinks01 = this.footerLinks.footerLinks01;
-        this.footerLinks02 = this.footerLinks.footerLinks02;
     }
 
     ngOnInit() {
