@@ -3,39 +3,53 @@
         {   
             "name": "x-twitter", 
             "url": "https://x.com/NIST",
-            "icon": "pi pi-twitter" 
+            "icon": "x-twitter", 
+            "prefix": "fab",
+            "hover": "lightgray"
         },
         { 
             "name": "facebook", 
             "url": "https://www.facebook.com/NIST/",
-            "icon": "faa faa-facebook" 
+            "icon": "facebook",
+            "prefix": "fab",
+            "hover": "#039BE5" 
         },
         { 
             "name": "linkedin", 
             "url": "https://www.linkedin.com/company/nist",
-            "icon": "faa faa-linkedin" 
+            "icon": "linkedin",
+            "prefix": "fab",
+            "hover": "#0288D1" 
         },
         { 
             "name": "Instagram", 
             "url": "https://www.instagram.com/nist/",
-            "icon": "faa faa-instagram" 
+            "icon": "instagram",
+            "prefix": "fab",
+            "hover": "#C2185B" 
         },
         { 
             "name": "youtube", 
             "url": "https://www.youtube.com/nist",
-            "icon": "faa faa-youtube" 
+            "icon": "youtube",
+            "prefix": "fab",
+            "hover": "#FF3D00" 
         },
         { 
             "name": "rss", 
             "url": "https://www.nist.gov/news-events/nist-rss-feeds",
-            "icon": "faa faa-rss" 
+            "icon": "rss",
+            "prefix": "fas",
+            "hover": "#FF9800" 
         },
         { 
             "name": "govdelivery", 
             "url": "https://service.govdelivery.com/accounts/USNIST/subscriber/new",
-            "icon": "faa faa-envelope" 
+            "icon": "envelope",
+            "prefix": "fas",
+            "hover": "#009122" 
         }
-    ],
+    ],   
     "footerLinks01": [
         {
             "title": "Site Privacy",
@@ -76,9 +90,7 @@
         {
             "title": "Information Quality Standards",
             "url": "https://www.nist.gov/nist-information-quality-standards"
-        }
-    ],
-    "footerLinks02": [
+        },
         {
             "title": "Commerce.gov",
             "url": "https://www.commerce.gov/"
@@ -90,6 +102,6 @@
         {
             "title": "USA.gov",
             "url": "http://www.usa.gov/"
-        }
+        }        
     ]
 }

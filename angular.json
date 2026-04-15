@@ -66,7 +66,6 @@
                             "node_modules/primeng/resources/themes/saga-blue/theme.css",
                             "angular-archwizard/archwizard.css",
                             "angular-archwizard/archwizard.scss",
-                            "libs/oarng/src/styles/font-awesome/css/font-awesome.min.css",
                             "libs/oarng/src/styles/main.css",
                             "projects/wizard/src/styles.css"
                         ],

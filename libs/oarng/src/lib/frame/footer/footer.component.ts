@@ -1,12 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import * as footerlinks from '../../../assets/site-constants/footer-links.json';
 import { CommonModule } from '@angular/common';
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import {
+    faXTwitter, faFacebook, faLinkedin, faInstagram, faYoutube
+} from '@fortawesome/free-brands-svg-icons';
+import { faEnvelope, faRss } from '@fortawesome/free-solid-svg-icons';
+
 
 @Component({
   selector: 'app-footer',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule, FontAwesomeModule
   ],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.css']
@@ -22,10 +28,11 @@ export class FooterComponent implements OnInit {
     // Footer link line #1
     footerLinks01: any[];
 
-    // Footer link line #2
-    footerLinks02: any[];
+    constructor(public iconLibrary: FaIconLibrary) {
+        iconLibrary.addIcons(
+            faXTwitter, faFacebook, faLinkedin, faInstagram, faEnvelope, faYoutube, faRss
+        );
 
-    constructor() {
         // For some reason, footerlinks does not have "default" field in unit test
         // So we have to use following condition to make both production and unit test work.
         if((footerlinks as any).default)
@@ -35,8 +42,8 @@ export class FooterComponent implements OnInit {
 
         // Add footerLinks to the condition to avoid unit test error
         this.socialMediaList = this.footerLinks.socialMediaList;
+
         this.footerLinks01 = this.footerLinks.footerLinks01;
-        this.footerLinks02 = this.footerLinks.footerLinks02;
     }
 
     ngOnInit() {

@@ -1,5 +1,9 @@
 import { Component, ChangeDetectorRef, HostListener, Input, ElementRef } from '@angular/core';
 import { state, style, trigger, transition, animate } from '@angular/animations';
+import {
+    faCircleQuestion,
+    faCircleXmark
+} from '@fortawesome/free-solid-svg-icons';
 
 /**
  * A Panel that includes a sidebar that can be opened and closed.  When it is opened,
@@ -36,6 +40,9 @@ import { state, style, trigger, transition, animate } from '@angular/animations'
     ]
 })
 export class PushingSidebarComponent {
+    faCircleQuestion = faCircleQuestion;    
+    faCircleXmark = faCircleXmark;
+
     @Input() marginLeft: number = 20;
 
     private _sbarvisible : boolean = true;

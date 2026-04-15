@@ -6,13 +6,16 @@ import { CommonModule } from '@angular/common';
 import { NistLogoComponent } from './nist-logo/nist-logo.component';
 import { DOCUMENT } from '@angular/common';
 import { ConfigurationService } from '../../config/config.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faHouse, faUser } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
     selector: 'app-header',
     standalone: true,
     imports: [
-      CommonModule,
-      NistLogoComponent
+        CommonModule,
+        NistLogoComponent,
+        FontAwesomeModule
     ],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
@@ -31,6 +34,9 @@ export class HeaderComponent implements OnInit {
     userBlockStatus: string = 'collapsed';
     homeButtonLink: string = "https://data.nist.gov";
     
+    faHouse = faHouse;
+    faUser = faUser;
+
     @Input() appVersion: string = "1.0";
     @Input() titleLn1: string = "MIDAS";
     @Input() titleLn2: string = "DATA PUBLISHING";
