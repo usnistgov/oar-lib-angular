@@ -20,7 +20,7 @@
         "dist/oarng"
       ]
     },
-    "importHelpers": true,
+    "importHelpers": false,
     "target": "ES2022",
     "module": "preserve",
     "lib": [
