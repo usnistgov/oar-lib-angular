@@ -13,16 +13,16 @@
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "paths": {
       "oarng": [
         "dist/oarng/oarng",
         "dist/oarng"
       ]
     },
-    "importHelpers": true,
+    "importHelpers": false,
     "target": "ES2022",
-    "module": "es2022",
+    "module": "preserve",
     "lib": [
       "es2022",
       "dom"
