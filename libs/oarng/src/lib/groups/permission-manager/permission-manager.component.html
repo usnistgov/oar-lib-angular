@@ -1,0 +1,24 @@
+<mat-card class="pm-card">
+  <mat-card-header>
+    <mat-card-title>
+      Access Control
+      <span class="pm-stub-badge" aria-hidden="true">stub</span>
+    </mat-card-title>
+    @if (recordId) {
+      <mat-card-subtitle>{{ recordId }}</mat-card-subtitle>
+    }
+  </mat-card-header>
+
+  <mat-card-content>
+    @for (perm of perms; track perm) {
+      <div class="pm-perm-row">
+        <span class="pm-perm-label">{{ perm }}</span>
+        <div class="pm-perm-chips" aria-hidden="true">
+          <div class="pm-chip-ghost"></div>
+          <div class="pm-chip-ghost pm-chip-ghost--short"></div>
+        </div>
+        <div class="pm-add-ghost" aria-hidden="true"></div>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

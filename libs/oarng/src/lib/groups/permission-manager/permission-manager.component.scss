@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.pm-card {
+  width: 100%;
+}
+
+.pm-stub-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: #1976d2;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.pm-perm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.pm-perm-label {
+  width: 56px;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+.pm-perm-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.pm-chip-ghost {
+  height: 22px;
+  width: 72px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.07);
+
+  &--short {
+    width: 52px;
+  }
+}
+
+.pm-add-ghost {
+  height: 28px;
+  width: 120px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
