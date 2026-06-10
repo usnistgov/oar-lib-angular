@@ -4,8 +4,10 @@
       Access Control
       <span class="pm-stub-badge" aria-hidden="true">stub</span>
     </mat-card-title>
-    @if (recordId) {
-      <mat-card-subtitle>{{ recordId }}</mat-card-subtitle>
+    @if (records.length === 1) {
+      <mat-card-subtitle>{{ records[0].id }}</mat-card-subtitle>
+    } @else if (records.length > 1) {
+      <mat-card-subtitle>{{ records.length }} records selected</mat-card-subtitle>
     }
   </mat-card-header>
 

@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core'
-import { AclPerm } from '../group.types'
+import { AclPerm, RecordRef } from '../group.types'
 
 @Component({
   selector: 'oarng-permission-manager',
@@ -7,8 +7,8 @@ import { AclPerm } from '../group.types'
   styleUrl: './permission-manager.component.scss'
 })
 export class PermissionManagerComponent {
-  @Input() recordId: string = ''
-  @Input() apiBase: string = ''
+  @Input() records: RecordRef[] = []
+  @Input() layout: 'compact' | 'panel' = 'compact'
 
   readonly perms: AclPerm[] = ['read', 'write', 'admin', 'delete']
 }

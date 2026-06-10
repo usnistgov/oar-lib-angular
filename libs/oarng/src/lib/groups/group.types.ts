@@ -5,6 +5,11 @@ export interface Group {
   members: string[]
 }
 
+export interface RecordRef {
+  id: string
+  apiBase: string
+}
+
 export type AclPerm = 'read' | 'write' | 'admin' | 'delete'
 
 export interface Acls {
