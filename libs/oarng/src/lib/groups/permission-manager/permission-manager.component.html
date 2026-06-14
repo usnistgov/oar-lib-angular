@@ -12,15 +12,124 @@
   </mat-card-header>
 
   <mat-card-content>
-    @for (perm of perms; track perm) {
-      <div class="pm-perm-row">
-        <span class="pm-perm-label">{{ perm }}</span>
-        <div class="pm-perm-chips" aria-hidden="true">
-          <div class="pm-chip-ghost"></div>
-          <div class="pm-chip-ghost pm-chip-ghost--short"></div>
+
+    <!-- Permissions section -->
+    <section class="pm-section" aria-label="Permission levels">
+      @for (perm of perms; track perm) {
+        <div class="pm-perm-row">
+          <span class="pm-perm-label">{{ perm }}</span>
+          <div class="pm-perm-chips" aria-hidden="true">
+            <div class="pm-chip-ghost"></div>
+            <div class="pm-chip-ghost pm-chip-ghost--short"></div>
+          </div>
+          <div class="pm-add-ghost" aria-hidden="true"></div>
         </div>
-        <div class="pm-add-ghost" aria-hidden="true"></div>
+      }
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <!-- My Groups section -->
+    <section class="pm-section pm-groups" aria-label="My groups">
+
+      <div class="pm-groups-header">
+        <h3 class="pm-section-title">My Groups</h3>
+        <button
+          mat-stroked-button
+          class="pm-new-group-btn"
+          (click)="showNewGroupForm.set(true)"
+          [disabled]="showNewGroupForm()"
+          aria-label="Create a new group">
+          <mat-icon>add</mat-icon>
+          New Group
+        </button>
       </div>
-    }
+
+      <!-- Create group form -->
+      @if (showNewGroupForm()) {
+        <div class="pm-new-group-form">
+          <mat-form-field appearance="outline" class="pm-group-name-field">
+            <mat-label>Group name</mat-label>
+            <input
+              matInput
+              [(ngModel)]="newGroupName"
+              (keydown.enter)="createGroup()"
+              (keydown.escape)="cancelCreate()"
+              placeholder="e.g. lab-team"
+              aria-label="New group name"
+              autofocus />
+          </mat-form-field>
+          <div class="pm-form-actions">
+            <button mat-flat-button color="primary" (click)="createGroup()" [disabled]="!newGroupName.trim()">
+              Create
+            </button>
+            <button mat-button (click)="cancelCreate()">Cancel</button>
+          </div>
+        </div>
+      }
+
+      <!-- Group list -->
+      @if (groups().length === 0 && !showNewGroupForm()) {
+        <p class="pm-empty-state">No groups yet. Create one to share access easily.</p>
+      }
+
+      @for (group of groups(); track group.id) {
+        <div class="pm-group-item">
+
+          <div class="pm-group-row">
+            <span class="pm-group-name">{{ group.name }}</span>
+            <span class="pm-member-count" [attr.aria-label]="group.members.length + ' members'">
+              {{ group.members.length }} member{{ group.members.length !== 1 ? 's' : '' }}
+            </span>
+            <div class="pm-group-actions">
+              <button
+                mat-icon-button
+                [attr.aria-label]="(expandedGroupId() === group.id ? 'Collapse' : 'Manage') + ' group ' + group.name"
+                [attr.aria-expanded]="expandedGroupId() === group.id"
+                (click)="toggleGroup(group.id)">
+                <mat-icon>{{ expandedGroupId() === group.id ? 'expand_less' : 'manage_accounts' }}</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="pm-delete-btn"
+                [attr.aria-label]="'Delete group ' + group.name"
+                (click)="deleteGroup(group.id)">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Members panel -->
+          @if (expandedGroupId() === group.id) {
+            <div class="pm-members-panel" role="region" [attr.aria-label]="'Members of ' + group.name">
+              @if (group.members.length === 0) {
+                <p class="pm-empty-state pm-empty-state--small">No members yet.</p>
+              }
+              @for (member of group.members; track member) {
+                <div class="pm-member-row">
+                  <mat-icon class="pm-member-icon" aria-hidden="true">person</mat-icon>
+                  <span class="pm-member-name">{{ member }}</span>
+                  <button
+                    mat-icon-button
+                    class="pm-member-remove"
+                    [attr.aria-label]="'Remove ' + member + ' from ' + group.name"
+                    (click)="removeGroupMember(group.id, member)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
+              <!-- Add member placeholder -->
+              <div class="pm-add-member-ghost" aria-hidden="true">
+                <mat-icon>person_add</mat-icon>
+                <span>Add member…</span>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+
+    </section>
+
   </mat-card-content>
 </mat-card>

@@ -68,3 +68,156 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
 }
+
+// --- Shared section layout ---
+
+.pm-section {
+  padding: 0.5rem 0;
+}
+
+.pm-section-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+mat-divider {
+  margin: 0.25rem 0;
+}
+
+// --- My Groups ---
+
+.pm-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0 0.5rem;
+}
+
+.pm-new-group-btn {
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.pm-new-group-form {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.pm-group-name-field {
+  width: 100%;
+}
+
+.pm-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.pm-empty-state {
+  font-size: 0.85rem;
+  opacity: 0.55;
+  padding: 0.5rem 0;
+  margin: 0;
+
+  &--small {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.pm-group-item {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.pm-group-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+}
+
+.pm-group-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.pm-member-count {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.pm-group-actions {
+  display: flex;
+  gap: 0;
+}
+
+.pm-delete-btn {
+  color: rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    color: #c62828;
+  }
+}
+
+.pm-members-panel {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+
+.pm-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+
+.pm-member-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.45;
+}
+
+.pm-member-name {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.pm-member-remove {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.pm-add-member-ghost {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.25rem;
+  margin-top: 0.25rem;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  opacity: 0.45;
+  cursor: default;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
