@@ -69,6 +69,35 @@
   flex-shrink: 0;
 }
 
+// --- Loading / error states ---
+
+.pm-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  opacity: 0.65;
+}
+
+.pm-error {
+  font-size: 0.85rem;
+  color: #c62828;
+  margin: 0.25rem 0;
+}
+
+.pm-multi-hint {
+  font-size: 0.85rem;
+  opacity: 0.55;
+  margin: 0.25rem 0;
+}
+
+.pm-perm-empty {
+  font-size: 0.8rem;
+  opacity: 0.35;
+  align-self: center;
+}
+
 // --- Shared section layout ---
 
 .pm-section {
