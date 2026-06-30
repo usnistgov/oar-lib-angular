@@ -1,20 +1,21 @@
 {
-    "name": "oarng",
-    "version": "0.0.1",
-    "peerDependencies": {
-        "@angular/common": "^18.2.13",
-        "@angular/core": "^18.2.13",
-        "ng-sidebar": "^9.1.1",
-        "primeflex": "^3.3.1",
-        "primeicons": "^7.0.0",
-        "primeng": "^17.3.3",
-        "@fortawesome/angular-fontawesome": "^0.15.0",
-        "@fortawesome/fontawesome-svg-core": "^6.6.0",
-        "@fortawesome/free-solid-svg-icons": "^6.6.0",
-        "@fortawesome/free-regular-svg-icons": "^6.6.0",
-        "@fortawesome/free-brands-svg-icons": "^6.6.0"
-    },
-    "dependencies": {
-        "tslib": "^2.3.0"
-    }
+  "name": "oarng",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^18.2.13",
+    "@angular/core": "^18.2.13",
+    "ng-sidebar": "^9.1.1",
+    "primeflex": "^3.3.1",
+    "primeicons": "^7.0.0",
+    "primeng": "^17.3.3",
+    "@fortawesome/angular-fontawesome": "^0.15.0",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "tailwindcss": "^3.4.19"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
 }

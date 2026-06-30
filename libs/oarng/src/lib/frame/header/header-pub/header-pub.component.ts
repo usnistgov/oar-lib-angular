@@ -4,13 +4,26 @@ import { CommonModule } from '@angular/common';
 import { DOCUMENT } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faHouse } from '@fortawesome/free-solid-svg-icons';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
-  selector: 'app-header-pub',
-  standalone: true,
-  imports: [ NistLogoComponent, CommonModule, FontAwesomeModule ],
-  templateUrl: './header-pub.component.html',
-  styleUrls: ['./header-pub.component.css','../header.component.css']
+    selector: 'app-header-pub',
+    standalone: true,
+    imports: [
+        NistLogoComponent,
+        CommonModule,
+        FontAwesomeModule,
+        MatButtonModule,
+        MatMenuModule,
+        MatBadgeModule,
+        MatTooltipModule,
+        MatIconModule],
+    templateUrl: './header-pub.component.html',
+    styleUrls: ['./header-pub.component.css','../header.component.css']
 })
 export class HeaderPubComponent {
     title_line01: string = "MIDAS";

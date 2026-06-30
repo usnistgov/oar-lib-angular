@@ -1,26 +1,76 @@
-<div class="header-container">
-    <!-- Logo -->
+<!-- <div class="header-container">
+
     <lib-nist-logo
       [titleLn1]="title_line01"
       [titleLn2]="title_line02">
     </lib-nist-logo>
   
-    <!-- App version -->
+
     <div class="badge badge-pill version">
       {{appVersion}}
     </div>
   
-    <!-- Right side menu -->
+
     <div class="bar-right-pub">
-        <!-- Home button (left) -->
+
         <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="goHome()">
             <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
-            <!-- <i class="faa faa-home" aria-hidden="true"></i> -->
+
         </div>
 
-        <!-- Custom menu (right) -->
+
         <div class="customNavbar">
             <ng-content select=".custom-navbar"></ng-content>
         </div>
     </div>
-</div>
+</div> -->
+
+<nav
+    class="flex items-center justify-between
+            text-white px-[3.5rem]
+            py-3 shadow-md h-14" style="background-color: black; height: 3em;">
+
+    <!-- Left -->
+
+    <div class="flex items-start gap-3">
+        <!-- Logo -->
+        <lib-nist-logo
+            [titleLn1]="title_line01"
+            [titleLn2]="title_line02">
+        </lib-nist-logo>
+
+        <!-- Version Badge -->
+
+        <span
+            class="flex rounded
+                    font-semibold items-center justify-center 
+                    border border-solid border-white"
+            style="margin-left: 1em; margin-top: 5px; font-size: 10px; padding: 0px 4px; height: 20px;">
+
+            {{appVersion}}
+
+        </span>
+    </div>
+    
+    <!-- Desktop Menu -->
+
+    <div class="flex" style="margin-top: 20px !important;">
+
+    <!-- Home button -->
+        <button 
+            *ngIf="homeButtonLink && homeButtonLink != ''"
+            (click)="goHome()"
+            mat-icon-button
+            matTooltip="Home"
+            matTooltipPosition="above">
+
+            <mat-icon class="text-white">home</mat-icon>
+
+        </button>
+
+        <!-- Custom menu (right) -->
+        <div class="customNavbarMat">
+            <ng-content select=".custom-navbar-mat"></ng-content>
+        </div>
+    </div>
+</nav>
