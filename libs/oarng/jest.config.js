@@ -4,5 +4,10 @@ module.exports = {
     moduleNameMapper: {
         "^lodash-es$": "lodash"
     },
-    globalSetup: 'jest-preset-angular/global-setup'
+    globalSetup: 'jest-preset-angular/global-setup',
+    globals: {
+        'ts-jest': {
+            tsconfig: '<rootDir>/tsconfig.spec.json'
+        }
+    }
 };

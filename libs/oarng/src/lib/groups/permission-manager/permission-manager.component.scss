@@ -48,6 +48,9 @@
   display: flex;
   gap: 0.4rem;
   flex: 1;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .pm-chip-ghost {
@@ -67,6 +70,123 @@
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
+}
+
+.pm-add-person-btn {
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+
+  &:hover, &--active {
+    opacity: 1;
+  }
+}
+
+.pm-add-person-panel {
+  margin: 0 0 0.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.pm-staged-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.pm-people-field {
+  width: 100%;
+}
+
+.pm-group-field {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.pm-org-units {
+  margin-top: 0.25rem;
+}
+
+.pm-loading--small {
+  padding: 0.25rem 0;
+  font-size: 0.8rem;
+}
+
+.pm-nist-groups {
+  padding: 0.5rem 0;
+}
+
+.pm-nist-org-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.pm-nist-org-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.pm-nist-org-name {
+  font-size: 0.85rem;
+}
+
+.pm-group-option-btn--nist {
+  border-color: rgba(0, 0, 0, 0.18);
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.pm-group-options {
+  margin-top: 0.5rem;
+}
+
+.pm-group-options-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.5;
+  margin-bottom: 0.35rem;
+}
+
+.pm-group-option-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pm-group-option-btn {
+  height: 28px;
+  font-size: 0.8rem;
+  line-height: 28px;
+  padding: 0 0.6rem;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+
+  &--staged {
+    background: rgba(25, 118, 210, 0.1);
+    border-color: #1976d2;
+    color: #1976d2;
+  }
+}
+
+.pm-add-person-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 // --- Loading / error states ---
@@ -90,6 +210,30 @@
   font-size: 0.85rem;
   opacity: 0.55;
   margin: 0.25rem 0;
+}
+
+.pm-bulk-panel {
+  padding: 0.25rem 0;
+}
+
+.pm-bulk-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+  }
+}
+
+.pm-perm-select-field {
+  width: 100%;
+  margin-bottom: 0.25rem;
 }
 
 .pm-perm-empty {
@@ -221,32 +365,97 @@ mat-divider {
 }
 
 .pm-member-remove {
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
+  --mdc-icon-button-state-layer-size: 28px;
+  --mdc-icon-button-icon-size: 18px;
+  flex-shrink: 0;
+}
 
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+.pm-add-member-form {
+  margin-top: 0.25rem;
+}
+
+.pm-add-member-field {
+  width: 100%;
+}
+
+// --- Graduated model subject rows ---
+
+.pm-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-of-type {
+    border-bottom: none;
   }
 }
 
-.pm-add-member-ghost {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.25rem;
-  margin-top: 0.25rem;
-  border: 1px dashed rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  font-size: 0.82rem;
-  opacity: 0.45;
-  cursor: default;
+.pm-subject-name {
+  flex: 1;
+  font-size: 0.875rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-level-select-field {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+
+  // Compact the mat-form-field for inline row use
+  .mat-mdc-form-field-infix {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    min-height: unset;
+  }
+  .mat-mdc-text-field-wrapper {
+    padding: 0 8px;
+  }
+}
+
+.pm-level-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  flex-shrink: 0;
+
+  &--custom {
+    background: rgba(0, 0, 0, 0.07);
+    color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.pm-remove-btn {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    color: #c62828;
+  }
+}
+
+.pm-add-access-btn {
+  margin-top: 0.5rem;
+  height: 32px;
+  font-size: 0.8rem;
 
   mat-icon {
     font-size: 16px;
     width: 16px;
     height: 16px;
+    margin-right: 4px;
   }
+}
+
+.pm-level-field {
+  width: 100%;
+  margin-top: 0.25rem;
 }
