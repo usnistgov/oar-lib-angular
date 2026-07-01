@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
-import { Subject, Subscription, of } from 'rxjs'
+import { Subject, Subscription, Observable, of } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
 import { HttpClient } from '@angular/common/http'
 import { MatDialog } from '@angular/material/dialog'
@@ -456,7 +456,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     return null
   }
 
-  setSubjectLevel(subject: string, newLevel: 'view' | 'update' | 'admin'): void {
+  setSubjectLevel(subject: string, newLevel: 'view' | 'update' | 'admin', emitChange = true): void {
     const record = this.singleRecord()
     if (!record) return
     const current = this.acls()
@@ -466,16 +466,22 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
     const toGrant = required.filter(p => !(current[p] ?? []).includes(subject))
     const toRevoke = all.filter(p => !required.includes(p) && (current[p] ?? []).includes(subject))
-    const grantOps = toGrant.map(p => this.permsSvc.grantPerm(record, p, subject))
-    const revokeOps = toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject))
-    const total = grantOps.length + revokeOps.length
-    if (!total) return
+    const ops: Observable<unknown>[] = [
+      ...toGrant.map(p => this.permsSvc.grantPerm(record, p, subject)),
+      ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject)),
+    ]
+    if (!ops.length) return
 
-    let remaining = total
-    const onNext = () => { if (--remaining === 0) { this.loadAcls(); this.permissionsChanged.emit() } }
-    const onError = (err: unknown) => console.error('[PermissionManager] setSubjectLevel error:', err)
-    grantOps.forEach(op$ => op$.subscribe({ next: onNext, error: onError }))
-    revokeOps.forEach(op$ => op$.subscribe({ next: onNext, error: onError }))
+    let remaining = ops.length
+    ops.forEach(op$ => op$.subscribe({
+      next: () => {
+        if (--remaining === 0) {
+          this.loadAcls()
+          if (emitChange) this.permissionsChanged.emit()
+        }
+      },
+      error: (err: unknown) => console.error('[PermissionManager] setSubjectLevel error:', err)
+    }))
   }
 
   removeSubject(subject: string): void {
@@ -503,7 +509,35 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const people = this.staged()
     if (!people.length) return
 
-    people.forEach(person => this.setSubjectLevel(person.id, level))
+    const total = people.length
+    let completed = 0
+
+    const onOneDone = () => {
+      completed++
+      if (completed === total) {
+        this.permissionsChanged.emit()
+      }
+    }
+
+    people.forEach(person => {
+      const currentAcls = this.acls()
+      if (!currentAcls) { onOneDone(); return }
+      const required = this.LEVEL_PERMS[level]
+      const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
+      const toGrant = required.filter(p => !(currentAcls[p] ?? []).includes(person.id))
+      const toRevoke = all.filter(p => !required.includes(p) && (currentAcls[p] ?? []).includes(person.id))
+      const ops: Observable<unknown>[] = [
+        ...toGrant.map(p => this.permsSvc.grantPerm(record, p, person.id)),
+        ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, person.id)),
+      ]
+      if (!ops.length) { onOneDone(); return }
+      let remaining = ops.length
+      ops.forEach(op$ => op$.subscribe({
+        next: () => { if (--remaining === 0) { this.loadAcls(); onOneDone() } },
+        error: (err: unknown) => console.error('[PermissionManager] grantStagedLevel error:', err)
+      }))
+    })
+
     this.closeAddPerson()
   }
 
