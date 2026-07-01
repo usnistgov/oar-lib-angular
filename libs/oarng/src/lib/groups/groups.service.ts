@@ -16,7 +16,9 @@ export class GroupsService {
   }
 
   private get headers(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` })
+    const token = this.getToken()
+    const h = new HttpHeaders()
+    return token ? h.set('Authorization', `Bearer ${token}`) : h
   }
 
   getGroups(): Observable<Group[]> {

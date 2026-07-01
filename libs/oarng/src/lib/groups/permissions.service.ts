@@ -10,7 +10,9 @@ export class PermissionsService {
   private getToken = inject(GROUPS_AUTH_TOKEN, { optional: true }) ?? (() => '')
 
   private get headers(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` })
+    const token = this.getToken()
+    const h = new HttpHeaders()
+    return token ? h.set('Authorization', `Bearer ${token}`) : h
   }
 
   // Backend: /{record.apiBase}/{record.id}/acls  (plural)
