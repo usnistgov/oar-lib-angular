@@ -272,6 +272,23 @@ describe('PermissionManagerComponent', () => {
       component.removeSubject('alice')
       expect(permsSvc.revokePerm).not.toHaveBeenCalled()
     })
+
+    it('calls loadAcls() and emits even when one revoke errors', () => {
+      permsSvc.revokePerm
+        .mockReturnValueOnce(throwError(() => new Error('500')))
+        .mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
+
+      component.acls.set({ read: ['alice'], write: ['alice'], admin: [], delete: [] })
+      permsSvc.getAcls.mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
+      const spy = jest.spyOn(component.permissionsChanged, 'emit')
+
+      component.removeSubject('alice')
+
+      // forkJoin fails fast; error path must call loadAcls
+      expect(permsSvc.getAcls).toHaveBeenCalled()
+      // permissionsChanged does NOT emit on error (partial failure = unknown state)
+      expect(spy).not.toHaveBeenCalled()
+    })
   })
 
   // ── grantStagedLevel() ─────────────────────────────────────────────────────

@@ -494,12 +494,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       .filter(p => (current[p] ?? []).includes(subject))
     if (!toRevoke.length) return
 
-    let remaining = toRevoke.length
-    toRevoke.forEach(p => {
-      this.permsSvc.revokePerm(record, p, subject).subscribe({
-        next: () => { if (--remaining === 0) { this.loadAcls(); this.permissionsChanged.emit() } },
-        error: err => console.error('[PermissionManager] removeSubject error:', err)
-      })
+    forkJoin(toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject))).subscribe({
+      next: () => { this.loadAcls(); this.permissionsChanged.emit() },
+      error: (err: unknown) => {
+        this.loadAcls()
+        console.error('[PermissionManager] removeSubject error:', err)
+      }
     })
   }
 
