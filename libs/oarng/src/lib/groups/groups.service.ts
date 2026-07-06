@@ -16,7 +16,9 @@ export class GroupsService {
   }
 
   private get headers(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` })
+    const token = this.getToken()
+    const h = new HttpHeaders()
+    return token ? h.set('Authorization', `Bearer ${token}`) : h
   }
 
   getGroups(): Observable<Group[]> {
@@ -28,24 +30,36 @@ export class GroupsService {
     return this.http.post<Group>(this.base, { name }, { headers: this.headers })
   }
 
-  deleteGroup(groupId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${groupId}`, { headers: this.headers })
+  // Backend returns text/plain ("Group deleted"), not JSON
+  deleteGroup(groupId: string): Observable<string> {
+    return this.http.delete(
+      this.groupUrl(groupId),
+      { headers: this.headers, responseType: 'text' }
+    )
   }
 
-  // Backend: POST /{groupId} with body as the member ID string directly
-  addMember(groupId: string, memberId: string): Observable<Group> {
-    return this.http.post<Group>(
-      `${this.base}/${groupId}`,
-      memberId,
+  // Backend: POST /{shoulder}/{groupId} — returns the updated members array, not the full group
+  addMember(groupId: string, memberId: string): Observable<string[]> {
+    return this.http.post<string[]>(
+      this.groupUrl(groupId),
+      JSON.stringify(memberId),
       { headers: this.headers.set('Content-Type', 'application/json') }
     )
   }
 
-  // Backend: DELETE /{groupId}/{memberId}
-  removeMember(groupId: string, memberId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${this.base}/${groupId}/${encodeURIComponent(memberId)}`,
-      { headers: this.headers }
+  // Backend returns text/plain ("Removed … from group …"), not JSON
+  removeMember(groupId: string, memberId: string): Observable<string> {
+    return this.http.delete(
+      `${this.groupUrl(groupId)}/${encodeURIComponent(memberId)}`,
+      { headers: this.headers, responseType: 'text' }
     )
+  }
+
+  // Group IDs are "{shoulder}:{owner}:{name}" — backend requires /{shoulder}/{groupId} routing.
+  // colonIdx > 0 guards against IDs with no prefix (fall back to grp0).
+  private groupUrl(groupId: string): string {
+    const colonIdx = groupId.indexOf(':')
+    const shoulder = colonIdx > 0 ? groupId.substring(0, colonIdx) : 'grp0'
+    return `${this.base}/${shoulder}/${groupId}`
   }
 }

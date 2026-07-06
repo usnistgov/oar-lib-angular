@@ -13,8 +13,8 @@ export interface RecordRef {
 export type AclPerm = 'read' | 'write' | 'admin' | 'delete'
 
 export interface Acls {
-  read: string[]
-  write: string[]
-  admin: string[]
-  delete: string[]
+  read?: string[]
+  write?: string[]
+  admin?: string[]
+  delete?: string[]
 }
