@@ -346,6 +346,38 @@ describe('PermissionManagerComponent', () => {
       component.grantStagedLevel('admin')
       expect(permsSvc.grantPerm).not.toHaveBeenCalled()
     })
+
+    it('calls loadAcls() exactly once even when 3 people are staged', () => {
+      const record: RecordRef = { id: 'mdm:001', apiBase: 'https://api/' }
+      fixture.componentRef.setInput('records', [record])
+      component.acls.set({ read: [], write: [], admin: [], delete: [] })
+      component.staged.set([
+        { id: 'alice', label: 'Alice' },
+        { id: 'bob', label: 'Bob' },
+        { id: 'carol', label: 'Carol' },
+      ])
+      permsSvc.grantPerm.mockReturnValue(of(['alice']))
+      permsSvc.getAcls.mockReturnValue(of({ read: ['alice', 'bob', 'carol'], write: [], admin: [], delete: [] }))
+
+      component.grantStagedLevel('view')
+
+      expect(permsSvc.getAcls).toHaveBeenCalledTimes(1)
+    })
+
+    it('calls loadAcls() and does NOT emit when any op errors', () => {
+      const record: RecordRef = { id: 'mdm:001', apiBase: 'https://api/' }
+      fixture.componentRef.setInput('records', [record])
+      component.acls.set({ read: [], write: [], admin: [], delete: [] })
+      component.staged.set([{ id: 'alice', label: 'Alice' }])
+      permsSvc.grantPerm.mockReturnValue(throwError(() => new Error('403')))
+      permsSvc.getAcls.mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
+      const spy = jest.spyOn(component.permissionsChanged, 'emit')
+
+      component.grantStagedLevel('view')
+
+      expect(permsSvc.getAcls).toHaveBeenCalled()
+      expect(spy).not.toHaveBeenCalled()
+    })
   })
 
   // ── grantBulk() ────────────────────────────────────────────────────────────

@@ -509,36 +509,36 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const people = this.staged()
     if (!people.length) return
 
-    const total = people.length
-    let completed = 0
-
-    const onOneDone = () => {
-      completed++
-      if (completed === total) {
-        this.permissionsChanged.emit()
-      }
-    }
-
-    people.forEach(person => {
-      const currentAcls = this.acls()
-      if (!currentAcls) { onOneDone(); return }
+    const currentAcls = this.acls()
+    const allOps: Observable<unknown>[] = people.flatMap(person => {
+      if (!currentAcls) return []
       const required = this.LEVEL_PERMS[level]
       const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
       const toGrant = required.filter(p => !(currentAcls[p] ?? []).includes(person.id))
       const toRevoke = all.filter(p => !required.includes(p) && (currentAcls[p] ?? []).includes(person.id))
-      const ops: Observable<unknown>[] = [
+      return [
         ...toGrant.map(p => this.permsSvc.grantPerm(record, p, person.id)),
         ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, person.id)),
       ]
-      if (!ops.length) { onOneDone(); return }
-      let remaining = ops.length
-      ops.forEach(op$ => op$.subscribe({
-        next: () => { if (--remaining === 0) { this.loadAcls(); onOneDone() } },
-        error: (err: unknown) => console.error('[PermissionManager] grantStagedLevel error:', err)
-      }))
     })
 
     this.closeAddPerson()
+
+    if (!allOps.length) {
+      this.permissionsChanged.emit()
+      return
+    }
+
+    forkJoin(allOps).subscribe({
+      next: () => {
+        this.loadAcls()
+        this.permissionsChanged.emit()
+      },
+      error: (err: unknown) => {
+        this.loadAcls()
+        console.error('[PermissionManager] grantStagedLevel error:', err)
+      }
+    })
   }
 
   // ── Confirmation wrappers ─────────────────────────────────────────────────
