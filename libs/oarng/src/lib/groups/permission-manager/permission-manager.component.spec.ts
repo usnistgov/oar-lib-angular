@@ -630,4 +630,59 @@ describe('PermissionManagerComponent', () => {
       expect(component.LEVEL_PERMS['admin']).toEqual(['read', 'write', 'admin', 'delete'])
     })
   })
+
+  // ── loadNistOrgs — subject prefix ─────────────────────────────────────────
+
+  describe('loadNistOrgs — subject prefix', () => {
+    beforeEach(() => {
+      // Provide an orgURL so loadNistOrgs doesn't bail out early
+      jest.spyOn((component as any).configSvc, 'getConfig').mockReturnValue({ orgURL: 'https://orgs.example.com/api' })
+    })
+
+    it('stages a NIST ou org with nistou: prefix', () => {
+      // org name contains 'mml' so the name-based filter passes
+      const orgApiResponse = { ou: { '728': 'MML Materials Division' } }
+      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
+
+      component.loadNistOrgs('MML')
+
+      expect(component.nistOrgs()).toContainEqual({ id: 'nistou:728', name: 'MML Materials Division' })
+    })
+
+    it('stages a NIST div org with nistdiv: prefix', () => {
+      // org name contains 'itl' so the name-based filter passes
+      const orgApiResponse = { div: { '456': 'ITL Applied Cybersecurity Division' } }
+      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
+
+      component.loadNistOrgs('ITL')
+
+      expect(component.nistOrgs()).toContainEqual({ id: 'nistdiv:456', name: 'ITL Applied Cybersecurity Division' })
+    })
+
+    it('falls back to the raw key as prefix for unknown org types', () => {
+      // org name contains 'x' so the name-based filter passes
+      const orgApiResponse = { custom: { '999': 'X Unknown Org' } }
+      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
+
+      component.loadNistOrgs('X')
+
+      expect(component.nistOrgs()).toContainEqual({ id: 'custom:999', name: 'X Unknown Org' })
+    })
+  })
+
+  // ── ngOnChanges dedup ──────────────────────────────────────────────────────
+
+  describe('ngOnChanges', () => {
+    it('calls loadGroups() once when records and section=groups both change simultaneously', () => {
+      const loadGroupsSpy = jest.spyOn(component, 'loadGroups')
+      component.section = 'groups'
+
+      component.ngOnChanges({
+        records: { currentValue: [{ id: 'r1', apiBase: 'https://api/' }], previousValue: [], firstChange: false, isFirstChange: () => false },
+        section: { currentValue: 'groups', previousValue: 'permissions', firstChange: false, isFirstChange: () => false },
+      })
+
+      expect(loadGroupsSpy).toHaveBeenCalledTimes(1)
+    })
+  })
 })

@@ -41,6 +41,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     admin:  ['read', 'write', 'admin', 'delete'],
   }
 
+  private readonly NIST_ORG_PREFIX: Record<string, string> = {
+    ou: 'nistou',
+    div: 'nistdiv',
+    grp: 'nistgrp',
+  }
+
   // ── Groups state ──────────────────────────────────────────────────────────
   groups = signal<Group[]>([])
   groupsLoading = signal(false)
@@ -160,10 +166,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
               Object.keys(raw).forEach(key => {
                 const group = raw[key]
                 if (group && typeof group === 'object') {
-                  Object.keys(group).forEach(id => {
-                    // key.startsWith(q) handles org codes like MML, ITL; wordPrefixMatch handles names
-                    if (key.toLowerCase().startsWith(q) || wordPrefixMatch(group[id])) {
-                      nist.push({ id, name: group[id], type: 'nist' })
+                  Object.keys(group).forEach(numericId => {
+                    if (key.toLowerCase().startsWith(q) || wordPrefixMatch(group[numericId])) {
+                      const prefix = this.NIST_ORG_PREFIX[key] ?? key
+                      nist.push({ id: `${prefix}:${numericId}`, name: group[numericId], type: 'nist' })
                     }
                   })
                 }
@@ -216,8 +222,9 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       this.singleRecord.set(this.records.length === 1 ? this.records[0] : null)
       this.loadGroups()
       this.loadAcls()
-    }
-    if (changes['section'] && this.section === 'groups') {
+    } else if (changes['section'] && this.section === 'groups') {
+      // Only load groups when section changes to 'groups' and records didn't also change —
+      // if records changed, loadGroups was already called above.
       this.loadGroups()
     }
     if (changes['userOu'] && this.userOu) {
@@ -562,7 +569,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const current = this.subjectLevel(subject)
     this.confirm({
       title: 'Change access level',
-      body: `Change access for "${label}" on ${record?.id} from ${current ?? 'custom'} to ${newLevel}?`,
+      body: `Change access for "${label}" on ${record?.id} from ${current ?? 'none'} to ${newLevel}?`,
       confirmLabel: 'Change',
     }, () => this.setSubjectLevel(subject, newLevel))
   }
@@ -616,7 +623,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           Object.keys(raw).forEach(key => {
             const group = raw[key]
             if (group && typeof group === 'object') {
-              Object.keys(group).forEach(id => flat.push({ id, name: group[id], key }))
+              Object.keys(group).forEach(numericId => {
+                const prefix = this.NIST_ORG_PREFIX[key] ?? key
+                flat.push({ id: `${prefix}:${numericId}`, name: group[numericId], key })
+              })
             }
           })
         }
