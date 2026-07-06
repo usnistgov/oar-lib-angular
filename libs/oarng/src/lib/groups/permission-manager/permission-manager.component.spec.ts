@@ -163,6 +163,10 @@ describe('PermissionManagerComponent', () => {
       expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'admin', 'alice')
       expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'delete', 'alice')
       expect(permsSvc.revokePerm).not.toHaveBeenCalled()
+      // The key invariant: read is already held — grantPerm must NOT be called for 'read'
+      expect(permsSvc.grantPerm).not.toHaveBeenCalledWith(
+        expect.any(Object), 'read', 'alice'
+      )
     })
 
     it('revokes excess perms when downgrading to view', () => {
@@ -384,7 +388,7 @@ describe('PermissionManagerComponent', () => {
 
   describe('grantBulk()', () => {
     beforeEach(() => {
-      component.records = [RECORD]
+      fixture.componentRef.setInput('records', [RECORD])
       component.staged.set([{ id: 'alice', label: 'Alice' }])
       component.bulkLevel = 'update'
     })
@@ -431,13 +435,13 @@ describe('PermissionManagerComponent', () => {
     })
 
     it('is a no-op when records is empty', () => {
-      component.records = []
+      fixture.componentRef.setInput('records', [])
       component.grantBulk()
       expect(permsSvc.grantPerm).not.toHaveBeenCalled()
     })
 
     it('revokes permissions above the requested level (downgrade support)', () => {
-      component.records = [{ id: 'mdm:001', apiBase: 'https://api/' }]
+      fixture.componentRef.setInput('records', [{ id: 'mdm:001', apiBase: 'https://api/' }])
       component.staged.set([{ id: 'alice', label: 'Alice' }])
       component.bulkLevel = 'view'  // grant view: only read should remain
 
@@ -460,7 +464,7 @@ describe('PermissionManagerComponent', () => {
     })
 
     it('does NOT revoke permissions that are part of the requested level', () => {
-      component.records = [{ id: 'mdm:001', apiBase: 'https://api/' }]
+      fixture.componentRef.setInput('records', [{ id: 'mdm:001', apiBase: 'https://api/' }])
       component.staged.set([{ id: 'alice', label: 'Alice' }])
       component.bulkLevel = 'update'  // read + write — must not revoke read or write
 
@@ -612,6 +616,140 @@ describe('PermissionManagerComponent', () => {
       component.showNewGroupForm.set(true)
       component.cancelCreate()
       expect(component.showNewGroupForm()).toBe(false)
+    })
+  })
+
+  // ── createGroup() ─────────────────────────────────────────────────────────
+
+  describe('createGroup()', () => {
+    it('calls groupsSvc.createGroup with trimmed name', () => {
+      component.newGroupName = '  My Team  '
+      component.createGroup()
+      expect(groupsSvc.createGroup).toHaveBeenCalledWith('My Team')
+    })
+
+    it('does nothing when name is blank', () => {
+      component.newGroupName = '   '
+      component.createGroup()
+      expect(groupsSvc.createGroup).not.toHaveBeenCalled()
+    })
+
+    it('appends the new group to the groups signal', () => {
+      groupsSvc.createGroup.mockReturnValue(
+        of({ id: 'grp0:alice:newteam', name: 'New Team', owner: 'alice', members: [] })
+      )
+      component.newGroupName = 'New Team'
+      component.groups.set([])
+      component.createGroup()
+      expect(component.groups()).toHaveLength(1)
+      expect(component.groups()[0].id).toBe('grp0:alice:newteam')
+    })
+
+    it('resets newGroupName and hides the form on success', () => {
+      groupsSvc.createGroup.mockReturnValue(
+        of({ id: 'grp0:alice:newteam', name: 'New Team', owner: 'alice', members: [] })
+      )
+      component.newGroupName = 'New Team'
+      component.showNewGroupForm.set(true)
+      component.createGroup()
+      expect(component.newGroupName).toBe('')
+      expect(component.showNewGroupForm()).toBe(false)
+    })
+
+    it('logs error on failure', () => {
+      groupsSvc.createGroup.mockReturnValue(throwError(() => new Error('500')))
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      component.newGroupName = 'Bad Team'
+      component.createGroup()
+      expect(spy).toHaveBeenCalled()
+      spy.mockRestore()
+    })
+  })
+
+  // ── deleteGroup() ─────────────────────────────────────────────────────────
+
+  describe('deleteGroup()', () => {
+    it('removes the group from the groups signal', () => {
+      groupsSvc.deleteGroup.mockReturnValue(of('deleted'))
+      component.groups.set([
+        { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: [] },
+        { id: 'grp0:alice:other', name: 'Other', owner: 'alice', members: [] },
+      ])
+      component.deleteGroup('grp0:alice:team')
+      expect(component.groups()).toHaveLength(1)
+      expect(component.groups()[0].id).toBe('grp0:alice:other')
+    })
+
+    it('resets expandedGroupId when the deleted group was expanded', () => {
+      groupsSvc.deleteGroup.mockReturnValue(of('deleted'))
+      component.groups.set([{ id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: [] }])
+      component.expandedGroupId.set('grp0:alice:team')
+      component.deleteGroup('grp0:alice:team')
+      expect(component.expandedGroupId()).toBeNull()
+    })
+
+    it('does not reset expandedGroupId when a different group is deleted', () => {
+      groupsSvc.deleteGroup.mockReturnValue(of('deleted'))
+      component.groups.set([
+        { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: [] },
+        { id: 'grp0:alice:other', name: 'Other', owner: 'alice', members: [] },
+      ])
+      component.expandedGroupId.set('grp0:alice:team')
+      component.deleteGroup('grp0:alice:other')
+      expect(component.expandedGroupId()).toBe('grp0:alice:team')
+    })
+  })
+
+  // ── removeGroupMember() ────────────────────────────────────────────────────
+
+  describe('removeGroupMember()', () => {
+    it('removes the member from the group in the groups signal', () => {
+      groupsSvc.removeMember.mockReturnValue(of('removed'))
+      component.groups.set([{
+        id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: ['alice', 'bob']
+      }])
+      component.removeGroupMember('grp0:alice:team', 'bob')
+      expect(component.groups()[0].members).toEqual(['alice'])
+      expect(component.groups()[0].members).not.toContain('bob')
+    })
+
+    it('does not modify other groups', () => {
+      groupsSvc.removeMember.mockReturnValue(of('removed'))
+      component.groups.set([
+        { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: ['bob'] },
+        { id: 'grp0:alice:other', name: 'Other', owner: 'alice', members: ['bob'] },
+      ])
+      component.removeGroupMember('grp0:alice:team', 'bob')
+      expect(component.groups()[1].members).toContain('bob')
+    })
+  })
+
+  // ── addGroupMember() ───────────────────────────────────────────────────────
+
+  describe('addGroupMember()', () => {
+    beforeEach(() => {
+      component.groups.set([{
+        id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: []
+      }])
+      // memberPeopleIndex is a private field; set it via the member search response path
+      ;(component as any).memberPeopleIndex = { 'Bob Smith': 'bob' }
+    })
+
+    it('calls groupsSvc.addMember with the resolved EID', () => {
+      groupsSvc.addMember.mockReturnValue(of(['bob']))
+      component.addGroupMember('grp0:alice:team', 'Bob Smith')
+      expect(groupsSvc.addMember).toHaveBeenCalledWith('grp0:alice:team', 'bob')
+    })
+
+    it('updates the group members signal on success', () => {
+      groupsSvc.addMember.mockReturnValue(of(['bob', 'carol']))
+      component.addGroupMember('grp0:alice:team', 'Bob Smith')
+      expect(component.groups()[0].members).toEqual(['bob', 'carol'])
+    })
+
+    it('does nothing when the label has no matching EID in memberPeopleIndex', () => {
+      component.addGroupMember('grp0:alice:team', 'Unknown Person')
+      expect(groupsSvc.addMember).not.toHaveBeenCalled()
     })
   })
 
