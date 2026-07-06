@@ -5,7 +5,7 @@ import { ConfigurationService } from '../config/config.service'
 import { GROUPS_AUTH_TOKEN } from './groups-auth.token'
 import { Group } from './group.types'
 
-const BASE = 'https://api.example.com/midas/groups/grp0'
+const BASE = 'https://api.example.com/midas/groups'
 const GROUP: Group = { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: ['bob'] }
 
 function makeTestBed(token?: string): void {

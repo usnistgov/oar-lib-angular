@@ -42,6 +42,7 @@ export class GroupsService {
   addMember(groupId: string, memberId: string): Observable<string[]> {
     return this.http.post<string[]>(
       this.groupUrl(groupId),
+      // get_json_body() expects valid JSON; a bare string is not valid JSON, so encode it as a JSON string literal
       JSON.stringify(memberId),
       { headers: this.headers.set('Content-Type', 'application/json') }
     )
