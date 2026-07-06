@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatIconModule } from '@angular/material/icon'
 import { MatInputModule } from '@angular/material/input'
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
+import { MatMenuModule } from '@angular/material/menu'
 import { MatSelectModule } from '@angular/material/select'
 import { PermissionManagerComponent } from './permission-manager/permission-manager.component'
 import { ConfirmDialogComponent } from './confirm-dialog.component'
@@ -29,6 +30,7 @@ import { ConfirmDialogComponent } from './confirm-dialog.component'
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSelectModule,
     ConfirmDialogComponent,

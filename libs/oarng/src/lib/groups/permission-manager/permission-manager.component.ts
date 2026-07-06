@@ -596,6 +596,20 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     }, () => this.setSubjectLevel(subject, newLevel))
   }
 
+  changeLevel(subject: string, fromLevel: string, toLevel: 'view' | 'update' | 'admin'): void {
+    this.setSubjectLevel(subject, toLevel)
+  }
+
+  confirmChangeLevel(subject: string, fromLevel: string, toLevel: 'view' | 'update' | 'admin'): void {
+    const label = this.subjectLabels()[subject] || subject
+    const record = this.singleRecord()
+    this.confirm({
+      title: 'Change access level',
+      body: `Change access for "${label}" on ${record?.id} from ${fromLevel} to ${toLevel}?`,
+      confirmLabel: 'Change',
+    }, () => this.changeLevel(subject, fromLevel, toLevel))
+  }
+
   confirmGrantLevel(level: 'view' | 'update' | 'admin'): void {
     const record = this.singleRecord()
     this.confirm({
