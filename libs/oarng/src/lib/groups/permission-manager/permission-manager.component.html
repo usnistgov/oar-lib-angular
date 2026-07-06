@@ -125,12 +125,62 @@
         } @else if (!acls()) {
           <p class="pm-empty-state">Select a record to load its permissions.</p>
         } @else {
+
+          <!-- Read-only summary: who has what level at a glance -->
+          <div class="perm-summary" aria-label="Permission summary">
+            <div class="perm-summary-row">
+              <span class="perm-summary-label perm-summary-label--admin">Admin</span>
+              <span class="perm-summary-pills">
+                @if (subjectsByLevel().admin.length === 0) {
+                  <span class="perm-summary-empty" aria-label="No admin access">—</span>
+                }
+                @for (s of subjectsByLevel().admin; track s) {
+                  <span class="perm-summary-pill">{{ subjectLabels()[s] || s }}</span>
+                }
+              </span>
+            </div>
+            <div class="perm-summary-row">
+              <span class="perm-summary-label perm-summary-label--update">Update</span>
+              <span class="perm-summary-pills">
+                @if (subjectsByLevel().update.length === 0) {
+                  <span class="perm-summary-empty" aria-label="No update access">—</span>
+                }
+                @for (s of subjectsByLevel().update; track s) {
+                  <span class="perm-summary-pill">{{ subjectLabels()[s] || s }}</span>
+                }
+              </span>
+            </div>
+            <div class="perm-summary-row">
+              <span class="perm-summary-label perm-summary-label--view">View</span>
+              <span class="perm-summary-pills">
+                @if (subjectsByLevel().view.length === 0) {
+                  <span class="perm-summary-empty" aria-label="No view access">—</span>
+                }
+                @for (s of subjectsByLevel().view; track s) {
+                  <span class="perm-summary-pill">{{ subjectLabels()[s] || s }}</span>
+                }
+              </span>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+
+          <!-- Add access button — above the edit rows -->
+          @if (!showAddPanel()) {
+            <button mat-stroked-button class="pm-add-access-btn"
+                    (click)="openAddPerson()"
+                    aria-label="Add access for a person or group">
+              <mat-icon aria-hidden="true">person_add</mat-icon>
+              Add access
+            </button>
+          }
+
           <!-- Subject list with computed levels -->
           @if (uniqueSubjects().length === 0) {
             <p class="pm-empty-state">No one has access to this record yet.</p>
           }
           @for (subject of uniqueSubjects(); track subject) {
             <div class="pm-subject-row">
+              <mat-icon class="pm-subject-type-icon" aria-hidden="true">{{ isGroup(subject) ? 'corporate_fare' : 'person' }}</mat-icon>
               <span class="pm-subject-name">{{ subjectLabels()[subject] || subject }}</span>
               @if (subjectLevel(subject) !== null) {
                 <mat-form-field appearance="outline" class="pm-level-select-field" subscriptSizing="dynamic">
@@ -151,15 +201,6 @@
                 <mat-icon>person_remove</mat-icon>
               </button>
             </div>
-          }
-
-          @if (!showAddPanel()) {
-            <button mat-stroked-button class="pm-add-access-btn"
-                    (click)="openAddPerson()"
-                    aria-label="Add access for a person or group">
-              <mat-icon aria-hidden="true">person_add</mat-icon>
-              Add access
-            </button>
           }
 
           @if (showAddPanel()) {

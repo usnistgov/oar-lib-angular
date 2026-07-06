@@ -444,6 +444,7 @@ mat-divider {
 
 .pm-add-access-btn {
   margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
   height: 32px;
   font-size: 0.8rem;
 
@@ -453,6 +454,85 @@ mat-divider {
     height: 16px;
     margin-right: 4px;
   }
+}
+
+// --- Permission summary block ---
+
+.perm-summary {
+  padding: 0.35rem 0 0.5rem;
+}
+
+.perm-summary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  min-height: 28px;
+}
+
+.perm-summary-label {
+  flex-shrink: 0;
+  width: 52px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 0;
+  border-radius: 3px;
+  text-align: center;
+
+  &--admin {
+    background: rgba(198, 40, 40, 0.1);
+    color: #b71c1c;
+  }
+
+  &--update {
+    background: rgba(25, 118, 210, 0.1);
+    color: #1565c0;
+  }
+
+  &--view {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.perm-summary-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.perm-summary-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.07);
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.perm-summary-empty {
+  font-size: 0.8rem;
+  opacity: 0.3;
+  line-height: 1.6;
+}
+
+// --- Subject row type icon ---
+
+.pm-subject-type-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.45;
+  color: inherit;
 }
 
 .pm-level-field {

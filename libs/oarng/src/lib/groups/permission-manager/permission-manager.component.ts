@@ -74,6 +74,20 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     ]))
   })
 
+  readonly subjectsByLevel = computed(() => {
+    const subjects = this.uniqueSubjects()
+    const admin: string[] = []
+    const update: string[] = []
+    const view: string[] = []
+    for (const s of subjects) {
+      const level = this.subjectLevel(s)
+      if (level === 'admin') admin.push(s)
+      else if (level === 'update') update.push(s)
+      else if (level === 'view') view.push(s)
+    }
+    return { admin, update, view }
+  })
+
   // ── User's NIST org units ─────────────────────────────────────────────────
   nistOrgs = signal<{ id: string; name: string }[]>([])
   nistOrgsLoading = signal(false)
@@ -457,6 +471,14 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     if (r && w) return 'update'
     if (r) return 'view'
     return null
+  }
+
+  isGroup(subject: string): boolean {
+    // Numeric IDs are NIST org groups; prefixed IDs (e.g. nistou:123) are NIST org units;
+    // MIDAS group IDs match an entry in the loaded groups list.
+    if (/^\d+$/.test(subject) || /^nist(ou|div|grp):/.test(subject)) return true
+    if (this.groups().some(g => g.id === subject)) return true
+    return false
   }
 
   setSubjectLevel(subject: string, newLevel: 'view' | 'update' | 'admin', emitChange = true): void {
