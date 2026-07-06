@@ -10,7 +10,9 @@ export class PermissionsService {
   private getToken = inject(GROUPS_AUTH_TOKEN, { optional: true }) ?? (() => '')
 
   private get headers(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` })
+    const token = this.getToken()
+    const h = new HttpHeaders()
+    return token ? h.set('Authorization', `Bearer ${token}`) : h
   }
 
   // Backend: /{record.apiBase}/{record.id}/acls  (plural)
@@ -27,11 +29,11 @@ export class PermissionsService {
     return this.http.put<Acls>(this.aclsUrl(record), acls, { headers: this.headers })
   }
 
-  // POST /acls/{perm} — body is the subject string directly (or array)
-  grantPerm(record: RecordRef, perm: keyof Acls, subject: string): Observable<Acls> {
-    return this.http.post<Acls>(
+  // POST /acls/{perm} — backend expects a JSON-encoded string body
+  grantPerm(record: RecordRef, perm: keyof Acls, subject: string): Observable<string[]> {
+    return this.http.post<string[]>(
       `${this.aclsUrl(record)}/${perm}`,
-      subject,
+      JSON.stringify(subject),
       { headers: this.headers.set('Content-Type', 'application/json') }
     )
   }
