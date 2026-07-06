@@ -230,41 +230,37 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const level = this.bulkLevel
     if (!people.length || !this.records.length) return
 
-    const permsToGrant = this.LEVEL_PERMS[level]
+    const required = this.LEVEL_PERMS[level]
+    const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
+    const toRevoke = all.filter(p => !required.includes(p))
     this.bulkGranting.set(true)
     this.bulkGrantError.set(null)
 
-    let remaining = people.length * this.records.length * permsToGrant.length
-    let failed = 0
+    const ops: Observable<unknown>[] = people.flatMap(person =>
+      this.records.flatMap(record => [
+        ...required.map(perm => this.permsSvc.grantPerm(record, perm, person.id)),
+        // Revoke perms above the target level; 404s are safe (subject didn't hold that perm).
+        ...toRevoke.map(p =>
+          this.permsSvc.revokePerm(record, p, person.id).pipe(catchError(() => of(null)))
+        ),
+      ])
+    )
 
-    people.forEach(person => {
-      this.records.forEach(record => {
-        permsToGrant.forEach(perm => {
-          this.permsSvc.grantPerm(record, perm, person.id).subscribe({
-            next: () => {
-              if (--remaining === 0) {
-                this.bulkGranting.set(false)
-                if (failed === 0) {
-                  this.staged.set([])
-                  this.peopleQuery = ''
-                  this.groupQuery = ''
-                  this.peopleSuggestions.set([])
-                  this.groupSuggestions.set([])
-                  this.permissionsChanged.emit()
-                }
-              }
-            },
-            error: err => {
-              failed++
-              if (--remaining === 0) {
-                this.bulkGranting.set(false)
-                this.bulkGrantError.set(`${failed} operation(s) failed.`)
-              }
-              console.error('[PermissionManager] bulk grant error:', err)
-            }
-          })
-        })
-      })
+    forkJoin(ops).subscribe({
+      next: () => {
+        this.bulkGranting.set(false)
+        this.staged.set([])
+        this.peopleQuery = ''
+        this.groupQuery = ''
+        this.peopleSuggestions.set([])
+        this.groupSuggestions.set([])
+        this.permissionsChanged.emit()
+      },
+      error: (err) => {
+        this.bulkGranting.set(false)
+        this.bulkGrantError.set('One or more operations failed.')
+        console.error('[PermissionManager] bulk grant error:', err)
+      }
     })
   }
 

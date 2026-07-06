@@ -435,6 +435,42 @@ describe('PermissionManagerComponent', () => {
       component.grantBulk()
       expect(permsSvc.grantPerm).not.toHaveBeenCalled()
     })
+
+    it('revokes permissions above the requested level (downgrade support)', () => {
+      component.records = [{ id: 'mdm:001', apiBase: 'https://api/' }]
+      component.staged.set([{ id: 'alice', label: 'Alice' }])
+      component.bulkLevel = 'view'  // grant view: only read should remain
+
+      component.grantBulk()
+
+      // must grant read
+      expect(permsSvc.grantPerm).toHaveBeenCalledWith(
+        expect.any(Object), 'read', 'alice'
+      )
+      // must revoke write, admin, delete
+      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
+        expect.any(Object), 'write', 'alice'
+      )
+      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
+        expect.any(Object), 'admin', 'alice'
+      )
+      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
+        expect.any(Object), 'delete', 'alice'
+      )
+    })
+
+    it('does NOT revoke permissions that are part of the requested level', () => {
+      component.records = [{ id: 'mdm:001', apiBase: 'https://api/' }]
+      component.staged.set([{ id: 'alice', label: 'Alice' }])
+      component.bulkLevel = 'update'  // read + write — must not revoke read or write
+
+      component.grantBulk()
+
+      const revokeCalls = (permsSvc.revokePerm as jest.Mock).mock.calls
+      const revokedPerms = revokeCalls.map((c: any[]) => c[1])
+      expect(revokedPerms).not.toContain('read')
+      expect(revokedPerms).not.toContain('write')
+    })
   })
 
   // ── loadAcls() ─────────────────────────────────────────────────────────────
