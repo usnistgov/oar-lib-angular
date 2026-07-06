@@ -221,14 +221,13 @@ describe('PermissionManagerComponent', () => {
       permsSvc.revokePerm.mockReturnValue(throwError(() => new Error('403')))
       permsSvc.grantPerm.mockReturnValue(of(['alice']))
 
-      // alice has read + write but NOT admin/delete — upgrading to admin triggers grants
-      component.acls.set(makeAcls(['alice'], ['alice'], [], []))
-      // mock getAcls for loadAcls()
-      permsSvc.getAcls.mockReturnValue(of({ read: ['alice'], write: ['alice'], admin: ['alice'], delete: ['alice'] }))
+      // alice at full admin — downgrading to view produces toRevoke=[write,admin,delete]
+      // which calls revokePerm 3 times; revokePerm throws, hitting the error path
+      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
+      permsSvc.getAcls.mockReturnValue(of(makeAcls(['alice'], [], [], [])))
 
-      component.setSubjectLevel('alice', 'admin')
+      component.setSubjectLevel('alice', 'view')
 
-      // forkJoin error path — loadAcls must be called
       expect(permsSvc.getAcls).toHaveBeenCalled()
     })
   })
