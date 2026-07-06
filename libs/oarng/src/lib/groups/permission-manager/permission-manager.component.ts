@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
-import { Subject, Subscription, Observable, of } from 'rxjs'
+import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
 import { HttpClient } from '@angular/common/http'
 import { MatDialog } from '@angular/material/dialog'
@@ -472,16 +472,16 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     ]
     if (!ops.length) return
 
-    let remaining = ops.length
-    ops.forEach(op$ => op$.subscribe({
+    forkJoin(ops).subscribe({
       next: () => {
-        if (--remaining === 0) {
-          this.loadAcls()
-          if (emitChange) this.permissionsChanged.emit()
-        }
+        this.loadAcls()
+        if (emitChange) this.permissionsChanged.emit()
       },
-      error: (err: unknown) => console.error('[PermissionManager] setSubjectLevel error:', err)
-    }))
+      error: (err: unknown) => {
+        this.loadAcls()
+        console.error('[PermissionManager] setSubjectLevel error:', err)
+      }
+    })
   }
 
   removeSubject(subject: string): void {
