@@ -467,8 +467,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const w = acls.write?.includes(subject) ?? false
     const a = acls.admin?.includes(subject) ?? false
     const d = acls.delete?.includes(subject) ?? false
-    if (r && w && a && d) return 'admin'
-    if (r && w) return 'update'
+    if (a) return 'admin'
+    if (w) return 'update'
     if (r) return 'view'
     return null
   }
