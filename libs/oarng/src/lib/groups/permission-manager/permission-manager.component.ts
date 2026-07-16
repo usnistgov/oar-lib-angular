@@ -41,11 +41,11 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     admin:  ['read', 'write', 'admin', 'delete'],
   }
 
-  private readonly NIST_ORG_PREFIX: Record<string, string> = {
-    ou: 'nistou',
-    div: 'nistdiv',
-    grp: 'nistgrp',
-  }
+  private readonly NIST_ORG_TYPES = [
+    { endpoint: 'OU',    prefix: 'nistou'  as const },
+    { endpoint: 'Div',   prefix: 'nistdiv' as const },
+    { endpoint: 'Group', prefix: 'nistgrp' as const },
+  ]
 
   // ── Groups state ──────────────────────────────────────────────────────────
   groups = signal<Group[]>([])
@@ -89,7 +89,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   })
 
   // ── User's NIST org units ─────────────────────────────────────────────────
-  nistOrgs = signal<{ id: string; name: string }[]>([])
+  nistOrgs = signal<{ id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[]>([])
   nistOrgsLoading = signal(false)
 
   // ── People picker state ────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   // ── Group search state ────────────────────────────────────────────────────
   groupQuery = ''
-  groupSuggestions = signal<{ id: string; name: string; type: 'midas' | 'nist' }[]>([])
+  groupSuggestions = signal<{ id: string; name: string; code: string; type: 'midas' | 'nistou' | 'nistdiv' | 'nistgrp' }[]>([])
 
   // ── Group member search state ─────────────────────────────────────────────
   memberQuery = ''
@@ -170,28 +170,18 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
         const midas = this.groups()
           .filter(g => wordPrefixMatch(g.name) || g.id.toLowerCase().startsWith(q))
           .slice(0, 5)
-          .map(g => ({ id: g.id, name: g.name, type: 'midas' as const }))
-        const orgUrl = (this.configSvc.getConfig<any>()['orgURL'] ?? '') as string
-        if (!orgUrl) return of(midas)
-        return this.http.get<any>(`${orgUrl}?${encodeURIComponent(query.toUpperCase())}`).pipe(
-          map(raw => {
-            const nist: { id: string; name: string; type: 'nist' }[] = []
-            if (raw && typeof raw === 'object') {
-              Object.keys(raw).forEach(key => {
-                const group = raw[key]
-                if (group && typeof group === 'object') {
-                  Object.keys(group).forEach(numericId => {
-                    if (key.toLowerCase().startsWith(q) || wordPrefixMatch(group[numericId])) {
-                      const prefix = this.NIST_ORG_PREFIX[key] ?? key
-                      nist.push({ id: `${prefix}:${numericId}`, name: group[numericId], type: 'nist' })
-                    }
-                  })
-                }
-              })
-            }
-            return ([...midas, ...nist] as { id: string; name: string; type: 'midas' | 'nist' }[]).slice(0, 10)
-          }),
-          catchError(() => of(midas))
+          .map(g => ({ id: g.id, name: g.name, code: '', type: 'midas' as const }))
+        const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
+        if (!orgBaseUrl) return of(midas)
+        return forkJoin(
+          this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
+            this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(query.toUpperCase())}`).pipe(
+              map(raw => this.parseOrgIndex(raw, prefix).filter(o => wordPrefixMatch(o.name))),
+              catchError(() => of([]))
+            )
+          )
+        ).pipe(
+          map(results => [...midas, ...results.flat()].slice(0, 10))
         )
       })
     ).subscribe(suggestions => this.groupSuggestions.set(suggestions))
@@ -312,6 +302,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
+  private readonly ORG_TYPE_MAP: Record<string, { endpoint: string; label: string; prefix: 'nistou' | 'nistdiv' | 'nistgrp' }> = {
+    nistou:  { endpoint: 'OU',    label: 'OU',  prefix: 'nistou'  },
+    nistdiv: { endpoint: 'Div',   label: 'Div', prefix: 'nistdiv' },
+    nistgrp: { endpoint: 'Group', label: 'Grp', prefix: 'nistgrp' },
+  }
+
   private resolveUnknownLabels(acls: Acls): void {
     const known = this.subjectLabels()
     const allSubjects = new Set([
@@ -322,12 +318,15 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     ])
     const syncUpdates: { [subject: string]: string } = {}
     const toResolveViaSearch: string[] = []
+    const toResolveViaOrg: string[] = []
 
     for (const subject of allSubjects) {
       if (known[subject]) continue
       const group = this.groups().find(g => g.id === subject)
       if (group) {
         syncUpdates[subject] = group.name
+      } else if (/^nist(ou|div|grp):/.test(subject) || /^\d+:\d+$/.test(subject) || /^[a-z]+:\d+$/.test(subject)) {
+        toResolveViaOrg.push(subject)
       } else if (/^\d+$/.test(subject)) {
         syncUpdates[subject] = `Org group (${subject})`
       } else {
@@ -355,6 +354,78 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
             }
           }
         })
+      })
+    }
+
+    // NIST org subjects — two formats:
+    //   new: "nistou:13289" / "nistdiv:13289" / "nistgrp:13289"
+    //   legacy: "775:13289" (orgCode:orgId, stored by older versions of this UI)
+    // In both cases, display as "{orgName} ({orgCode})".
+    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
+    if (orgBaseUrl) {
+      toResolveViaOrg.forEach(subject => {
+        const colonIdx = subject.indexOf(':')
+        const prefix = subject.substring(0, colonIdx)
+        const afterColon = subject.substring(colonIdx + 1)
+
+        if (/^nist(ou|div|grp)$/.test(prefix)) {
+          // New format: query the typed endpoint, look up numericId directly
+          const mapping = this.ORG_TYPE_MAP[prefix]
+          this.http.get<any>(`${orgBaseUrl}/${mapping.endpoint}/index`).pipe(
+            catchError(() => of({}))
+          ).subscribe((raw: any) => {
+            const numericId = afterColon
+            for (const code of Object.keys(raw ?? {})) {
+              const group = raw[code]
+              if (group && typeof group === 'object' && group[numericId]) {
+                const name = (group[numericId] as string).replace(/\s*\(\d+\)\s*$/, '')
+                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
+                return
+              }
+            }
+          })
+        } else if (/^\d+$/.test(prefix)) {
+          // Legacy format "775:13289" (orgCode:orgId) — direct lookup by both keys
+          const orgCode = prefix
+          const orgId = afterColon
+          forkJoin(
+            this.NIST_ORG_TYPES.map(({ endpoint }) =>
+              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
+                catchError(() => of({}))
+              )
+            )
+          ).subscribe(responses => {
+            for (const raw of responses) {
+              const group = raw?.[orgCode]
+              if (group && typeof group === 'object' && group[orgId]) {
+                const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
+                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${orgCode})` }))
+                return
+              }
+            }
+          })
+        } else {
+          // Org abbreviation format "mml:13213" — scan all endpoints by orgId, get code from outer key
+          const orgId = afterColon
+          forkJoin(
+            this.NIST_ORG_TYPES.map(({ endpoint }) =>
+              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
+                catchError(() => of({}))
+              )
+            )
+          ).subscribe(responses => {
+            for (const raw of responses) {
+              for (const code of Object.keys(raw ?? {})) {
+                const group = raw[code]
+                if (group && typeof group === 'object' && group[orgId]) {
+                  const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
+                  this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
+                  return
+                }
+              }
+            }
+          })
+        }
       })
     }
   }
@@ -634,13 +705,16 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   confirmDeleteGroup(groupId: string): void {
     const group = this.groups().find(g => g.id === groupId)
-    const count = group?.members.length ?? 0
+    const members = group?.members ?? []
+    const labels = this.subjectLabels()
     this.confirm({
       title: 'Delete group',
       body: `Permanently delete group "${group?.name}"?`,
-      items: count > 0
-        ? [`${count} member${count > 1 ? 's' : ''} will lose access granted through this group`]
+      items: members.length > 0
+        ? [`${members.length} member${members.length !== 1 ? 's' : ''} will lose access granted through this group`]
         : ['This group has no members'],
+      section: members.length > 0 ? 'Members' : undefined,
+      sectionItems: members.length > 0 ? members.map(m => labels[m] ?? m) : undefined,
       confirmLabel: 'Delete',
       isDestructive: true,
     }, () => this.deleteGroup(groupId))
@@ -649,29 +723,23 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   // ── User's NIST org units ─────────────────────────────────────────────────
 
   loadNistOrgs(ou: string): void {
-    const orgUrl = (this.configSvc.getConfig<any>()['orgURL'] ?? '') as string
-    if (!orgUrl || !ou) return
+    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
+    if (!orgBaseUrl || !ou) return
     this.nistOrgsLoading.set(true)
-    this.http.get<any>(`${orgUrl}?${encodeURIComponent(ou.toUpperCase())}`).subscribe({
-      next: raw => {
-        const flat: { id: string; name: string; key: string }[] = []
-        if (raw && typeof raw === 'object') {
-          Object.keys(raw).forEach(key => {
-            const group = raw[key]
-            if (group && typeof group === 'object') {
-              Object.keys(group).forEach(numericId => {
-                const prefix = this.NIST_ORG_PREFIX[key] ?? key
-                flat.push({ id: `${prefix}:${numericId}`, name: group[numericId], key })
-              })
-            }
-          })
-        }
+    forkJoin(
+      this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
+        this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(ou.toUpperCase())}`).pipe(
+          map(raw => this.parseOrgIndex(raw, prefix)),
+          catchError(() => of([]))
+        )
+      )
+    ).subscribe({
+      next: results => {
         const q = ou.toLowerCase()
         const seen = new Set<string>()
-        const orgs = flat
-          .filter(o => o.name.toLowerCase().includes(q) || o.key.toLowerCase().includes(q))
+        const orgs = results.flat()
+          .filter(o => o.name.toLowerCase().includes(q))
           .filter(o => !seen.has(o.id) && seen.add(o.id))
-          .map(o => ({ id: o.id, name: o.name }))
         this.nistOrgs.set(orgs)
         this.nistOrgsLoading.set(false)
       },
@@ -679,12 +747,40 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
-  stageNistOrg(org: { id: string; name: string }): void {
+  private parseOrgIndex(
+    raw: any,
+    prefix: 'nistou' | 'nistdiv' | 'nistgrp'
+  ): { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] {
+    const out: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] = []
+    if (!raw || typeof raw !== 'object') return out
+    Object.keys(raw).forEach(code => {
+      const group = raw[code]
+      if (group && typeof group === 'object') {
+        Object.keys(group).forEach(numericId => {
+          out.push({ id: `${prefix}:${numericId}`, name: group[numericId], code, type: prefix })
+        })
+      }
+    })
+    return out
+  }
+
+  stageNistOrg(org: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }): void {
     this._addStaged(org.id, org.name)
+    this.subjectLabels.update(m => ({
+      ...m,
+      [org.id]: `${org.name} (${org.code})`
+    }))
   }
 
   isNistOrgStaged(orgId: string): boolean {
     return this.staged().some(s => s.id === orgId)
+  }
+
+  orgTypeLabel(type: string): string {
+    if (type === 'nistou')  return 'OU'
+    if (type === 'nistdiv') return 'Div'
+    if (type === 'nistgrp') return 'Grp'
+    return ''
   }
 
   // ── People picker ─────────────────────────────────────────────────────────

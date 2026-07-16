@@ -183,6 +183,17 @@
   }
 }
 
+.pm-org-type-badge {
+  display: inline-block;
+  margin-left: 0.4em;
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  vertical-align: middle;
+}
+
 .pm-add-person-actions {
   display: flex;
   gap: 0.5rem;
@@ -304,14 +315,13 @@ mat-divider {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   margin-bottom: 0.5rem;
-  overflow: hidden;
 }
 
 .pm-group-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  padding: 0.4rem 0.25rem 0.4rem 0.75rem;
 }
 
 .pm-group-name {
@@ -342,14 +352,15 @@ mat-divider {
 .pm-members-panel {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(0, 0, 0, 0.02);
-  padding: 0.25rem 0.5rem 0.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+  border-radius: 0 0 6px 6px;
 }
 
 .pm-member-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.2rem 0;
+  padding: 0.1rem 0;
 }
 
 .pm-member-icon {

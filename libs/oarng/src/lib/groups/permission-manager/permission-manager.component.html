@@ -85,6 +85,9 @@
                 <mat-option [value]="s">
                   <mat-icon>{{ s.type === 'midas' ? 'group' : 'corporate_fare' }}</mat-icon>
                   {{ s.name }}
+                  @if (s.type !== 'midas') {
+                    <span class="pm-org-type-badge">{{ orgTypeLabel(s.type) }}</span>
+                  }
                 </mat-option>
               }
             </mat-autocomplete>
@@ -289,11 +292,12 @@
                         <button mat-stroked-button
                                 class="pm-group-option-btn"
                                 [class.pm-group-option-btn--staged]="isNistOrgStaged(org.id)"
-                                [attr.aria-label]="'Add org unit ' + org.name"
+                                [attr.aria-label]="'Add ' + orgTypeLabel(org.type) + ' ' + org.name"
                                 [attr.aria-pressed]="isNistOrgStaged(org.id)"
                                 (click)="stageNistOrg(org)">
                           <mat-icon>corporate_fare</mat-icon>
                           {{ org.name }}
+                          <span class="pm-org-type-badge">{{ orgTypeLabel(org.type) }}</span>
                         </button>
                       }
                     </div>
@@ -390,10 +394,10 @@
                 <div class="pm-group-actions">
                   <button
                     mat-icon-button
-                    [attr.aria-label]="(expandedGroupId() === group.id ? 'Collapse' : 'Manage') + ' group ' + group.name"
+                    [attr.aria-label]="(expandedGroupId() === group.id ? 'Close add member' : 'Add member to') + ' group ' + group.name"
                     [attr.aria-expanded]="expandedGroupId() === group.id"
                     (click)="toggleGroup(group.id)">
-                    <mat-icon>{{ expandedGroupId() === group.id ? 'expand_less' : 'manage_accounts' }}</mat-icon>
+                    <mat-icon>{{ expandedGroupId() === group.id ? 'expand_less' : 'person_add' }}</mat-icon>
                   </button>
                   <button
                     mat-icon-button
@@ -405,43 +409,44 @@
                 </div>
               </div>
 
-              @if (expandedGroupId() === group.id) {
-                <div class="pm-members-panel" role="region" [attr.aria-label]="'Members of ' + group.name">
-                  @if (group.members.length === 0) {
-                    <p class="pm-empty-state pm-empty-state--small">No members yet.</p>
-                  }
-                  @for (member of group.members; track member) {
-                    <div class="pm-member-row">
-                      <mat-icon class="pm-member-icon" aria-hidden="true">person</mat-icon>
-                      <span class="pm-member-name">{{ member }}</span>
-                      <button
-                        mat-icon-button
-                        class="pm-member-remove"
-                        [attr.aria-label]="'Remove ' + member + ' from ' + group.name"
-                        (click)="removeGroupMember(group.id, member)">
-                        <mat-icon>close</mat-icon>
-                      </button>
-                    </div>
-                  }
-                  <div class="pm-add-member-form">
-                    <mat-form-field appearance="outline" class="pm-add-member-field">
-                      <mat-label>Add member</mat-label>
-                      <input matInput
-                             [(ngModel)]="memberQuery"
-                             (input)="onMemberQueryChange(memberQuery)"
-                             [matAutocomplete]="memberAuto"
-                             placeholder="Type a name…"
-                             aria-label="Search for a person to add to this group" />
-                      @if (memberSearchLoading()) {
-                        <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
-                      }
-                    </mat-form-field>
-                    <mat-autocomplete #memberAuto (optionSelected)="addGroupMember(group.id, $event.option.value)">
-                      @for (s of memberSuggestions(); track s) {
-                        <mat-option [value]="s">{{ s }}</mat-option>
-                      }
-                    </mat-autocomplete>
+              <div class="pm-members-panel" role="region" [attr.aria-label]="'Members of ' + group.name">
+                @if (group.members.length === 0) {
+                  <p class="pm-empty-state pm-empty-state--small">No members yet.</p>
+                }
+                @for (member of group.members; track member) {
+                  <div class="pm-member-row">
+                    <mat-icon class="pm-member-icon" aria-hidden="true">person</mat-icon>
+                    <span class="pm-member-name">{{ subjectLabels()[member] || member }}</span>
+                    <button
+                      mat-icon-button
+                      class="pm-member-remove"
+                      [attr.aria-label]="'Remove ' + member + ' from ' + group.name"
+                      (click)="removeGroupMember(group.id, member)">
+                      <mat-icon>close</mat-icon>
+                    </button>
                   </div>
+                }
+              </div>
+
+              @if (expandedGroupId() === group.id) {
+                <div class="pm-add-member-form">
+                  <mat-form-field appearance="outline" class="pm-add-member-field">
+                    <mat-label>Add member</mat-label>
+                    <input matInput
+                           [(ngModel)]="memberQuery"
+                           (input)="onMemberQueryChange(memberQuery)"
+                           [matAutocomplete]="memberAuto"
+                           placeholder="Type a name…"
+                           aria-label="Search for a person to add to this group" />
+                    @if (memberSearchLoading()) {
+                      <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                    }
+                  </mat-form-field>
+                  <mat-autocomplete #memberAuto (optionSelected)="addGroupMember(group.id, $event.option.value)">
+                    @for (s of memberSuggestions(); track s) {
+                      <mat-option [value]="s">{{ s }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </div>
               }
 
