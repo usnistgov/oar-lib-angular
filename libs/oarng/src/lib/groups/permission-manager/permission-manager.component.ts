@@ -819,8 +819,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       this.peopleSuggestions.set([])
     })
 
-    const personUrl = (this.configSvc.getConfig<any>()['personURL'] ?? '') as string
-    if (personUrl) {
+    const personUrl = ((this.configSvc.getConfig<any>()['personURL'] ?? '') as string).replace(/\/?$/, '/')
+    if (personUrl !== '/') {
       this.http.get<any>(`${personUrl}${peopleId}`).subscribe({
         next: person => {
           const subject = person?.nistUsername || peopleId
