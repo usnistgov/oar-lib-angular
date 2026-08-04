@@ -20,3 +20,10 @@ export * from './lib/staffdir/staffdir.module';
 export * from './lib/data/data.module';
 
 export * from './lib/frame/header/header-pub/header-pub.component';
+
+export * from './lib/groups/groups.module';
+export * from './lib/groups/group.types';
+export * from './lib/groups/groups-auth.token';
+export * from './lib/groups/groups.service';
+export * from './lib/groups/permissions.service';
+export * from './lib/groups/permission-manager/permission-manager.component';

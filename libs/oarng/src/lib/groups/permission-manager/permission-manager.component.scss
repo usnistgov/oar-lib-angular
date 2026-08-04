@@ -1,0 +1,546 @@
+:host {
+  display: block;
+}
+
+.pm-card {
+  width: 100%;
+}
+
+.pm-stub-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: #1976d2;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.pm-perm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.pm-perm-label {
+  width: 56px;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+.pm-perm-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pm-chip-ghost {
+  height: 22px;
+  width: 72px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.07);
+
+  &--short {
+    width: 52px;
+  }
+}
+
+.pm-add-ghost {
+  height: 28px;
+  width: 120px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.pm-add-person-btn {
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+
+  &:hover, &--active {
+    opacity: 1;
+  }
+}
+
+.pm-add-person-panel {
+  margin: 0 0 0.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.pm-staged-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.pm-people-field {
+  width: 100%;
+}
+
+.pm-group-field {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.pm-org-units {
+  margin-top: 0.25rem;
+}
+
+.pm-loading--small {
+  padding: 0.25rem 0;
+  font-size: 0.8rem;
+}
+
+.pm-nist-groups {
+  padding: 0.5rem 0;
+}
+
+.pm-nist-org-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.pm-nist-org-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.pm-nist-org-name {
+  font-size: 0.85rem;
+}
+
+.pm-group-option-btn--nist {
+  border-color: rgba(0, 0, 0, 0.18);
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.pm-group-options {
+  margin-top: 0.5rem;
+}
+
+.pm-group-options-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.5;
+  margin-bottom: 0.35rem;
+}
+
+.pm-group-option-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pm-group-option-btn {
+  height: 28px;
+  font-size: 0.8rem;
+  line-height: 28px;
+  padding: 0 0.6rem;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+
+  &--staged {
+    background: rgba(25, 118, 210, 0.1);
+    border-color: #1976d2;
+    color: #1976d2;
+  }
+}
+
+.pm-org-type-badge {
+  display: inline-block;
+  margin-left: 0.4em;
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  vertical-align: middle;
+}
+
+.pm-add-person-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+// --- Loading / error states ---
+
+.pm-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  opacity: 0.65;
+}
+
+.pm-error {
+  font-size: 0.85rem;
+  color: #c62828;
+  margin: 0.25rem 0;
+}
+
+.pm-multi-hint {
+  font-size: 0.85rem;
+  opacity: 0.55;
+  margin: 0.25rem 0;
+}
+
+.pm-bulk-panel {
+  padding: 0.25rem 0;
+}
+
+.pm-bulk-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+  }
+}
+
+.pm-perm-select-field {
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.pm-perm-empty {
+  font-size: 0.8rem;
+  opacity: 0.35;
+  align-self: center;
+}
+
+// --- Shared section layout ---
+
+.pm-section {
+  padding: 0.5rem 0;
+}
+
+.pm-section-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+mat-divider {
+  margin: 0.25rem 0;
+}
+
+// --- My Groups ---
+
+.pm-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0 0.5rem;
+}
+
+.pm-new-group-btn {
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.pm-new-group-form {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.pm-group-name-field {
+  width: 100%;
+}
+
+.pm-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.pm-empty-state {
+  font-size: 0.85rem;
+  opacity: 0.55;
+  padding: 0.5rem 0;
+  margin: 0;
+
+  &--small {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.pm-group-item {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.pm-group-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.25rem 0.4rem 0.75rem;
+}
+
+.pm-group-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.pm-member-count {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.pm-group-actions {
+  display: flex;
+  gap: 0;
+}
+
+.pm-delete-btn {
+  color: rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    color: #c62828;
+  }
+}
+
+.pm-members-panel {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+  border-radius: 0 0 6px 6px;
+}
+
+.pm-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.1rem 0;
+}
+
+.pm-member-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.45;
+}
+
+.pm-member-name {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.pm-member-remove {
+  --mdc-icon-button-state-layer-size: 28px;
+  --mdc-icon-button-icon-size: 18px;
+  flex-shrink: 0;
+}
+
+.pm-add-member-form {
+  margin-top: 0.25rem;
+}
+
+.pm-add-member-field {
+  width: 100%;
+}
+
+// --- Chip layout (levels grouped) ---
+
+.pm-levels {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.pm-level-section {
+  margin-bottom: 16px;
+}
+
+.pm-level-header {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  width: fit-content;
+
+  &--admin {
+    background: rgba(198, 40, 40, 0.1);
+    color: #b71c1c;
+  }
+
+  &--update {
+    background: rgba(25, 118, 210, 0.1);
+    color: #1565c0;
+  }
+
+  &--view {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.pm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  min-height: 26px;
+  align-items: center;
+}
+
+.pm-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 16px;
+  padding: 2px 4px 2px 4px;
+  font-size: 0.82rem;
+  line-height: 1;
+
+  &--admin {
+    background: rgba(198, 40, 40, 0.08);
+    border: 1px solid rgba(183, 28, 28, 0.2);
+  }
+
+  &--update {
+    background: rgba(25, 118, 210, 0.08);
+    border: 1px solid rgba(21, 101, 192, 0.2);
+  }
+
+  &--view {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
+.pm-chip-icon {
+  font-size: 13px;
+  width: 13px;
+  height: 13px;
+  opacity: 0.5;
+  margin-right: 3px;
+  flex-shrink: 0;
+}
+
+.pm-chip-label {
+  background: none;
+  border: none;
+  padding: 2px 4px 2px 2px;
+  font-size: inherit;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+}
+
+.pm-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 1px 4px 1px 2px;
+  color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #c62828;
+    background: rgba(198, 40, 40, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #c62828;
+    outline-offset: 1px;
+  }
+}
+
+.pm-chips-empty {
+  font-size: 0.8rem;
+  opacity: 0.3;
+  line-height: 1.6;
+}
+
+// --- Add access section ---
+
+.pm-add-section {
+  margin-top: 0.5rem;
+}
+
+.pm-add-access-btn {
+  height: 32px;
+  font-size: 0.8rem;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.pm-level-field {
+  width: 100%;
+  margin-top: 0.25rem;
+}

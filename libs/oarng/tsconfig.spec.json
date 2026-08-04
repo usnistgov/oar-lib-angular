@@ -5,6 +5,10 @@
     "outDir": "../../out-tsc/spec",
     "types": [
         "jest", "node"
+    ],
+    "typeRoots": [
+      "../../node_modules/@types",
+      "../../../node_modules/@types"
     ]
   },
   "files": [

@@ -1,0 +1,461 @@
+<mat-card class="pm-card">
+  <mat-card-header>
+    <mat-card-title>{{ section === 'groups' ? 'My Groups' : 'Access Control' }}</mat-card-title>
+    @if (records.length === 1) {
+      <mat-card-subtitle>{{ records[0].id }}</mat-card-subtitle>
+    } @else if (records.length > 1) {
+      <mat-card-subtitle>{{ records.length }} records selected</mat-card-subtitle>
+    }
+  </mat-card-header>
+
+  <mat-card-content>
+
+    <!-- ── Permissions section ─────────────────────────────────────────── -->
+    @if (section === 'permissions') {
+      <section class="pm-section" aria-label="Permission levels">
+
+        @if (aclsLoading()) {
+          <div class="pm-loading" aria-live="polite" aria-label="Loading permissions">
+            <mat-progress-spinner mode="indeterminate" diameter="20" color="primary"></mat-progress-spinner>
+            <span>Loading permissions…</span>
+          </div>
+        } @else if (aclsError()) {
+          <p class="pm-error" role="alert">{{ aclsError() }}</p>
+        } @else if (records.length > 1) {
+
+          <!-- Bulk grant panel -->
+          <div class="pm-bulk-panel">
+            <p class="pm-bulk-hint">
+              <mat-icon aria-hidden="true">group_work</mat-icon>
+              Grant access to all <strong>{{ records.length }}</strong> selected records.
+            </p>
+
+            <mat-form-field appearance="outline" class="pm-perm-select-field">
+              <mat-label>Access level</mat-label>
+              <mat-select [(ngModel)]="bulkLevel" aria-label="Select access level to grant">
+                <mat-option value="view">View — read only</mat-option>
+                <mat-option value="update">Update — read + write</mat-option>
+                <mat-option value="admin">Admin — full access</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            @if (staged().length > 0) {
+              <mat-chip-set class="pm-staged-chips" aria-label="People and groups to be granted access">
+                @for (p of staged(); track p.id) {
+                  <mat-chip (removed)="unstage(p.id)" [attr.aria-label]="p.label">
+                    {{ p.label }}
+                    <button matChipRemove [attr.aria-label]="'Remove ' + p.label">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            }
+
+            <mat-form-field appearance="outline" class="pm-people-field">
+              <mat-label>Search NIST personnel</mat-label>
+              <input matInput
+                     [(ngModel)]="peopleQuery"
+                     (input)="onPeopleQueryChange(peopleQuery)"
+                     [matAutocomplete]="bulkPersonAuto"
+                     placeholder="Type a name…"
+                     aria-label="Search for a person to add" />
+              @if (peopleSearchLoading()) {
+                <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+              }
+            </mat-form-field>
+            <mat-autocomplete #bulkPersonAuto (optionSelected)="stagePerson($event.option.value)">
+              @for (suggestion of peopleSuggestions(); track suggestion) {
+                <mat-option [value]="suggestion">{{ suggestion }}</mat-option>
+              }
+            </mat-autocomplete>
+
+            <mat-form-field appearance="outline" class="pm-group-field">
+              <mat-label>Search groups or orgs</mat-label>
+              <input matInput
+                     [(ngModel)]="groupQuery"
+                     (input)="onGroupQueryChange(groupQuery)"
+                     [matAutocomplete]="bulkGroupAuto"
+                     placeholder="My groups or NIST orgs…"
+                     aria-label="Search for a group to add" />
+            </mat-form-field>
+            <mat-autocomplete #bulkGroupAuto [displayWith]="displayGroupLabel"
+                              (optionSelected)="stageGroupSuggestion($event.option.value)">
+              @for (s of groupSuggestions(); track s.id) {
+                <mat-option [value]="s">
+                  <mat-icon>{{ s.type === 'midas' ? 'group' : 'corporate_fare' }}</mat-icon>
+                  {{ s.name }}
+                  @if (s.type !== 'midas') {
+                    <span class="pm-org-type-badge">{{ orgTypeLabel(s.type) }}</span>
+                  }
+                </mat-option>
+              }
+            </mat-autocomplete>
+
+            @if (nistOrgs().length > 0) {
+              <div class="pm-org-units">
+                <span class="pm-group-options-label">Your org units:</span>
+                <div class="pm-group-option-btns">
+                  @for (org of nistOrgs(); track org.id) {
+                    <button mat-stroked-button
+                            class="pm-group-option-btn"
+                            [class.pm-group-option-btn--staged]="isNistOrgStaged(org.id)"
+                            [attr.aria-label]="'Add org unit ' + org.name"
+                            [attr.aria-pressed]="isNistOrgStaged(org.id)"
+                            (click)="stageNistOrg(org)">
+                      <mat-icon>corporate_fare</mat-icon>
+                      {{ org.name }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (bulkGrantError()) {
+              <p class="pm-error" role="alert">{{ bulkGrantError() }}</p>
+            }
+            <div class="pm-add-person-actions">
+              <button mat-flat-button color="primary"
+                      [disabled]="staged().length === 0 || bulkGranting()"
+                      (click)="confirmBulkGrant()"
+                      [attr.aria-label]="'Grant ' + bulkLevel + ' to all ' + records.length + ' records'">
+                @if (bulkGranting()) { Granting… }
+                @else { Grant {{ bulkLevel }} to all {{ records.length }} records }
+              </button>
+            </div>
+          </div>
+
+        } @else if (!acls()) {
+          <p class="pm-empty-state">Select a record to load its permissions.</p>
+        } @else {
+
+          <!-- Chips grouped by permission level -->
+          <div class="pm-levels" aria-label="Permissions by level">
+
+            <!-- Admin -->
+            <div class="pm-level-section">
+              <span class="pm-level-header pm-level-header--admin">Admin</span>
+              <div class="pm-chips">
+                @for (s of subjectsByLevel().admin; track s) {
+                  <div class="pm-chip pm-chip--admin">
+                    <button class="pm-chip-label"
+                            [matMenuTriggerFor]="adminMenu"
+                            [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
+                      <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
+                      {{ subjectLabels()[s] || s }}
+                    </button>
+                    <button class="pm-chip-remove"
+                            (click)="confirmRemoveSubject(s)"
+                            [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
+                    <mat-menu #adminMenu>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'admin', 'update')">Change to Update</button>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'admin', 'view')">Change to View</button>
+                    </mat-menu>
+                  </div>
+                }
+                @if (subjectsByLevel().admin.length === 0) {
+                  <span class="pm-chips-empty" aria-label="No admin access">—</span>
+                }
+              </div>
+            </div>
+
+            <!-- Update -->
+            <div class="pm-level-section">
+              <span class="pm-level-header pm-level-header--update">Update</span>
+              <div class="pm-chips">
+                @for (s of subjectsByLevel().update; track s) {
+                  <div class="pm-chip pm-chip--update">
+                    <button class="pm-chip-label"
+                            [matMenuTriggerFor]="updateMenu"
+                            [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
+                      <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
+                      {{ subjectLabels()[s] || s }}
+                    </button>
+                    <button class="pm-chip-remove"
+                            (click)="confirmRemoveSubject(s)"
+                            [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
+                    <mat-menu #updateMenu>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'update', 'admin')">Change to Admin</button>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'update', 'view')">Change to View</button>
+                    </mat-menu>
+                  </div>
+                }
+                @if (subjectsByLevel().update.length === 0) {
+                  <span class="pm-chips-empty" aria-label="No update access">—</span>
+                }
+              </div>
+            </div>
+
+            <!-- View -->
+            <div class="pm-level-section">
+              <span class="pm-level-header pm-level-header--view">View</span>
+              <div class="pm-chips">
+                @for (s of subjectsByLevel().view; track s) {
+                  <div class="pm-chip pm-chip--view">
+                    <button class="pm-chip-label"
+                            [matMenuTriggerFor]="viewMenu"
+                            [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
+                      <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
+                      {{ subjectLabels()[s] || s }}
+                    </button>
+                    <button class="pm-chip-remove"
+                            (click)="confirmRemoveSubject(s)"
+                            [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
+                    <mat-menu #viewMenu>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'view', 'admin')">Change to Admin</button>
+                      <button mat-menu-item (click)="confirmChangeLevel(s, 'view', 'update')">Change to Update</button>
+                    </mat-menu>
+                  </div>
+                }
+                @if (subjectsByLevel().view.length === 0) {
+                  <span class="pm-chips-empty" aria-label="No view access">—</span>
+                }
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Add access -->
+          <div class="pm-add-section">
+            @if (!showAddPanel()) {
+              <button mat-stroked-button class="pm-add-access-btn"
+                      (click)="openAddPerson()"
+                      aria-label="Add access for a person or group">
+                <mat-icon aria-hidden="true">person_add</mat-icon>
+                Add access
+              </button>
+            }
+
+            @if (showAddPanel()) {
+              <div class="pm-add-person-panel" role="region" aria-label="Grant access to a person or group">
+
+                @if (staged().length > 0) {
+                  <mat-chip-set class="pm-staged-chips" aria-label="People to be granted access">
+                    @for (p of staged(); track p.id) {
+                      <mat-chip (removed)="unstage(p.id)" [attr.aria-label]="p.label">
+                        {{ p.label }}
+                        <button matChipRemove [attr.aria-label]="'Remove ' + p.label">
+                          <mat-icon>cancel</mat-icon>
+                        </button>
+                      </mat-chip>
+                    }
+                  </mat-chip-set>
+                }
+
+                <mat-form-field appearance="outline" class="pm-people-field">
+                  <mat-label>Search NIST personnel</mat-label>
+                  <input matInput
+                         [(ngModel)]="peopleQuery"
+                         (input)="onPeopleQueryChange(peopleQuery)"
+                         [matAutocomplete]="personAuto"
+                         placeholder="Type a name…"
+                         aria-label="Search for a person to add" />
+                  @if (peopleSearchLoading()) {
+                    <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                  }
+                </mat-form-field>
+                <mat-autocomplete #personAuto (optionSelected)="stagePerson($event.option.value)">
+                  @for (suggestion of peopleSuggestions(); track suggestion) {
+                    <mat-option [value]="suggestion">{{ suggestion }}</mat-option>
+                  }
+                </mat-autocomplete>
+
+                <mat-form-field appearance="outline" class="pm-group-field">
+                  <mat-label>Search groups or orgs</mat-label>
+                  <input matInput
+                         [(ngModel)]="groupQuery"
+                         (input)="onGroupQueryChange(groupQuery)"
+                         [matAutocomplete]="groupAuto"
+                         placeholder="My groups or NIST orgs…"
+                         aria-label="Search for a group to add" />
+                </mat-form-field>
+                <mat-autocomplete #groupAuto [displayWith]="displayGroupLabel"
+                                  (optionSelected)="stageGroupSuggestion($event.option.value)">
+                  @for (s of groupSuggestions(); track s.id) {
+                    <mat-option [value]="s">
+                      <mat-icon>{{ s.type === 'midas' ? 'group' : 'corporate_fare' }}</mat-icon>
+                      {{ s.name }}
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+
+                @if (nistOrgsLoading()) {
+                  <div class="pm-loading pm-loading--small" aria-live="polite">
+                    <mat-progress-spinner mode="indeterminate" diameter="14" color="primary"></mat-progress-spinner>
+                    <span>Loading your org units…</span>
+                  </div>
+                } @else if (nistOrgs().length > 0) {
+                  <div class="pm-org-units">
+                    <span class="pm-group-options-label">Your org units:</span>
+                    <div class="pm-group-option-btns">
+                      @for (org of nistOrgs(); track org.id) {
+                        <button mat-stroked-button
+                                class="pm-group-option-btn"
+                                [class.pm-group-option-btn--staged]="isNistOrgStaged(org.id)"
+                                [attr.aria-label]="'Add ' + orgTypeLabel(org.type) + ' ' + org.name"
+                                [attr.aria-pressed]="isNistOrgStaged(org.id)"
+                                (click)="stageNistOrg(org)">
+                          <mat-icon>corporate_fare</mat-icon>
+                          {{ org.name }}
+                          <span class="pm-org-type-badge">{{ orgTypeLabel(org.type) }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <mat-form-field appearance="outline" class="pm-level-field">
+                  <mat-label>Access level</mat-label>
+                  <mat-select [(ngModel)]="grantLevelValue" aria-label="Select access level to grant">
+                    <mat-option value="view">View — read only</mat-option>
+                    <mat-option value="update">Update — read + write</mat-option>
+                    <mat-option value="admin">Admin — full access</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="pm-add-person-actions">
+                  <button mat-flat-button color="primary"
+                          [disabled]="staged().length === 0"
+                          (click)="confirmGrantLevel(grantLevelValue)"
+                          [attr.aria-label]="'Grant ' + grantLevelValue + ' access to selected people'">
+                    Grant {{ grantLevelValue }}
+                  </button>
+                  <button mat-button (click)="closeAddPerson()">Cancel</button>
+                </div>
+
+              </div>
+            }
+          </div>
+
+        }
+      </section>
+    }
+
+    <!-- ── My Groups section ───────────────────────────────────────────── -->
+    @if (section === 'groups') {
+      <section class="pm-section pm-groups" aria-label="My groups">
+
+        <div class="pm-groups-header">
+          <h3 class="pm-section-title">My Groups</h3>
+          <button
+            mat-stroked-button
+            class="pm-new-group-btn"
+            (click)="showNewGroupForm.set(true)"
+            [disabled]="showNewGroupForm()"
+            aria-label="Create a new group">
+            <mat-icon>add</mat-icon>
+            New Group
+          </button>
+        </div>
+
+        @if (groupsLoading()) {
+          <div class="pm-loading" aria-live="polite" aria-label="Loading groups">
+            <mat-progress-spinner mode="indeterminate" diameter="20" color="primary"></mat-progress-spinner>
+            <span>Loading groups…</span>
+          </div>
+        } @else if (groupsError()) {
+          <p class="pm-error" role="alert">{{ groupsError() }}</p>
+        } @else {
+
+          @if (showNewGroupForm()) {
+            <div class="pm-new-group-form">
+              <mat-form-field appearance="outline" class="pm-group-name-field">
+                <mat-label>Group name</mat-label>
+                <input
+                  matInput
+                  [(ngModel)]="newGroupName"
+                  (keydown.enter)="createGroup()"
+                  (keydown.escape)="cancelCreate()"
+                  placeholder="e.g. lab-team"
+                  aria-label="New group name"
+                  autofocus />
+              </mat-form-field>
+              <div class="pm-form-actions">
+                <button mat-flat-button color="primary" (click)="createGroup()" [disabled]="!newGroupName.trim()">
+                  Create
+                </button>
+                <button mat-button (click)="cancelCreate()">Cancel</button>
+              </div>
+            </div>
+          }
+
+          @if (groups().length === 0 && !showNewGroupForm()) {
+            <p class="pm-empty-state">No groups yet. Create one to share access easily.</p>
+          }
+
+          @for (group of groups(); track group.id) {
+            <div class="pm-group-item">
+
+              <div class="pm-group-row">
+                <span class="pm-group-name">{{ group.name }}</span>
+                <span class="pm-member-count" [attr.aria-label]="group.members.length + ' members'">
+                  {{ group.members.length }} member{{ group.members.length !== 1 ? 's' : '' }}
+                </span>
+                <div class="pm-group-actions">
+                  <button
+                    mat-icon-button
+                    [attr.aria-label]="(expandedGroupId() === group.id ? 'Close add member' : 'Add member to') + ' group ' + group.name"
+                    [attr.aria-expanded]="expandedGroupId() === group.id"
+                    (click)="toggleGroup(group.id)">
+                    <mat-icon>{{ expandedGroupId() === group.id ? 'expand_less' : 'person_add' }}</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="pm-delete-btn"
+                    [attr.aria-label]="'Delete group ' + group.name"
+                    (click)="confirmDeleteGroup(group.id)">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="pm-members-panel" role="region" [attr.aria-label]="'Members of ' + group.name">
+                @if (group.members.length === 0) {
+                  <p class="pm-empty-state pm-empty-state--small">No members yet.</p>
+                }
+                @for (member of group.members; track member) {
+                  <div class="pm-member-row">
+                    <mat-icon class="pm-member-icon" aria-hidden="true">person</mat-icon>
+                    <span class="pm-member-name">{{ subjectLabels()[member] || member }}</span>
+                    <button
+                      mat-icon-button
+                      class="pm-member-remove"
+                      [attr.aria-label]="'Remove ' + member + ' from ' + group.name"
+                      (click)="removeGroupMember(group.id, member)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              @if (expandedGroupId() === group.id) {
+                <div class="pm-add-member-form">
+                  <mat-form-field appearance="outline" class="pm-add-member-field">
+                    <mat-label>Add member</mat-label>
+                    <input matInput
+                           [(ngModel)]="memberQuery"
+                           (input)="onMemberQueryChange(memberQuery)"
+                           [matAutocomplete]="memberAuto"
+                           placeholder="Type a name…"
+                           aria-label="Search for a person to add to this group" />
+                    @if (memberSearchLoading()) {
+                      <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                    }
+                  </mat-form-field>
+                  <mat-autocomplete #memberAuto (optionSelected)="addGroupMember(group.id, $event.option.value)">
+                    @for (s of memberSuggestions(); track s) {
+                      <mat-option [value]="s">{{ s }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </div>
+              }
+
+            </div>
+          }
+        }
+
+      </section>
+    }
+
+  </mat-card-content>
+</mat-card>
