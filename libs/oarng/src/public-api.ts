@@ -27,3 +27,4 @@ export * from './lib/groups/groups-auth.token';
 export * from './lib/groups/groups.service';
 export * from './lib/groups/permissions.service';
 export * from './lib/groups/permission-manager/permission-manager.component';
+export * from './lib/groups/permission-manager-dialog/permission-manager-dialog.component';
