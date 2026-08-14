@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY, BehaviorSubject } from 'rxjs';
+import { Observable, of, map, tap, switchMap, catchError, throwError, Subscriber, EMPTY, BehaviorSubject, timeout, TimeoutError } from 'rxjs';
 
 import { AuthInfo, UserDetails, Credentials, MOCK_CREDENTIALS, messageToCredentials, deepCopy } from './auth';
 import { Configuration, ConfigurationService } from '../config/config.module';
@@ -224,6 +224,11 @@ export class OARAuthenticationService extends AuthenticationService {
                 return of(c);
             }),
             catchError((e) => {
+                // A stalled auth check (e.g. Safari) times out here; treat it like "not logged in".
+                if (e instanceof TimeoutError) {
+                    console.warn("tokeninfo timed out; redirecting to login");
+                    return this.handleUnauthenticated(!nologin, returnURL);
+                }
                 console.error("Credentials not available (status = "+e.status+")");
                 if (e.status && e.status == 401)
                     return this.handleUnauthenticated(!nologin, returnURL);
@@ -245,6 +250,9 @@ export class OARAuthenticationService extends AuthenticationService {
         url += "auth/_tokeninfo";
 
         return this.httpcli.get(url).pipe(
+            // Cap the auth check: Safari can stall this request indefinitely; on timeout,
+            // catchError() falls back to login instead of hanging.
+            timeout(5000),
             map<any, Credentials>(messageToCredentials)
         );
     }
