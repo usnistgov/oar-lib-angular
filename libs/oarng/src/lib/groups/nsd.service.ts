@@ -40,4 +40,13 @@ export class NsdService {
       { headers: this.headers() }
     )
   }
+
+  // The with_ filter is a substring match on the backend, so callers must
+  // still check nistUsername on the returned records for an exact match.
+  getPeopleByUsername(eid: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.base}people?with_nistUsername=${encodeURIComponent(eid)}`,
+      { headers: this.headers() }
+    )
+  }
 }

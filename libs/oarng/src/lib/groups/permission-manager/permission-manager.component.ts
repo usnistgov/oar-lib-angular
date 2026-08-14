@@ -332,19 +332,16 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       this.subjectLabels.update(m => ({ ...m, ...syncUpdates }))
     }
 
-    // EIDs: search the people API with the EID as query and look for an exact key match
+    // EIDs: query by nistUsername and keep only the exact match
     toResolveViaSearch.forEach(eid => {
-      this.nsd.searchPeople(eid).pipe(
-        catchError(() => of({}))
-      ).subscribe((raw: any) => {
-          if (!raw || typeof raw !== 'object') return
-          for (const key of Object.keys(raw)) {
-            const group = raw[key]
-            if (group && typeof group === 'object' && Object.prototype.hasOwnProperty.call(group, eid)) {
-              this.subjectLabels.update(m => ({ ...m, [eid]: group[eid] }))
-              return
-            }
-          }
+      this.nsd.getPeopleByUsername(eid).pipe(
+        catchError(() => of([]))
+      ).subscribe((people: any[]) => {
+          if (!Array.isArray(people)) return
+          const person = people.find(p => p?.nistUsername?.toLowerCase() === eid.toLowerCase())
+          if (!person?.lastName) return
+          const name = person.firstName ? `${person.lastName}, ${person.firstName}` : person.lastName
+          this.subjectLabels.update(m => ({ ...m, [eid]: name }))
         })
       })
 

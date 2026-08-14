@@ -808,6 +808,53 @@ describe('PermissionManagerComponent', () => {
     })
   })
 
+  // ── resolveUnknownLabels — EID resolution ─────────────────────────────────
+
+  describe('resolveUnknownLabels — EID resolution', () => {
+    // The with_nistUsername query is a substring match on the backend, so the
+    // component must keep only the record whose nistUsername equals the EID.
+    it('resolves an EID to "Last, First" from the exact nistUsername match', () => {
+      jest.spyOn((component as any).nsd, 'getPeopleByUsername').mockReturnValue(of([
+        { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
+        { nistUsername: 'mch', lastName: 'Hawes', firstName: 'Melvin' },
+        { nistUsername: 'pmchu', lastName: 'Chu', firstName: 'Pamela' },
+      ]))
+
+      ;(component as any).resolveUnknownLabels(makeAcls(['mch'], [], [], []))
+
+      expect(component.subjectLabels()['mch']).toBe('Hawes, Melvin')
+    })
+
+    it('leaves the label unset when no record matches the EID exactly', () => {
+      jest.spyOn((component as any).nsd, 'getPeopleByUsername').mockReturnValue(of([
+        { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
+      ]))
+
+      ;(component as any).resolveUnknownLabels(makeAcls(['mch'], [], [], []))
+
+      expect(component.subjectLabels()['mch']).toBeUndefined()
+    })
+
+    it('matches the EID case-insensitively and tolerates a missing firstName', () => {
+      jest.spyOn((component as any).nsd, 'getPeopleByUsername').mockReturnValue(of([
+        { nistUsername: 'CND7', lastName: 'Davis' },
+      ]))
+
+      ;(component as any).resolveUnknownLabels(makeAcls([], ['cnd7'], [], []))
+
+      expect(component.subjectLabels()['cnd7']).toBe('Davis')
+    })
+
+    it('does not query the people API for numeric org subjects', () => {
+      const spy = jest.spyOn((component as any).nsd, 'getPeopleByUsername')
+
+      ;(component as any).resolveUnknownLabels(makeAcls(['13252'], [], [], []))
+
+      expect(spy).not.toHaveBeenCalled()
+      expect(component.subjectLabels()['13252']).toBe('Org group (13252)')
+    })
+  })
+
   // ── ngOnChanges dedup ──────────────────────────────────────────────────────
 
   describe('ngOnChanges', () => {
