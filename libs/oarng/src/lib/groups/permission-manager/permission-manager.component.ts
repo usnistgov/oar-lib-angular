@@ -1,11 +1,10 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
 import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
-import { HttpClient } from '@angular/common/http'
 import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
-import { ConfigurationService } from '../../config/config.service'
+import { NsdService } from '../nsd.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
@@ -29,8 +28,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   private groupsSvc = inject(GroupsService)
   private permsSvc = inject(PermissionsService)
-  private http = inject(HttpClient)
-  private configSvc = inject(ConfigurationService)
+  private nsd = inject(NsdService)
   private dialog = inject(MatDialog)
 
   // ── Graduated permission model ────────────────────────────────────────────
@@ -131,8 +129,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 2) return of(null)
         this.peopleSearchLoading.set(true)
-        const baseUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-        return this.http.get<any>(`${baseUrl}?${encodeURIComponent(query.toUpperCase())}`).pipe(
+        return this.nsd.searchPeople(query).pipe(
           map(raw => ({ raw, query })),
           catchError(() => of(null))
         )
@@ -171,11 +168,9 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           .filter(g => wordPrefixMatch(g.name) || g.id.toLowerCase().startsWith(q))
           .slice(0, 5)
           .map(g => ({ id: g.id, name: g.name, code: '', type: 'midas' as const }))
-        const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-        if (!orgBaseUrl) return of(midas)
         return forkJoin(
           this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
-            this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(query.toUpperCase())}`).pipe(
+            this.nsd.searchOrgIndex(endpoint, query).pipe(
               map(raw => this.parseOrgIndex(raw, prefix).filter(o => wordPrefixMatch(o.name))),
               catchError(() => of([]))
             )
@@ -192,8 +187,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 2) return of(null)
         this.memberSearchLoading.set(true)
-        const baseUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-        return this.http.get<any>(`${baseUrl}?${encodeURIComponent(query.toUpperCase())}`).pipe(
+        return this.nsd.searchPeople(query).pipe(
           map(raw => ({ raw, query })),
           catchError(() => of(null))
         )
@@ -338,41 +332,33 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       this.subjectLabels.update(m => ({ ...m, ...syncUpdates }))
     }
 
-    // EIDs: search the people API with the EID as query and look for an exact key match
-    const peopleUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-    if (peopleUrl) {
-      toResolveViaSearch.forEach(eid => {
-        this.http.get<any>(`${peopleUrl}?${encodeURIComponent(eid.toUpperCase())}`).pipe(
-          catchError(() => of({}))
-        ).subscribe((raw: any) => {
-          if (!raw || typeof raw !== 'object') return
-          for (const key of Object.keys(raw)) {
-            const group = raw[key]
-            if (group && typeof group === 'object' && Object.prototype.hasOwnProperty.call(group, eid)) {
-              this.subjectLabels.update(m => ({ ...m, [eid]: group[eid] }))
-              return
-            }
-          }
+    // EIDs: query by nistUsername and keep only the exact match
+    toResolveViaSearch.forEach(eid => {
+      this.nsd.getPeopleByUsername(eid).pipe(
+        catchError(() => of([]))
+      ).subscribe((people: any[]) => {
+          if (!Array.isArray(people)) return
+          const person = people.find(p => p?.nistUsername?.toLowerCase() === eid.toLowerCase())
+          if (!person?.lastName) return
+          const name = person.firstName ? `${person.lastName}, ${person.firstName}` : person.lastName
+          this.subjectLabels.update(m => ({ ...m, [eid]: name }))
         })
       })
-    }
 
     // NIST org subjects — two formats:
     //   new: "nistou:13289" / "nistdiv:13289" / "nistgrp:13289"
     //   legacy: "775:13289" (orgCode:orgId, stored by older versions of this UI)
     // In both cases, display as "{orgName} ({orgCode})".
-    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-    if (orgBaseUrl) {
-      toResolveViaOrg.forEach(subject => {
-        const colonIdx = subject.indexOf(':')
-        const prefix = subject.substring(0, colonIdx)
-        const afterColon = subject.substring(colonIdx + 1)
+    toResolveViaOrg.forEach(subject => {
+      const colonIdx = subject.indexOf(':')
+      const prefix = subject.substring(0, colonIdx)
+      const afterColon = subject.substring(colonIdx + 1)
 
-        if (/^nist(ou|div|grp)$/.test(prefix)) {
-          // New format: query the typed endpoint, look up numericId directly
-          const mapping = this.ORG_TYPE_MAP[prefix]
-          this.http.get<any>(`${orgBaseUrl}/${mapping.endpoint}/index`).pipe(
-            catchError(() => of({}))
+      if (/^nist(ou|div|grp)$/.test(prefix)) {
+        // New format: query the typed endpoint, look up numericId directly
+        const mapping = this.ORG_TYPE_MAP[prefix]
+        this.nsd.searchOrgIndex(mapping.endpoint).pipe(
+          catchError(() => of({}))
           ).subscribe((raw: any) => {
             const numericId = afterColon
             for (const code of Object.keys(raw ?? {})) {
@@ -390,9 +376,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           const orgId = afterColon
           forkJoin(
             this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
-                catchError(() => of({}))
-              )
+              this.nsd.searchOrgIndex(endpoint).pipe(catchError(() => of({})))
             )
           ).subscribe(responses => {
             for (const raw of responses) {
@@ -409,9 +393,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           const orgId = afterColon
           forkJoin(
             this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
-                catchError(() => of({}))
-              )
+              this.nsd.searchOrgIndex(endpoint).pipe(catchError(() => of({})))
             )
           ).subscribe(responses => {
             for (const raw of responses) {
@@ -427,7 +409,6 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           })
         }
       })
-    }
   }
 
   createGroup(): void {
@@ -479,7 +460,6 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     if (!peopleId) return
     setTimeout(() => { this.memberQuery = ''; this.memberSuggestions.set([]) })
 
-    const personUrl = (this.configSvc.getConfig<any>()['personURL'] ?? '') as string
     const doAdd = (memberId: string) => {
       this.groupsSvc.addMember(groupId, memberId).subscribe({
         next: updatedMembers => {
@@ -491,14 +471,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       })
     }
 
-    if (personUrl) {
-      this.http.get<any>(`${personUrl}${peopleId}`).subscribe({
-        next: person => doAdd(person?.nistUsername || peopleId),
-        error: () => doAdd(peopleId)
-      })
-    } else {
-      doAdd(peopleId)
-    }
+    this.nsd.getPerson(peopleId).subscribe({
+      next: person => doAdd(person?.nistUsername || peopleId),
+      error: () => doAdd(peopleId)
+    })
   }
 
   toggleGroup(id: string): void {
@@ -723,12 +699,11 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   // ── User's NIST org units ─────────────────────────────────────────────────
 
   loadNistOrgs(ou: string): void {
-    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-    if (!orgBaseUrl || !ou) return
+    if (!ou) return
     this.nistOrgsLoading.set(true)
     forkJoin(
       this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
-        this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(ou.toUpperCase())}`).pipe(
+        this.nsd.searchOrgIndex(endpoint, ou).pipe(
           map(raw => this.parseOrgIndex(raw, prefix)),
           catchError(() => of([]))
         )
@@ -819,18 +794,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       this.peopleSuggestions.set([])
     })
 
-    const personUrl = ((this.configSvc.getConfig<any>()['personURL'] ?? '') as string).replace(/\/?$/, '/')
-    if (personUrl !== '/') {
-      this.http.get<any>(`${personUrl}${peopleId}`).subscribe({
-        next: person => {
-          const subject = person?.nistUsername || peopleId
-          this._addStaged(subject, label)
-        },
-        error: () => this._addStaged(peopleId, label)
-      })
-    } else {
-      this._addStaged(peopleId, label)
-    }
+    this.nsd.getPerson(peopleId).subscribe({
+      next: person => this._addStaged(person?.nistUsername || peopleId, label),
+      error: () => this._addStaged(peopleId, label)
+    })
   }
 
   onGroupQueryChange(query: string): void {
