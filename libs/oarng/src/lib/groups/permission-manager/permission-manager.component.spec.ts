@@ -1,5 +1,5 @@
 import { of, throwError } from 'rxjs'
-import { ComponentFixture, TestBed } from '@angular/core/testing'
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing'
 import { PermissionManagerComponent } from './permission-manager.component'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
 import { MatDialogModule } from '@angular/material/dialog'
@@ -868,6 +868,70 @@ describe('PermissionManagerComponent', () => {
       })
 
       expect(loadGroupsSpy).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  // ── org index deduplication ────────────────────────────────────────────────
+
+  describe('org index deduplication', () => {
+    // The directory index lists one organization under several search keys — its full
+    // name, its abbreviation and its numeric code — all pointing at the same id.
+    const mmlIndex = {
+      'material measurement laboratory': { '13213': 'Material Measurement Laboratory (63)' },
+      'mml': { '13213': 'Material Measurement Laboratory (63)' },
+      '63': { '13213': 'Material Measurement Laboratory (63)' },
+    }
+
+    it('collapses the repeated keys into one entry per id', () => {
+      const orgs = (component as any).parseOrgIndex(mmlIndex, 'nistou')
+
+      expect(orgs).toHaveLength(1)
+      expect(orgs[0]).toEqual({
+        id: 'nistou:13213',
+        name: 'Material Measurement Laboratory (63)',
+        code: '63',
+        type: 'nistou'
+      })
+    })
+
+    it('keeps organizations that differ by id', () => {
+      const orgs = (component as any).parseOrgIndex({
+        'engineering laboratory': { '13215': 'Engineering Laboratory (73)' },
+        'el': { '13215': 'Engineering Laboratory (73)' },
+        'physical measurement laboratory': { '13214': 'Physical Measurement Laboratory (68)' },
+      }, 'nistou')
+
+      expect(orgs.map((o: any) => o.id).sort()).toEqual(['nistou:13214', 'nistou:13215'])
+    })
+
+    it('suggests an org once when the index repeats it under several keys', fakeAsync(() => {
+      jest.spyOn((component as any).nsd, 'searchOrgIndex')
+        .mockImplementation((endpoint: any) => of(endpoint === 'OU' ? mmlIndex : {}))
+
+      component.onGroupQueryChange('material')
+      tick(250)
+
+      expect(component.groupSuggestions()).toHaveLength(1)
+      expect(component.groupSuggestions()[0].id).toBe('nistou:13213')
+    }))
+
+    it('labels a staged org with the name the directory returned', () => {
+      component.stageNistOrg({
+        id: 'nistou:13213',
+        name: 'Material Measurement Laboratory (63)',
+        code: '63',
+        type: 'nistou'
+      })
+
+      expect(component.subjectLabels()['nistou:13213']).toBe('Material Measurement Laboratory (63)')
+    })
+
+    it('resolves an assigned org subject to the directory name, not the index key', () => {
+      jest.spyOn((component as any).nsd, 'searchOrgIndex').mockReturnValue(of(mmlIndex))
+
+      ;(component as any).resolveUnknownLabels(makeAcls(['nistou:13213'], [], [], []))
+
+      expect(component.subjectLabels()['nistou:13213']).toBe('Material Measurement Laboratory (63)')
     })
   })
 })

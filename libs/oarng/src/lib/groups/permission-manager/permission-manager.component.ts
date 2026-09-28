@@ -23,6 +23,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   @Input() layout: 'compact' | 'panel' = 'compact'
   @Input() userOu: string = ''
   @Input() section: 'permissions' | 'groups' = 'permissions'
+  // When set, a hint linking to the MIDAS portal is shown under the group search
+  @Input() groupsPortalUrl: string = ''
 
   @Output() permissionsChanged = new EventEmitter<void>()
 
@@ -348,7 +350,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     // NIST org subjects — two formats:
     //   new: "nistou:13289" / "nistdiv:13289" / "nistgrp:13289"
     //   legacy: "775:13289" (orgCode:orgId, stored by older versions of this UI)
-    // In both cases, display as "{orgName} ({orgCode})".
+    // The name in the index already carries the organization's code, so it is used as-is.
     toResolveViaOrg.forEach(subject => {
       const colonIdx = subject.indexOf(':')
       const prefix = subject.substring(0, colonIdx)
@@ -364,8 +366,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
             for (const code of Object.keys(raw ?? {})) {
               const group = raw[code]
               if (group && typeof group === 'object' && group[numericId]) {
-                const name = (group[numericId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
+                this.subjectLabels.update(m => ({ ...m, [subject]: group[numericId] as string }))
                 return
               }
             }
@@ -382,8 +383,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
             for (const raw of responses) {
               const group = raw?.[orgCode]
               if (group && typeof group === 'object' && group[orgId]) {
-                const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${orgCode})` }))
+                this.subjectLabels.update(m => ({ ...m, [subject]: group[orgId] as string }))
                 return
               }
             }
@@ -400,8 +400,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
               for (const code of Object.keys(raw ?? {})) {
                 const group = raw[code]
                 if (group && typeof group === 'object' && group[orgId]) {
-                  const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                  this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
+                  this.subjectLabels.update(m => ({ ...m, [subject]: group[orgId] as string }))
                   return
                 }
               }
@@ -722,28 +721,39 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
+  // The index lists each organization under several search keys — its full name, its
+  // abbreviation and its numeric code — all pointing at the same id, so collapse them
+  // to one entry per id.
   private parseOrgIndex(
     raw: any,
     prefix: 'nistou' | 'nistdiv' | 'nistgrp'
   ): { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] {
-    const out: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] = []
-    if (!raw || typeof raw !== 'object') return out
+    type OrgEntry = { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }
+    const byId = new Map<string, OrgEntry>()
+    if (!raw || typeof raw !== 'object') return []
     Object.keys(raw).forEach(code => {
       const group = raw[code]
       if (group && typeof group === 'object') {
         Object.keys(group).forEach(numericId => {
-          out.push({ id: `${prefix}:${numericId}`, name: group[numericId], code, type: prefix })
+          const id = `${prefix}:${numericId}`
+          const seen = byId.get(id)
+          if (!seen) {
+            byId.set(id, { id, name: group[numericId], code, type: prefix })
+          } else if (/^\d+$/.test(code)) {
+            // the numeric key is the organization's own code; the others are search aliases
+            seen.code = code
+          }
         })
       }
     })
-    return out
+    return [...byId.values()]
   }
 
   stageNistOrg(org: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }): void {
     this._addStaged(org.id, org.name)
     this.subjectLabels.update(m => ({
       ...m,
-      [org.id]: `${org.name} (${org.code})`
+      [org.id]: org.name
     }))
   }
 
