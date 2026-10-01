@@ -1,4 +1,15 @@
-import { Component, OnInit, Input, HostListener, Optional, ChangeDetectorRef, Inject } from '@angular/core';
+import {
+    Component,
+    OnInit,
+    Input,
+    HostListener,
+    Optional,
+    ChangeDetectorRef,
+    Inject,
+    ContentChild,
+    ElementRef,
+    AfterContentInit
+} from '@angular/core';
 import { AuthenticationService } from '../../auth/auth.service';
 import { Credentials } from '../../auth/auth';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -7,53 +18,64 @@ import { NistLogoComponent } from './nist-logo/nist-logo.component';
 import { DOCUMENT } from '@angular/common';
 import { ConfigurationService } from '../../config/config.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faHouse, faUser } from '@fortawesome/free-solid-svg-icons';
+import {
+    faHouse,
+    faUser,
+    faBars,
+    faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
     selector: 'app-header',
     standalone: true,
-    imports: [
-        CommonModule,
-        NistLogoComponent,
-        FontAwesomeModule
-    ],
+    imports: [CommonModule, NistLogoComponent, FontAwesomeModule],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
     animations: [
         trigger('userExpand', [
-            state('collapsed', style({height: '0px', minHeight: '0', opacity: '0'})),
-            state('expanded', style({height: '*', opacity: '1'})),
-            transition('expanded <=> collapsed', animate('625ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
-        ])
-    ]
+            state(
+                'collapsed',
+                style({ height: '0px', minHeight: '0', opacity: '0' }),
+            ),
+            state('expanded', style({ height: '*', opacity: '1' })),
+            transition(
+                'expanded <=> collapsed',
+                animate('625ms cubic-bezier(0.4, 0.0, 0.2, 1)'),
+            ),
+        ]),
+    ],
 })
 export class HeaderComponent implements OnInit {
-    title_line01: string = "MIDAS";
-    title_line02: string = "DATA PUBLISHING";
+    title_line01: string = 'MIDAS';
+    title_line02: string = 'DATA PUBLISHING';
     credential: Credentials = {} as Credentials;
     userBlockStatus: string = 'collapsed';
-    homeButtonLink: string = "https://data.nist.gov";
-    
+    homeButtonLink: string = 'https://data.nist.gov';
+
     faHouse = faHouse;
     faUser = faUser;
+    faBars = faBars;
+    faXmark = faXmark;
 
-    @Input() appVersion: string = "1.0";
-    @Input() titleLn1: string = "MIDAS";
-    @Input() titleLn2: string = "DATA PUBLISHING";
+    mobileMenuOpen = false;
+
+    @Input() appVersion: string = '1.0';
+    @Input() titleLn1: string = 'MIDAS';
+    @Input() titleLn2: string = 'DATA PUBLISHING';
     @Input() showUserIcon: boolean = true;
     // @Input() homeButtonLink: string = "";
 
     constructor(
-      @Optional() public authService: AuthenticationService,
+        @Optional() public authService: AuthenticationService,
         @Inject(DOCUMENT) private document: Document,
         private cfg: ConfigurationService,
-        private chref: ChangeDetectorRef,) {
+        private chref: ChangeDetectorRef,
+    ) {
         if (this.authService) {
             this.authService.watchCredential((cred: Credentials) => {
                 // console.debug('cred', cred);
                 this.credential = cred;
-                if (cred)
-                    console.debug('User identified:', cred.userId);
+                if (cred) console.debug('User identified:', cred.userId);
             });
         } else {
             // authService  not provided
@@ -61,30 +83,48 @@ export class HeaderComponent implements OnInit {
         }
     }
 
-
-    @HostListener('document:click', ['$event'])
-    clickout() {
+    @HostListener('document:click')
+    clickout(): void {
         this.userBlockStatus = 'collapsed';
+        this.mobileMenuOpen = false;
     }
+
+    @ContentChild('customNavbar')
+    customNavbar?: ElementRef;
 
     ngOnInit(): void {
         this.title_line01 = this.titleLn1.toUpperCase();
         this.title_line02 = this.titleLn2.toUpperCase();
 
-        let url = this.cfg.get("links.portalBase", "/");
-        this.homeButtonLink = url? url : "";        
+        let url = this.cfg.get('links.portalBase', '/');
+        this.homeButtonLink = url ? url : '';
         this.chref.detectChanges();
     }
 
+    toggleMobileMenu(event: Event): void {
+        event.stopPropagation();
+        this.mobileMenuOpen = !this.mobileMenuOpen;
+
+        // Close user details when closing the mobile menu.
+        if (!this.mobileMenuOpen) {
+            this.userBlockStatus = 'collapsed';
+        }
+    }
+
+    closeMobileMenu(): void {
+        this.mobileMenuOpen = false;
+        this.userBlockStatus = 'collapsed';
+    }
+
     toggleUserBlock() {
-        if(this.userBlockStatus == 'collapsed'){
+        if (this.userBlockStatus == 'collapsed') {
             this.userBlockStatus = 'expanded';
-        }else{
+        } else {
             this.userBlockStatus = 'collapsed';
         }
     }
 
     backToPortal() {
-      this.document.location.href = this.homeButtonLink;
+        this.document.location.href = this.homeButtonLink;
     }
 }

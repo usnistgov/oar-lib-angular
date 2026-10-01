@@ -1,65 +1,56 @@
 .header-container {
-  background-color: #000000;
-  width: 100%;
-  min-height: 3.1em;
-  padding: .5em 4em 0 4em;
-}
-
-.logo-text {
-    font-family: sans-serif,Roboto,'Helvetica Neue';
-    line-height: 16.5px;
-    vertical-align: text-top;
-    color: #FFFFFF;
-    font-size:14px;
-    padding-left: 4%;
-    white-space: nowrap;
-}
-
-#logo {
-    display:inline-block;
-    background-color: #000000;
-    margin-left: 10px;
-    cursor: pointer;
-}
-
-#user {
-    z-index: 999;
-    padding: 10px;
-    border-radius: 2px;
-    background-color: rgba(255, 255, 255, 0.9);
-    position: absolute;
-    right: 10px;
-    /* float: right; */
-    overflow: hidden;
-    margin-right: 20px;
-}
-
-.user-icon-wrapper{
-    /* float: right; */
-    display: inline-block;
-    vertical-align: bottom;
-    color: #f0f0f0;
-    cursor: pointer;
-    margin-bottom: 4px;
-}
-
-.user-icon {
     position: relative;
-    top: -2px;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    height: 50px;
+
+    padding: 8px 60px;
+    box-sizing: border-box;
+
+    background-color: #000;
+    overflow: visible;
 }
 
-.user-icon-wrapper:hover {
-    color: rgb(0, 221, 255);
+.bar-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+
+    transform: translateY(8px);
+}
+
+.right-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.menu-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.home-menu-item {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
 }
 
 .home-icon {
-    display: inline-block;
-    vertical-align: bottom;
-    color: #f0f0f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 !important;
+    transform: none;
+
+    color: white;
     cursor: pointer;
-    margin-top: -6px;
-    margin-right: 16px;
-    font-size: x-large;
 }
 
 .home-icon:hover {
@@ -67,110 +58,272 @@
 }
 
 .customNavbar {
-    display: inline-block;
-    margin: 0px 10px 3px 0;
-    color: white;
-    margin-top: 0px;
-}
-
-.bar-right {
-    float: right;
-    margin-top: 12px;
-}
-
-.badgesm {
-    font-size: 12px;
-    font-weight: bold;
-    color: #fff;
-    padding: 3px 7px;
-    vertical-align: 50%;
-    height:20px;
-    width:20px;
-    min-width: 10px;
-    z-index: 10;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    background-color: #777;
-    border-radius: 10px;
-}
-
-/* .badge-notify {
-    background-color: green;
-    color: white;
-    position: relative;
-    top: -10px;
-    left: -5px;
-    font-size: 9px;
-    height: 20px;
-    width: 20px;
-    padding: 5px 3px 3px 3px ;
-} */
-.badge-notify {
-    display: inline-flex !important;
+    display: flex;
     align-items: center;
-    justify-content: center;
 
-    width: 14px;
-    height: 14px;
-    padding: 0 0 0 3px;
-
-    font-size: 9px;
-    line-height: 1;
-
-    border-radius: 50%;
-    box-sizing: border-box;
-}
-
-a:link, a:hover, a:visited{
+    margin: 0;
     color: white;
-    background-color: transparent;
-    text-decoration: none;
 }
 
-.badge-style {
-    background-color: var(--nist-green-default);
-    color: white;
-    border-radius: 100%;
-    padding: 2px 2px 2px 2px;
-    font-size: small;
+.customNavbar:empty {
+    display: none;
+    margin: 0;
 }
 
-.logo-container {
-    display:inline-block;
-    width: 90px;  /* Width of the container */
-    height: 30px; /* Height of the container */
-    overflow: hidden;
+.user-icon {
+    position: static;
 }
-/* app.component.css */
-.image-container {
-    width: 200px;  /* Width of the container */
-    height: 100px; /* Height of the container */
-    overflow: hidden;
+
+.mobile-label {
+    display: none;
+}
+
+.mobile-menu-button {
+    display: none;
+}
+
+
+
+.user-section {
     position: relative;
-    margin-left: -60px;
-    margin-top: -2em;
+
+    display: inline-flex;
+    align-items: center;
 }
 
-.scaled-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;    /* Ensures the image scales to cover the container */
-    object-position: left center;  /* Ensures the left part of the image is in view */
-    transform: scale(.6);  /* Scale the image */
-    clip-path: inset(0 14% 0 0);  /* Clips the right half, showing only the left */
-    transition: transform 0.3s ease-in-out; /* Smooth transition for scale */
+.user-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    color: #f0f0f0;
+    font: inherit;
+    line-height: 1;
+    white-space: nowrap;
+
+    cursor: pointer;
 }
 
-.version {
-    display:inline-block;
-    color:#f0f0f0;
-    border:1px solid #f0f0f0;
-    vertical-align: text-top;
-    margin-left: 3em;
-    font-size:10px;
-    margin-top:-4px;
-    border-radius: 7px;
-    padding: 3px 5px;
+.user-button:hover {
+    color: rgb(0, 221, 255);
 }
 
+.user-icon {
+    position: static;
+}
+
+/* Desktop user dropdown */
+.user-details {
+    position: absolute;
+
+    /* Place underneath the user button */
+    top: calc(100% + 8px);
+    right: 0;
+
+    width: max-content;
+    min-width: 260px;
+    max-width: 400px;
+
+    padding: 12px 16px;
+    box-sizing: border-box;
+
+    color: #222;
+    background-color: white;
+
+    border: 1px solid #ccc;
+    border-radius: 4px;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    line-height: 1.5;
+    text-align: left;
+
+    z-index: 2000;
+}
+
+.user-details > div {
+    white-space: nowrap;
+}
+
+
+@media (max-width: 1023px) {
+    .header-container {
+        height: 64px;
+        min-height: 64px;
+
+        padding: 8px 15px;
+    }
+
+    .bar-right {
+        transform: none;
+        align-items: center;
+    }
+
+    /* Hamburger */
+    .mobile-menu-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 36px;
+        height: 36px;
+
+        padding: 0;
+
+        color: white;
+        background: transparent;
+
+        border: 0;
+        border-radius: 4px;
+
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .mobile-menu-button:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Hide menu until hamburger is clicked */
+    .right-menu {
+        display: none !important;
+        gap: 0px;
+    }
+
+    /* Mobile dropdown */
+    .right-menu.mobile-open {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+
+        position: absolute;
+
+        top: 100%;
+        right: 10px;
+
+        min-width: 220px;
+
+        padding: 6px 0;
+
+        background-color: #111;
+
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+        z-index: 1000;
+    }
+
+    .mobile-label {
+        display: inline;
+    }
+
+    .mobile-label:hover {
+        color: rgb(0, 221, 255);
+    }
+
+    /* Projected menu */
+    /* .customNavbar {
+        display: block;
+        margin: 0;
+    }
+
+    .customNavbar:empty {
+        display: none;
+        margin: 0;
+    } */
+
+    /* User row */
+    .user-icon-wrapper {
+        display: flex;
+        align-items: center;
+
+        width: 100%;
+
+        margin: 0;
+        padding: 10px 16px;
+
+        box-sizing: border-box;
+    }
+
+    .user-icon-wrapper:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Home row */
+    .home-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        width: 100%;
+        padding: 10px 16px;
+        box-sizing: border-box;
+
+        color: white;
+        cursor: pointer;
+    }
+
+    .home-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .home-icon {
+        margin: 0 !important;
+        transform: none;
+        flex-shrink: 0;
+    }
+
+    .home-icon:hover {
+        color: rgb(0, 221, 255);
+    }
+
+    .user-section {
+        position: static;
+        display: block;
+        width: 100%;
+    }
+
+    .user-section:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .user-button {
+        display: flex;
+        align-items: center;
+
+        width: 100%;
+        padding: 10px 16px;
+
+        box-sizing: border-box;
+    }
+
+    .user-details {
+        /* Override desktop floating dropdown */
+        position: static;
+
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+
+        padding: 8px 16px 12px 32px;
+
+        color: #ddd;
+        background-color: rgba(255, 255, 255, 0.08);
+
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .user-details > div {
+        white-space: normal;
+    }    
+}

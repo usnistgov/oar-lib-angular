@@ -1,49 +1,114 @@
 <div class="header-container">
-    <!-- Logo -->
+    <!-- LEFT -->
     <lib-nist-logo
         [titleLn1]="title_line01"
-        [titleLn2]="title_line02">
+        [titleLn2]="title_line02"
+        [appVersion]="appVersion"
+    >
     </lib-nist-logo>
 
-    <!-- App version -->
-    <div class="badge badge-pill version">
-        {{appVersion}}
-    </div>
+    <!-- RIGHT -->
+    <div class="bar-right" (click)="$event.stopPropagation()">
+        <!-- Mobile hamburger -->
+        <button
+            type="button"
+            class="mobile-menu-button"
+            (click)="toggleMobileMenu($event)"
+            [attr.aria-expanded]="mobileMenuOpen"
+            aria-label="Toggle navigation menu"
+        >
+            <fa-icon [icon]="mobileMenuOpen ? faXmark : faBars"> </fa-icon>
+        </button>
 
-    <!-- Right side menu -->
-    <div class="bar-right">
-        <!-- Home button (Third right) -->
-        <!-- <div class="home-icon"> -->
-            <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="backToPortal()">
-                <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
+        <!--
+            Desktop: normal horizontal menu
+            Mobile: dropdown
+        -->
+        <div class="right-menu" [class.mobile-open]="mobileMenuOpen">
+            <!-- Home -->
+            <div
+                *ngIf="homeButtonLink && homeButtonLink != ''"
+                class="menu-item home-menu-item"
+                (click)="backToPortal()"
+            >
+                <fa-icon
+                    class="home-icon"
+                    [icon]="faHouse"
+                    transform="shrink-1"
+                    aria-hidden="true"
+                >
+                </fa-icon>
+
+                <!-- Only shown in mobile dropdown -->
+                <span class="mobile-label">Home</span>
             </div>
-        <!-- </div> -->
 
-        <!-- Custom menu (Second right) -->
-        <div class="customNavbar">
-            <ng-content select=".custom-navbar"></ng-content>
-        </div>
+            <!-- Custom menu -->
+            <!-- <div class="customNavbar">
+                <ng-content select=".custom-navbar"> </ng-content>
+            </div> -->
 
-        <!-- User icon (Far right) -->
-        <div
-            *ngIf="showUserIcon && credential && credential.userId"
-            (click)="$event.stopPropagation();toggleUserBlock()"
-            class="user-icon-wrapper ">
+            <!-- User -->
+            <div
+                *ngIf="showUserIcon && credential && credential.userId"
+                class="user-section"
+            >
+                <button
+                    type="button"
+                    class="user-button"
+                    (click)="$event.stopPropagation(); toggleUserBlock()"
+                    [attr.aria-expanded]="userBlockStatus === 'expanded'"
+                >
+                    <fa-icon
+                        [icon]="faUser"
+                        aria-hidden="true"
+                        class="user-icon"
+                    >
+                    </fa-icon>
 
-            <fa-icon [icon]="faUser" aria-hidden="true" class="user-icon"></fa-icon>
+                    <span>
+                        {{ credential.userAttributes.userLastName }},
+                        {{ credential.userAttributes.userName }}
+                    </span>
+                </button>
 
-            {{credential.userAttributes.userLastName}}, {{credential.userAttributes.userName}}
+                @if (userBlockStatus === "expanded") {
+                    <div
+                        class="user-details"
+                        (click)="$event.stopPropagation()"
+                    >
+                        <div *ngIf="credential.userId">
+                            <strong>User ID:</strong>
+                            {{ credential.userId }}
+                        </div>
+
+                        <div *ngIf="credential?.userAttributes?.userEmail">
+                            <strong>Email:</strong>
+                            {{ credential.userAttributes.userEmail }}
+                        </div>
+
+                        <div *ngIf="credential?.userAttributes?.userGroup">
+                            <strong>Group:</strong>
+                            {{ credential.userAttributes.userGroup }}
+                        </div>
+
+                        <div *ngIf="credential?.userAttributes?.userDiv">
+                            <strong>Division:</strong>
+                            {{ credential.userAttributes.userDiv }}
+                        </div>
+
+                        <div *ngIf="credential?.userAttributes?.userDivNum">
+                            <strong>Division #:</strong>
+                            {{ credential.userAttributes.userDivNum }}
+                        </div>
+
+                        <div *ngIf="credential?.userAttributes?.userOU">
+                            <strong>OU:</strong>
+                            {{ credential.userAttributes.userOU }}
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
-
-@if(showUserIcon) {
-  <div id="user"  [@userExpand]="userBlockStatus" (click)="$event.stopPropagation()">
-      <div *ngIf="credential.userId">User ID: {{credential.userId}}</div>
-      <div *ngIf="credential && credential.userAttributes?.userEmail">Email: {{credential.userAttributes.userEmail}}</div>
-      <div *ngIf="credential && credential.userAttributes?.userGroup">Group: {{credential.userAttributes.userGroup}}</div>
-      <div *ngIf="credential && credential.userAttributes?.userDiv">Division: {{credential.userAttributes.userDiv}}</div>
-      <div *ngIf="credential && credential.userAttributes?.userDivNum">Division #: {{credential.userAttributes.userDivNum}}</div>
-      <div *ngIf="credential && credential.userAttributes?.userOU">OU: {{credential.userAttributes.userOU}}</div>
-  </div>
-}
