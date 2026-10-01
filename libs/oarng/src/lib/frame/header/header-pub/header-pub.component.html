@@ -1,26 +1,47 @@
 <div class="header-container">
-    <!-- Logo -->
-    <lib-nist-logo
-      [titleLn1]="title_line01"
-      [titleLn2]="title_line02">
-    </lib-nist-logo>
-  
-    <!-- App version -->
-    <div class="badge badge-pill version">
-      {{appVersion}}
-    </div>
-  
-    <!-- Right side menu -->
-    <div class="bar-right-pub">
-        <!-- Home button (left) -->
-        <div *ngIf="homeButtonLink && homeButtonLink != ''" class="home-icon" (click)="goHome()">
-            <fa-icon [icon]="faHouse" aria-hidden="true" size="xs"></fa-icon>
-            <!-- <i class="faa faa-home" aria-hidden="true"></i> -->
-        </div>
 
-        <!-- Custom menu (right) -->
-        <div class="customNavbar">
+    <!-- LEFT -->
+    <div class="header-left">
+        <lib-nist-logo
+            [titleLn1]="title_line01"
+            [titleLn2]="title_line02"
+            [appVersion]="appVersion">
+        </lib-nist-logo>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="bar-right-pub">
+
+        <!-- Desktop Home -->
+        <fa-icon
+            class="home-icon"
+            *ngIf="homeButtonLink"
+            [icon]="faHouse"
+            transform="shrink-5"
+            (click)="goHome()"
+            aria-hidden="true">
+        </fa-icon>
+
+        <!-- Hamburger -->
+        <button
+            type="button"
+            class="mobile-menu-button"
+            (click)="toggleMobileMenu()"
+            [attr.aria-expanded]="mobileMenuOpen"
+            aria-label="Toggle navigation menu"
+        >
+            <fa-icon
+                [icon]="mobileMenuOpen ? faXmark : faBars">
+            </fa-icon>
+        </button>
+
+        <!-- Projected menu -->
+        <div
+            class="customNavbar"
+            [class.mobile-open]="mobileMenuOpen"
+        >
             <ng-content select=".custom-navbar"></ng-content>
         </div>
+
     </div>
 </div>

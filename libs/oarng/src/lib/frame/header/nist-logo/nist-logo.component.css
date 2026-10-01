@@ -1,32 +1,82 @@
-.logo-container {
-  display:inline-block;
-  width: 90px;  /* Width of the container */
-  height: 30px; /* Height of the container */
-  overflow: hidden;
+.nist-brand {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    height: 100%;
 }
-/* app.component.css */
+
+/* NIST logo */
 .image-container {
-  width: 200px;  /* Width of the container */
-  height: 100px; /* Height of the container */
-  overflow: hidden;
-  position: relative;
-  margin-left: -60px;
-  margin-top: -2em;
+    width: 235px;
+    height: 40px;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .scaled-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;    /* Ensures the image scales to cover the container */
-  object-position: left center;  /* Ensures the left part of the image is in view */
-  transform: scale(.6);  /* Scale the image */
-  clip-path: inset(0 14% 0 0);  /* Clips the right half, showing only the left */
-  transition: transform 0.3s ease-in-out; /* Smooth transition for scale */
+    display: block;
+    height: 70px;
+    width: auto; 
+    max-width: none;
+    margin-left: -19px;
+}
+
+/* PUBLIC / DATA REPOSITORY */
+.title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    color: white;
+    font-weight: 700;
+
+    margin-left: 10px;
+
+    padding-left: 10px;
+    border-left: 1px solid white;
 }
 
 .logo-text {
-  font-weight: bolder;
-  font-size:14px;
-  margin-bottom: -4px;
-  color: white;
+    font-size: 13px;     /* smaller */
+    font-weight: 700;
+    line-height: 1.05;
+    white-space: nowrap;
+}
+
+/* Version */
+.version {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-left: 20px;
+    padding: 4px 9px;
+
+    color: white;
+    font-size: 8px;     /* smaller */
+    font-weight: 700;
+    line-height: 1;
+
+    border: 1px solid white;
+    border-radius: 14px;
+
+    white-space: nowrap;
+
+    /* Slightly above vertical center */
+    transform: translateY(-4px);
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .title-container,
+    .version {
+        display: none;
+    }
+
+    .image-container {
+        margin: 0;
+    }
 }

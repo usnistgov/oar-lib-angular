@@ -1,11 +1,28 @@
-<div class="logo-container">
-  <div class="image-container">
-    <img src="assets/images/f_nist-logo-brand-white_nist-logo-brand-white.png" alt="Your Image" class="scaled-image" />
-  </div>
-</div>
+<div class="nist-brand flex items-center">
+    <!-- NIST logo -->
+    <div class="image-container">
+        <a href="https://www.nist.gov" target="_blank" title="National Institute of Standards and Technology" rel="home">
+            <img
+                src="assets/images/f_nist-logo-brand-white_nist-logo-brand-white.png"
+                alt="NIST"
+                class="scaled-image"
+            />
+        </a>
+    </div>
 
-<div style="display:inline-block;font-weight: bolder;">
-      <div class="logo-text">{{titleLn1}} </div>
-      <div class="logo-text">{{titleLn2}}</div>
-</div>
+    <!-- Two-line title -->
+    <div class="title-container">
+        <div class="logo-text">
+            {{ titleLn1 }}
+        </div>
 
+        <div class="logo-text">
+            {{ titleLn2 }}
+        </div>
+    </div>
+
+    <!-- Version -->
+    <span class="version">
+        {{ appVersion }}
+    </span>
+</div>

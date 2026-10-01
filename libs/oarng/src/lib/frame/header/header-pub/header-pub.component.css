@@ -1,4 +1,123 @@
+/* Desktop */
+.header-container {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-height: 64px;
+
+    padding: 8px 20px;
+    box-sizing: border-box;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
 .bar-right-pub {
-    float: right;
-    margin-top: 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+
+    margin-left: auto;
+
+    transform: translateY(8px);
+}
+
+.home-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0px !important;
+    transform: translateY(2px);
+
+    color: white;
+    cursor: pointer;
+}
+
+.customNavbar {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-menu-button {
+    display: none;
+}
+
+/* Small screen */
+@media (max-width: 1023px) {
+
+    .header-container {
+        min-height: 64px;
+        height: 64px;
+
+        padding: 8px 20px;
+    }
+
+    .bar-right-pub {
+        align-items: center;
+        transform: none;
+    }
+
+    /* Hide desktop home */
+    /* .home-icon {
+        display: none;
+    } */
+
+    /* Show hamburger */
+    .mobile-menu-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 36px;
+        height: 36px;
+
+        padding: 0;
+
+        border: 0;
+        border-radius: 4px;
+
+        background: transparent;
+        color: white;
+
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    /*
+     * IMPORTANT:
+     * menu is completely hidden by default
+     */
+    .customNavbar {
+        display: none !important;
+    }
+
+    /*
+     * Only display after hamburger click
+     */
+    .customNavbar.mobile-open {
+        display: block !important;
+
+        position: absolute;
+        top: 100%;
+        right: 10px;
+
+        min-width: 180px;
+        padding: 5px 0;
+
+        background: #111;
+
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+        z-index: 1000;
+    }
 }
