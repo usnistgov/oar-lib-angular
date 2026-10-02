@@ -9,45 +9,51 @@ import { faEnvelope, faRss } from '@fortawesome/free-solid-svg-icons';
 
 
 @Component({
-  selector: 'app-footer',
-  standalone: true,
-  imports: [
-    CommonModule, FontAwesomeModule
-  ],
-  templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.css']
+    selector: 'app-footer',
+    standalone: true,
+    imports: [CommonModule, FontAwesomeModule],
+    templateUrl: './footer.component.html',
+    styleUrls: ['./footer.component.css'],
 })
 export class FooterComponent implements OnInit {
-    appVersion: string = "1.0";
+    appVersion: string = '1.0';
 
     footerLinks: any;
 
     // Social media list
-    socialMediaList : any[];
+    socialMediaList: any[];
 
     // Footer link line #1
     footerLinks01: any[];
 
+    // Core Trust Seal link
+    coreTrustSealLink: string = "";
+
     constructor(public iconLibrary: FaIconLibrary) {
         iconLibrary.addIcons(
-            faXTwitter, faFacebook, faLinkedin, faInstagram, faEnvelope, faYoutube, faRss
+            faXTwitter,
+            faFacebook,
+            faLinkedin,
+            faInstagram,
+            faEnvelope,
+            faYoutube,
+            faRss,
         );
 
         // For some reason, footerlinks does not have "default" field in unit test
         // So we have to use following condition to make both production and unit test work.
-        if((footerlinks as any).default)
+        if ((footerlinks as any).default)
             this.footerLinks = (footerlinks as any).default;
-        else
-            this.footerLinks = footerlinks as any;
+        else this.footerLinks = footerlinks as any;
 
         // Add footerLinks to the condition to avoid unit test error
         this.socialMediaList = this.footerLinks.socialMediaList;
 
         this.footerLinks01 = this.footerLinks.footerLinks01;
+        this.coreTrustSealLink = this.footerLinks.CoreTrustSealLink;
     }
 
-    ngOnInit() {
-    }
+    ngOnInit() {}
 
     /**
      * The classes for the first and last items are different from the items in the link array.
@@ -57,12 +63,12 @@ export class FooterComponent implements OnInit {
      * @returns class name
      */
     getLinkClass(index: number, linkArray: any[]) {
-        let className = "menu__item is-leaf leaf menu-depth-1";
+        let className = 'menu__item is-leaf leaf menu-depth-1';
 
-        if( index == 0){
-            className = "menu__item is-leaf first leaf menu-depth-1";
-        } else if(index == linkArray.length-1) {
-            className = "menu__item is-leaf last leaf menu-depth-1";
+        if (index == 0) {
+            className = 'menu__item is-leaf first leaf menu-depth-1';
+        } else if (index == linkArray.length - 1) {
+            className = 'menu__item is-leaf last leaf menu-depth-1';
         }
 
         return className;
