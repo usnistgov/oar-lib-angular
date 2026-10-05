@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
 import { NsdService } from '../nsd.service'
+import { SubjectLabelService } from '../subject-label.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
@@ -31,6 +32,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   private groupsSvc = inject(GroupsService)
   private permsSvc = inject(PermissionsService)
   private nsd = inject(NsdService)
+  private labelSvc = inject(SubjectLabelService)
   private dialog = inject(MatDialog)
 
   // ── Graduated permission model ────────────────────────────────────────────
@@ -99,7 +101,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   peopleSuggestions = signal<string[]>([])
   staged = signal<PersonSuggestion[]>([])
   peopleSearchLoading = signal(false)
-  subjectLabels = signal<{ [subject: string]: string }>({})
+  // labels live in the service so a host app's own views resolve each subject once
+  readonly subjectLabels = this.labelSvc.labels
 
   // ── Bulk grant state (multiple records) ──────────────────────────────────
   bulkLevel: 'view' | 'update' | 'admin' = 'update'
@@ -164,21 +167,13 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 3) return of([])
         const q = query.toLowerCase()
-        const wordPrefixMatch = (text: string) =>
-          text.toLowerCase().split(/[\s()]+/).some(word => word.startsWith(q))
+        const wordPrefixMatch = this.labelSvc.wordPrefixMatcher(query)
         const midas = this.groups()
           .filter(g => wordPrefixMatch(g.name) || g.id.toLowerCase().startsWith(q))
           .slice(0, 5)
           .map(g => ({ id: g.id, name: g.name, code: '', type: 'midas' as const }))
-        return forkJoin(
-          this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
-            this.nsd.searchOrgIndex(endpoint, query).pipe(
-              map(raw => this.parseOrgIndex(raw, prefix).filter(o => wordPrefixMatch(o.name))),
-              catchError(() => of([]))
-            )
-          )
-        ).pipe(
-          map(results => [...midas, ...results.flat()].slice(0, 10))
+        return this.labelSvc.searchOrgs(query).pipe(
+          map(orgs => [...midas, ...orgs].slice(0, 10))
         )
       })
     ).subscribe(suggestions => this.groupSuggestions.set(suggestions))
@@ -298,116 +293,13 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
-  private readonly ORG_TYPE_MAP: Record<string, { endpoint: string; label: string; prefix: 'nistou' | 'nistdiv' | 'nistgrp' }> = {
-    nistou:  { endpoint: 'OU',    label: 'OU',  prefix: 'nistou'  },
-    nistdiv: { endpoint: 'Div',   label: 'Div', prefix: 'nistdiv' },
-    nistgrp: { endpoint: 'Group', label: 'Grp', prefix: 'nistgrp' },
-  }
-
   private resolveUnknownLabels(acls: Acls): void {
-    const known = this.subjectLabels()
-    const allSubjects = new Set([
+    this.labelSvc.resolve([
       ...(acls.read ?? []),
       ...(acls.write ?? []),
       ...(acls.admin ?? []),
       ...(acls.delete ?? []),
-    ])
-    const syncUpdates: { [subject: string]: string } = {}
-    const toResolveViaSearch: string[] = []
-    const toResolveViaOrg: string[] = []
-
-    for (const subject of allSubjects) {
-      if (known[subject]) continue
-      const group = this.groups().find(g => g.id === subject)
-      if (group) {
-        syncUpdates[subject] = group.name
-      } else if (/^nist(ou|div|grp):/.test(subject) || /^\d+:\d+$/.test(subject) || /^[a-z]+:\d+$/.test(subject)) {
-        toResolveViaOrg.push(subject)
-      } else if (/^\d+$/.test(subject)) {
-        syncUpdates[subject] = `Org group (${subject})`
-      } else {
-        toResolveViaSearch.push(subject)
-      }
-    }
-
-    if (Object.keys(syncUpdates).length > 0) {
-      this.subjectLabels.update(m => ({ ...m, ...syncUpdates }))
-    }
-
-    // EIDs: query by nistUsername and keep only the exact match
-    toResolveViaSearch.forEach(eid => {
-      this.nsd.getPeopleByUsername(eid).pipe(
-        catchError(() => of([]))
-      ).subscribe((people: any[]) => {
-          if (!Array.isArray(people)) return
-          const person = people.find(p => p?.nistUsername?.toLowerCase() === eid.toLowerCase())
-          if (!person?.lastName) return
-          const name = person.firstName ? `${person.lastName}, ${person.firstName}` : person.lastName
-          this.subjectLabels.update(m => ({ ...m, [eid]: name }))
-        })
-      })
-
-    // NIST org subjects — two formats:
-    //   new: "nistou:13289" / "nistdiv:13289" / "nistgrp:13289"
-    //   legacy: "775:13289" (orgCode:orgId, stored by older versions of this UI)
-    // The name in the index already carries the organization's code, so it is used as-is.
-    toResolveViaOrg.forEach(subject => {
-      const colonIdx = subject.indexOf(':')
-      const prefix = subject.substring(0, colonIdx)
-      const afterColon = subject.substring(colonIdx + 1)
-
-      if (/^nist(ou|div|grp)$/.test(prefix)) {
-        // New format: query the typed endpoint, look up numericId directly
-        const mapping = this.ORG_TYPE_MAP[prefix]
-        this.nsd.searchOrgIndex(mapping.endpoint).pipe(
-          catchError(() => of({}))
-          ).subscribe((raw: any) => {
-            const numericId = afterColon
-            for (const code of Object.keys(raw ?? {})) {
-              const group = raw[code]
-              if (group && typeof group === 'object' && group[numericId]) {
-                this.subjectLabels.update(m => ({ ...m, [subject]: group[numericId] as string }))
-                return
-              }
-            }
-          })
-        } else if (/^\d+$/.test(prefix)) {
-          // Legacy format "775:13289" (orgCode:orgId) — direct lookup by both keys
-          const orgCode = prefix
-          const orgId = afterColon
-          forkJoin(
-            this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.nsd.searchOrgIndex(endpoint).pipe(catchError(() => of({})))
-            )
-          ).subscribe(responses => {
-            for (const raw of responses) {
-              const group = raw?.[orgCode]
-              if (group && typeof group === 'object' && group[orgId]) {
-                this.subjectLabels.update(m => ({ ...m, [subject]: group[orgId] as string }))
-                return
-              }
-            }
-          })
-        } else {
-          // Org abbreviation format "mml:13213" — scan all endpoints by orgId, get code from outer key
-          const orgId = afterColon
-          forkJoin(
-            this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.nsd.searchOrgIndex(endpoint).pipe(catchError(() => of({})))
-            )
-          ).subscribe(responses => {
-            for (const raw of responses) {
-              for (const code of Object.keys(raw ?? {})) {
-                const group = raw[code]
-                if (group && typeof group === 'object' && group[orgId]) {
-                  this.subjectLabels.update(m => ({ ...m, [subject]: group[orgId] as string }))
-                  return
-                }
-              }
-            }
-          })
-        }
-      })
+    ], this.groups())
   }
 
   createGroup(): void {
@@ -703,7 +595,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     forkJoin(
       this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
         this.nsd.searchOrgIndex(endpoint, ou).pipe(
-          map(raw => this.parseOrgIndex(raw, prefix)),
+          map(raw => this.labelSvc.parseOrgIndex(raw, prefix)),
           catchError(() => of([]))
         )
       )
@@ -721,40 +613,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
-  // The index lists each organization under several search keys — its full name, its
-  // abbreviation and its numeric code — all pointing at the same id, so collapse them
-  // to one entry per id.
-  private parseOrgIndex(
-    raw: any,
-    prefix: 'nistou' | 'nistdiv' | 'nistgrp'
-  ): { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] {
-    type OrgEntry = { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }
-    const byId = new Map<string, OrgEntry>()
-    if (!raw || typeof raw !== 'object') return []
-    Object.keys(raw).forEach(code => {
-      const group = raw[code]
-      if (group && typeof group === 'object') {
-        Object.keys(group).forEach(numericId => {
-          const id = `${prefix}:${numericId}`
-          const seen = byId.get(id)
-          if (!seen) {
-            byId.set(id, { id, name: group[numericId], code, type: prefix })
-          } else if (/^\d+$/.test(code)) {
-            // the numeric key is the organization's own code; the others are search aliases
-            seen.code = code
-          }
-        })
-      }
-    })
-    return [...byId.values()]
-  }
-
   stageNistOrg(org: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }): void {
     this._addStaged(org.id, org.name)
-    this.subjectLabels.update(m => ({
-      ...m,
-      [org.id]: org.name
-    }))
   }
 
   isNistOrgStaged(orgId: string): boolean {
@@ -836,7 +696,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   private _addStaged(subject: string, label: string): void {
     if (!this.staged().find(p => p.id === subject)) {
       this.staged.update(s => [...s, { id: subject, label }])
-      this.subjectLabels.update(m => ({ ...m, [subject]: label }))
+      this.labelSvc.set(subject, label)
     }
   }
 

@@ -882,28 +882,6 @@ describe('PermissionManagerComponent', () => {
       '63': { '13213': 'Material Measurement Laboratory (63)' },
     }
 
-    it('collapses the repeated keys into one entry per id', () => {
-      const orgs = (component as any).parseOrgIndex(mmlIndex, 'nistou')
-
-      expect(orgs).toHaveLength(1)
-      expect(orgs[0]).toEqual({
-        id: 'nistou:13213',
-        name: 'Material Measurement Laboratory (63)',
-        code: '63',
-        type: 'nistou'
-      })
-    })
-
-    it('keeps organizations that differ by id', () => {
-      const orgs = (component as any).parseOrgIndex({
-        'engineering laboratory': { '13215': 'Engineering Laboratory (73)' },
-        'el': { '13215': 'Engineering Laboratory (73)' },
-        'physical measurement laboratory': { '13214': 'Physical Measurement Laboratory (68)' },
-      }, 'nistou')
-
-      expect(orgs.map((o: any) => o.id).sort()).toEqual(['nistou:13214', 'nistou:13215'])
-    })
-
     it('suggests an org once when the index repeats it under several keys', fakeAsync(() => {
       jest.spyOn((component as any).nsd, 'searchOrgIndex')
         .mockImplementation((endpoint: any) => of(endpoint === 'OU' ? mmlIndex : {}))
