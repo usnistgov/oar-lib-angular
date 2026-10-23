@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
+import { PermissionLevel, subjectPermissionLevel } from '../permission-level'
 import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
 import { MatDialog } from '@angular/material/dialog'
@@ -398,17 +399,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     return this.acls()?.[perm] ?? []
   }
 
-  subjectLevel(subject: string): 'view' | 'update' | 'admin' | null {
-    const acls = this.acls()
-    if (!acls) return null
-    const r = acls.read?.includes(subject) ?? false
-    const w = acls.write?.includes(subject) ?? false
-    const a = acls.admin?.includes(subject) ?? false
-    const d = acls.delete?.includes(subject) ?? false
-    if (a) return 'admin'
-    if (w) return 'update'
-    if (r) return 'view'
-    return null
+  subjectLevel(subject: string): PermissionLevel | null {
+    return subjectPermissionLevel(this.acls(), subject)
   }
 
   isGroup(subject: string): boolean {

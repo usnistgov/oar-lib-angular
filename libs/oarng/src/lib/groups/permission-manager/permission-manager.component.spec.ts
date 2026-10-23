@@ -68,9 +68,9 @@ describe('PermissionManagerComponent', () => {
       expect(component.subjectLevel('alice')).toBe('update')
     })
 
-    it('returns update even when subject has read+write+admin but not delete', () => {
+    it('returns admin when the subject holds admin, whatever else is set', () => {
       component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], []))
-      expect(component.subjectLevel('alice')).toBe('update')
+      expect(component.subjectLevel('alice')).toBe('admin')
     })
 
     it('returns view when subject has only read', () => {
@@ -78,9 +78,11 @@ describe('PermissionManagerComponent', () => {
       expect(component.subjectLevel('alice')).toBe('view')
     })
 
-    it('returns null when subject has no read permission', () => {
+    // write is granted on its own; calling that unplaced hid the subject from
+    // everything listing the record's permissions
+    it('returns update for write without read', () => {
       component.acls.set(makeAcls([], ['alice'], [], []))
-      expect(component.subjectLevel('alice')).toBeNull()
+      expect(component.subjectLevel('alice')).toBe('update')
     })
 
     it('returns null when subject is not present in any list', () => {
