@@ -1,5 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
-import { PermissionLevel, subjectPermissionLevel } from '../permission-level'
+import {
+  LEVEL_PERMS, PermissionLevel,
+  subjectPermissionLevel, withSubjectAtLevel, withoutSubject
+} from '../permission-level'
 import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
 import { MatDialog } from '@angular/material/dialog'
@@ -38,11 +41,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   // ── Graduated permission model ────────────────────────────────────────────
 
-  readonly LEVEL_PERMS: Record<'view' | 'update' | 'admin', AclPerm[]> = {
-    view:   ['read'],
-    update: ['read', 'write'],
-    admin:  ['read', 'write', 'admin', 'delete'],
-  }
+  // kept on the class because it is part of the published API
+  readonly LEVEL_PERMS = LEVEL_PERMS
 
   private readonly NIST_ORG_TYPES = [
     { endpoint: 'OU',    prefix: 'nistou'  as const },
@@ -65,6 +65,11 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   aclsError = signal<string | null>(null)
 
   readonly singleRecord = signal<RecordRef | null>(null)
+
+  /** a write is in flight; the chips must not accept another until it lands */
+  readonly aclsBusy = signal(false)
+  /** a failed write used to reach the console only, so it looked like nothing happened */
+  readonly aclsWriteError = signal<string | null>(null)
 
   readonly uniqueSubjects = computed(() => {
     const acls = this.acls()
@@ -228,6 +233,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     }
   }
 
+  // Still writes a permission at a time.  The single-write path needs the
+  // record's current acls to build a complete body, and acls is only loaded for
+  // a single record — a bulk PUT without that snapshot would clear whatever the
+  // selected records already had.
   grantBulk(): void {
     const people = this.staged()
     const level = this.bulkLevel
@@ -411,89 +420,62 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     return false
   }
 
-  setSubjectLevel(subject: string, newLevel: 'view' | 'update' | 'admin', emitChange = true): void {
-    const record = this.singleRecord()
-    if (!record) return
-    const current = this.acls()
-    if (!current) return
 
-    const required = this.LEVEL_PERMS[newLevel]
-    const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-    const toGrant = required.filter(p => !(current[p] ?? []).includes(subject))
-    const toRevoke = all.filter(p => !required.includes(p) && (current[p] ?? []).includes(subject))
-    const ops: Observable<unknown>[] = [
-      ...toGrant.map(p => this.permsSvc.grantPerm(record, p, subject)),
-      ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject)),
-    ]
-    if (!ops.length) return
-
-    forkJoin(ops).subscribe({
+  /**
+   * One request expresses one intent.  Granting admin used to mean four separate
+   * writes, each a read-modify-write of the whole record server-side, so the
+   * record's final state depended on which of them the server handled last.
+   */
+  private writeAcls(record: RecordRef, acls: Acls, emitChange = true): void {
+    this.aclsBusy.set(true)
+    this.aclsWriteError.set(null)
+    this.permsSvc.setAcls(record, acls).subscribe({
       next: () => {
+        this.aclsBusy.set(false)
         this.loadAcls()
         if (emitChange) this.permissionsChanged.emit()
       },
       error: (err: unknown) => {
+        this.aclsBusy.set(false)
+        this.aclsWriteError.set('That permission change could not be saved. Please try again.')
         this.loadAcls()
-        console.error('[PermissionManager] setSubjectLevel error:', err)
+        console.error('[PermissionManager] setAcls failed:', err)
       }
     })
+  }
+
+  setSubjectLevel(subject: string, newLevel: PermissionLevel, emitChange = true): void {
+    const record = this.singleRecord()
+    const current = this.acls()
+    if (!record || !current) return
+    if (subjectPermissionLevel(current, subject) === newLevel) return
+
+    this.writeAcls(record, withSubjectAtLevel(current, subject, newLevel), emitChange)
   }
 
   removeSubject(subject: string): void {
     const record = this.singleRecord()
-    if (!record) return
     const current = this.acls()
-    if (!current) return
+    if (!record || !current) return
 
-    const toRevoke: AclPerm[] = (['read', 'write', 'admin', 'delete'] as AclPerm[])
-      .filter(p => (current[p] ?? []).includes(subject))
-    if (!toRevoke.length) return
-
-    forkJoin(toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject))).subscribe({
-      next: () => { this.loadAcls(); this.permissionsChanged.emit() },
-      error: (err: unknown) => {
-        this.loadAcls()
-        console.error('[PermissionManager] removeSubject error:', err)
-      }
-    })
+    this.writeAcls(record, withoutSubject(current, subject))
   }
 
-  grantStagedLevel(level: 'view' | 'update' | 'admin'): void {
+  grantStagedLevel(level: PermissionLevel): void {
     const record = this.singleRecord()
-    if (!record) return
+    const current = this.acls()
     const people = this.staged()
-    if (!people.length) return
+    if (!record || !current || !people.length) return
 
-    const currentAcls = this.acls()
-    const allOps: Observable<unknown>[] = people.flatMap(person => {
-      if (!currentAcls) return []
-      const required = this.LEVEL_PERMS[level]
-      const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-      const toGrant = required.filter(p => !(currentAcls[p] ?? []).includes(person.id))
-      const toRevoke = all.filter(p => !required.includes(p) && (currentAcls[p] ?? []).includes(person.id))
-      return [
-        ...toGrant.map(p => this.permsSvc.grantPerm(record, p, person.id)),
-        ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, person.id)),
-      ]
-    })
+    // folded into one object: a write per person, each built from the same
+    // snapshot, would have the last one undo the people before it
+    const next = people.reduce(
+      (acls, person) => withSubjectAtLevel(acls, person.id, level),
+      current as Acls
+    )
 
     this.closeAddPerson()
-
-    if (!allOps.length) {
-      this.permissionsChanged.emit()
-      return
-    }
-
-    forkJoin(allOps).subscribe({
-      next: () => {
-        this.loadAcls()
-        this.permissionsChanged.emit()
-      },
-      error: (err: unknown) => {
-        this.loadAcls()
-        console.error('[PermissionManager] grantStagedLevel error:', err)
-      }
-    })
+    this.writeAcls(record, next)
   }
 
   // ── Confirmation wrappers ─────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { aclSubjects, subjectPermissionLevel } from './permission-level'
+import { aclSubjects, subjectPermissionLevel, withSubjectAtLevel, withoutSubject } from './permission-level'
 
 describe('subjectPermissionLevel', () => {
   // mdm1:0004, the record that exposed the portal's divergent copy of this rule
@@ -48,3 +48,75 @@ describe('aclSubjects', () => {
     expect(aclSubjects({})).toEqual([])
   })
 })
+
+describe('withSubjectAtLevel / withoutSubject', () => {
+  const BASE = {
+    read: ['owner', 'viewer'],
+    write: ['editor'],
+    admin: ['owner'],
+    delete: ['owner']
+  }
+
+  it('puts the subject in exactly the permissions the level requires', () => {
+    expect(withSubjectAtLevel(BASE, 'x', 'view')).toEqual(
+      { read: ['owner', 'viewer', 'x'], write: ['editor'], admin: ['owner'], delete: ['owner'] })
+
+    expect(withSubjectAtLevel(BASE, 'x', 'update')).toEqual(
+      { read: ['owner', 'viewer', 'x'], write: ['editor', 'x'], admin: ['owner'], delete: ['owner'] })
+
+    expect(withSubjectAtLevel(BASE, 'x', 'admin')).toEqual(
+      { read: ['owner', 'viewer', 'x'], write: ['editor', 'x'], admin: ['owner', 'x'], delete: ['owner', 'x'] })
+  })
+
+  it('demotes by removing the permissions the new level does not include', () => {
+    const asAdmin = withSubjectAtLevel(BASE, 'x', 'admin')
+    expect(withSubjectAtLevel(asAdmin, 'x', 'view')).toEqual(
+      { read: ['owner', 'viewer', 'x'], write: ['editor'], admin: ['owner'], delete: ['owner'] })
+  })
+
+  it('leaves every other subject exactly where it was', () => {
+    const next = withSubjectAtLevel(BASE, 'x', 'admin')
+    expect(next.read).toEqual(expect.arrayContaining(['owner', 'viewer']))
+    expect(next.write).toContain('editor')
+    expect(withoutSubject(next, 'x')).toEqual(BASE)
+  })
+
+  it('is idempotent', () => {
+    const once = withSubjectAtLevel(BASE, 'x', 'update')
+    expect(withSubjectAtLevel(once, 'x', 'update')).toEqual(once)
+  })
+
+  // the endpoint rejects a body holding any non-standard permission, for the
+  // whole request, before it writes — a record that has been through review
+  // carries publish and _read-style keys, so they must never be echoed back
+  it('never carries a non-standard permission into the result', () => {
+    const reviewed = {
+      ...BASE,
+      publish: ['curator'],
+      _read: ['old'],
+      _write: ['old']
+    } as any
+
+    for (const result of [withSubjectAtLevel(reviewed, 'x', 'admin'), withoutSubject(reviewed, 'owner')]) {
+      expect(Object.keys(result).sort()).toEqual(['admin', 'delete', 'read', 'write'])
+    }
+  })
+
+  it('always emits all four permissions, so an omitted one cannot keep the subject', () => {
+    expect(Object.keys(withoutSubject({ read: ['x'] }, 'x')).sort())
+      .toEqual(['admin', 'delete', 'read', 'write'])
+  })
+
+  it('folds several subjects into one object', () => {
+    const next = ['a', 'b', 'c'].reduce((acls, s) => withSubjectAtLevel(acls, s, 'admin'), BASE as any)
+    for (const s of ['a', 'b', 'c']) expect(next.admin).toContain(s)
+  })
+
+  it('copes with no acls at all', () => {
+    expect(withSubjectAtLevel(null, 'x', 'view')).toEqual(
+      { read: ['x'], write: [], admin: [], delete: [] })
+    expect(withoutSubject(undefined, 'x')).toEqual(
+      { read: [], write: [], admin: [], delete: [] })
+  })
+})
+

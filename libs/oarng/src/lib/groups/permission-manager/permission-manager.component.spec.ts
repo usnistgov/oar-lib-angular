@@ -18,7 +18,7 @@ const makeAcls = (r: string[], w: string[], a: string[], d: string[]): Acls =>
 describe('PermissionManagerComponent', () => {
   let component: PermissionManagerComponent
   let fixture: ComponentFixture<PermissionManagerComponent>
-  let permsSvc: { grantPerm: jest.Mock; revokePerm: jest.Mock; getAcls: jest.Mock }
+  let permsSvc: { grantPerm: jest.Mock; revokePerm: jest.Mock; getAcls: jest.Mock; setAcls: jest.Mock }
   let groupsSvc: {
     getGroups: jest.Mock
     createGroup: jest.Mock
@@ -32,6 +32,7 @@ describe('PermissionManagerComponent', () => {
       grantPerm: jest.fn().mockReturnValue(of(['alice'])),
       revokePerm: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
       getAcls: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
+      setAcls: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
     }
     groupsSvc = {
       getGroups: jest.fn().mockReturnValue(of([])),
@@ -152,237 +153,158 @@ describe('PermissionManagerComponent', () => {
 
   // ── setSubjectLevel() ──────────────────────────────────────────────────────
 
+  // One request expresses one intent.  These assert the body that reaches the
+  // server, not which service methods were reached for.
   describe('setSubjectLevel()', () => {
-    beforeEach(() => {
-      component.singleRecord.set(RECORD)
-    })
+    beforeEach(() => component.singleRecord.set(RECORD))
 
-    it('grants missing perms when upgrading to admin', () => {
-      // alice has view; upgrading to admin requires granting write, admin, delete
+    const bodyOf = () => permsSvc.setAcls.mock.calls[0][1]
+
+    it('writes the subject into exactly the permissions admin requires', () => {
       component.acls.set(makeAcls(['alice'], [], [], []))
       component.setSubjectLevel('alice', 'admin')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'admin', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'delete', 'alice')
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      expect(permsSvc.setAcls.mock.calls[0][0]).toBe(RECORD)
+      expect(bodyOf()).toEqual({
+        read: ['alice'], write: ['alice'], admin: ['alice'], delete: ['alice']
+      })
+      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
       expect(permsSvc.revokePerm).not.toHaveBeenCalled()
-      // The key invariant: read is already held — grantPerm must NOT be called for 'read'
-      expect(permsSvc.grantPerm).not.toHaveBeenCalledWith(
-        expect.any(Object), 'read', 'alice'
-      )
     })
 
-    it('revokes excess perms when downgrading to view', () => {
-      // alice has admin (all four); downgrading to view requires revoking write, admin, delete
+    it('drops the permissions a downgrade no longer includes', () => {
       component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
       component.setSubjectLevel('alice', 'view')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'admin', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'delete', 'alice')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      expect(bodyOf()).toEqual({ read: ['alice'], write: [], admin: [], delete: [] })
     })
 
-    it('both grants and revokes when switching from view to update', () => {
-      // alice has only read; upgrade to update requires granting write
-      component.acls.set(makeAcls(['alice'], [], [], []))
+    it('leaves everyone else untouched', () => {
+      component.acls.set(makeAcls(['bob', 'alice'], ['bob'], ['bob'], ['bob']))
       component.setSubjectLevel('alice', 'update')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.revokePerm).not.toHaveBeenCalled()
+
+      const body = bodyOf()
+      expect(body.read).toEqual(expect.arrayContaining(['bob', 'alice']))
+      expect(body.write).toEqual(expect.arrayContaining(['bob', 'alice']))
+      expect(body.admin).toEqual(['bob'])
+      expect(body.delete).toEqual(['bob'])
     })
 
-    it('is a no-op when the subject is already at the target level', () => {
-      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
-      component.setSubjectLevel('alice', 'admin')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
-      expect(permsSvc.revokePerm).not.toHaveBeenCalled()
-    })
-
-    it('emits permissionsChanged after all ops complete', () => {
-      component.acls.set(makeAcls(['alice'], [], [], []))
-      jest.spyOn(component.permissionsChanged, 'emit')
-      component.setSubjectLevel('alice', 'admin')
-      expect(component.permissionsChanged.emit).toHaveBeenCalledTimes(1)
-    })
-
-    it('does not emit permissionsChanged when emitChange is false', () => {
-      component.acls.set(makeAcls(['alice'], [], [], []))
-      jest.spyOn(component.permissionsChanged, 'emit')
-      component.setSubjectLevel('alice', 'admin', false)
-      expect(component.permissionsChanged.emit).not.toHaveBeenCalled()
-    })
-
-    it('does nothing when singleRecord is null', () => {
-      component.singleRecord.set(null)
+    it('emits permissionsChanged and refreshes once the write lands', () => {
+      const emitted = jest.fn()
+      component.permissionsChanged.subscribe(emitted)
       component.acls.set(makeAcls(['alice'], [], [], []))
       component.setSubjectLevel('alice', 'admin')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
-    })
 
-    it('does nothing when acls is null', () => {
-      component.acls.set(null)
-      component.setSubjectLevel('alice', 'admin')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
-    })
-
-    it('calls loadAcls() even when an operation errors', () => {
-      permsSvc.revokePerm.mockReturnValue(throwError(() => new Error('403')))
-      permsSvc.grantPerm.mockReturnValue(of(['alice']))
-
-      // alice at full admin — downgrading to view produces toRevoke=[write,admin,delete]
-      // which calls revokePerm 3 times; revokePerm throws, hitting the error path
-      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
-      permsSvc.getAcls.mockReturnValue(of(makeAcls(['alice'], [], [], [])))
-
-      component.setSubjectLevel('alice', 'view')
-
+      expect(emitted).toHaveBeenCalledTimes(1)
       expect(permsSvc.getAcls).toHaveBeenCalled()
     })
-  })
 
-  // ── removeSubject() ────────────────────────────────────────────────────────
+    it('does not emit when emitChange is false', () => {
+      const emitted = jest.fn()
+      component.permissionsChanged.subscribe(emitted)
+      component.acls.set(makeAcls(['alice'], [], [], []))
+      component.setSubjectLevel('alice', 'admin', false)
+
+      expect(emitted).not.toHaveBeenCalled()
+    })
+
+    it('writes nothing when the subject already holds that level', () => {
+      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
+      component.setSubjectLevel('alice', 'admin')
+
+      expect(permsSvc.setAcls).not.toHaveBeenCalled()
+    })
+
+    // a failure used to reach the console only, so the panel just snapped back
+    it('surfaces a failed write and clears the busy flag', () => {
+      permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('nope')))
+      component.acls.set(makeAcls(['alice'], [], [], []))
+      component.setSubjectLevel('alice', 'admin')
+
+      expect(component.aclsWriteError()).toBeTruthy()
+      expect(component.aclsBusy()).toBe(false)
+    })
+  })
 
   describe('removeSubject()', () => {
-    beforeEach(() => {
-      component.singleRecord.set(RECORD)
-    })
+    beforeEach(() => component.singleRecord.set(RECORD))
 
-    it('revokes all perms the subject holds', () => {
-      component.acls.set(makeAcls(['alice'], ['alice'], [], []))
+    // one write, so the subject cannot survive in a list and need removing twice
+    it('clears the subject from every permission in one write', () => {
+      component.acls.set(makeAcls(['alice', 'bob'], ['alice'], ['alice'], ['alice']))
       component.removeSubject('alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'read', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledTimes(2)
-    })
 
-    it('revokes all four perms for an admin subject', () => {
-      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
-      component.removeSubject('alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledTimes(4)
-    })
-
-    it('emits permissionsChanged when all revokes complete', () => {
-      component.acls.set(makeAcls(['alice'], ['alice'], [], []))
-      jest.spyOn(component.permissionsChanged, 'emit')
-      component.removeSubject('alice')
-      expect(component.permissionsChanged.emit).toHaveBeenCalledTimes(1)
-    })
-
-    it('is a no-op when subject is not in any ACL list', () => {
-      component.acls.set(makeAcls(['alice'], [], [], []))
-      component.removeSubject('bob')
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      expect(permsSvc.setAcls.mock.calls[0][1]).toEqual({
+        read: ['bob'], write: [], admin: [], delete: []
+      })
       expect(permsSvc.revokePerm).not.toHaveBeenCalled()
     })
 
-    it('does nothing when singleRecord is null', () => {
-      component.singleRecord.set(null)
+    it('emits permissionsChanged once the write lands', () => {
+      const emitted = jest.fn()
+      component.permissionsChanged.subscribe(emitted)
       component.acls.set(makeAcls(['alice'], [], [], []))
       component.removeSubject('alice')
-      expect(permsSvc.revokePerm).not.toHaveBeenCalled()
-    })
 
-    it('calls loadAcls() and emits even when one revoke errors', () => {
-      permsSvc.revokePerm
-        .mockReturnValueOnce(throwError(() => new Error('500')))
-        .mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
-
-      component.acls.set({ read: ['alice'], write: ['alice'], admin: [], delete: [] })
-      permsSvc.getAcls.mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
-      const spy = jest.spyOn(component.permissionsChanged, 'emit')
-
-      component.removeSubject('alice')
-
-      // forkJoin fails fast; error path must call loadAcls
-      expect(permsSvc.getAcls).toHaveBeenCalled()
-      // permissionsChanged does NOT emit on error (partial failure = unknown state)
-      expect(spy).not.toHaveBeenCalled()
+      expect(emitted).toHaveBeenCalledTimes(1)
     })
   })
 
-  // ── grantStagedLevel() ─────────────────────────────────────────────────────
-
   describe('grantStagedLevel()', () => {
-    beforeEach(() => {
-      component.singleRecord.set(RECORD)
-      component.acls.set(EMPTY_ACLS)
-    })
+    beforeEach(() => component.singleRecord.set(RECORD))
 
-    it('grants the required perms for each staged person', () => {
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.grantStagedLevel('view')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'read', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledTimes(1)
-    })
-
-    it('grants all four perms when level is admin', () => {
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.grantStagedLevel('admin')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'read', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'admin', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'delete', 'alice')
-    })
-
-    it('emits permissionsChanged once when all staged people are processed', () => {
+    // staged people folded into one body: a write each, all built from the same
+    // snapshot, would have the last person undo the ones before
+    it('adds every staged person in a single write', () => {
+      component.acls.set(makeAcls(['owner'], [], ['owner'], []))
       component.staged.set([
-        { id: 'alice', label: 'Alice' },
-        { id: 'bob', label: 'Bob' },
-      ])
-      jest.spyOn(component.permissionsChanged, 'emit')
-      component.grantStagedLevel('view')
-      expect(component.permissionsChanged.emit).toHaveBeenCalledTimes(1)
-    })
-
-    it('revokes excess perms when downgrading an existing subject', () => {
-      component.acls.set(makeAcls(['alice'], ['alice'], ['alice'], ['alice']))
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.grantStagedLevel('view')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'admin', 'alice')
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(RECORD, 'delete', 'alice')
-    })
-
-    it('is a no-op when staged is empty', () => {
-      component.staged.set([])
+        { id: 'a', label: 'A' }, { id: 'b', label: 'B' }, { id: 'c', label: 'C' }
+      ] as any)
       component.grantStagedLevel('admin')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      const body = permsSvc.setAcls.mock.calls[0][1]
+      for (const s of ['a', 'b', 'c']) {
+        expect(body.read).toContain(s)
+        expect(body.write).toContain(s)
+        expect(body.admin).toContain(s)
+        expect(body.delete).toContain(s)
+      }
+      expect(body.read).toContain('owner')
+      expect(body.admin).toContain('owner')
     })
 
-    it('is a no-op when singleRecord is null', () => {
-      component.singleRecord.set(null)
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.grantStagedLevel('admin')
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
-    })
-
-    it('calls loadAcls() exactly once even when 3 people are staged', () => {
-      const record: RecordRef = { id: 'mdm:001', apiBase: 'https://api/' }
-      fixture.componentRef.setInput('records', [record])
-      component.acls.set({ read: [], write: [], admin: [], delete: [] })
-      component.staged.set([
-        { id: 'alice', label: 'Alice' },
-        { id: 'bob', label: 'Bob' },
-        { id: 'carol', label: 'Carol' },
-      ])
-      permsSvc.grantPerm.mockReturnValue(of(['alice']))
-      permsSvc.getAcls.mockReturnValue(of({ read: ['alice', 'bob', 'carol'], write: [], admin: [], delete: [] }))
-
+    it('grants view to several people without giving them write', () => {
+      component.acls.set(makeAcls([], [], [], []))
+      component.staged.set([{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }] as any)
       component.grantStagedLevel('view')
 
-      expect(permsSvc.getAcls).toHaveBeenCalledTimes(1)
+      expect(permsSvc.setAcls.mock.calls[0][1]).toEqual({
+        read: ['a', 'b'], write: [], admin: [], delete: []
+      })
     })
 
-    it('calls loadAcls() and does NOT emit when any op errors', () => {
-      const record: RecordRef = { id: 'mdm:001', apiBase: 'https://api/' }
-      fixture.componentRef.setInput('records', [record])
-      component.acls.set({ read: [], write: [], admin: [], delete: [] })
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      permsSvc.grantPerm.mockReturnValue(throwError(() => new Error('403')))
-      permsSvc.getAcls.mockReturnValue(of({ read: [], write: [], admin: [], delete: [] }))
-      const spy = jest.spyOn(component.permissionsChanged, 'emit')
+    it('emits permissionsChanged once, not once per person', () => {
+      const emitted = jest.fn()
+      component.permissionsChanged.subscribe(emitted)
+      component.acls.set(makeAcls([], [], [], []))
+      component.staged.set([{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }] as any)
+      component.grantStagedLevel('update')
 
+      expect(emitted).toHaveBeenCalledTimes(1)
+    })
+
+    it('reports a failure instead of silently reverting', () => {
+      permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('nope')))
+      component.acls.set(makeAcls([], [], [], []))
+      component.staged.set([{ id: 'a', label: 'A' }] as any)
       component.grantStagedLevel('view')
 
-      expect(permsSvc.getAcls).toHaveBeenCalled()
-      expect(spy).not.toHaveBeenCalled()
+      expect(component.aclsWriteError()).toBeTruthy()
     })
   })
 
