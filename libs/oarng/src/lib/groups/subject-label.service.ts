@@ -29,6 +29,17 @@ const ORG_ENDPOINT: Record<OrgType, string> = {
  * organization ids — into names fit for display, and remembers what it has resolved so
  * an identity shown in several places is looked up once.
  */
+/**
+ * Whether a subject is a group rather than a person.
+ *
+ * Group names can legitimately contain a comma, so anything listing subjects
+ * needs to say which is which; the id is the only reliable signal.
+ */
+export function isGroupSubject(subject: string, groups: { id: string }[] = []): boolean {
+  if (/^\d+$/.test(subject) || /^nist(ou|div|grp):/.test(subject)) return true
+  return groups.some(g => g.id === subject)
+}
+
 @Injectable({ providedIn: 'root' })
 export class SubjectLabelService {
   private nsd = inject(NsdService)
@@ -129,7 +140,9 @@ export class SubjectLabelService {
       // the with_nistUsername filter is a substring match, so keep only the exact record
       const person = people.find(p => p?.nistUsername?.toLowerCase() === eid.toLowerCase())
       if (!person?.lastName) return
-      this.set(eid, person.firstName ? `${person.lastName}, ${person.firstName}` : person.lastName)
+      // "First Last": a comma here is indistinguishable from the one separating
+      // one person from the next wherever these are listed together
+      this.set(eid, person.firstName ? `${person.firstName} ${person.lastName}` : person.lastName)
     })
   }
 

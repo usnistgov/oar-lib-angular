@@ -737,7 +737,7 @@ describe('PermissionManagerComponent', () => {
   describe('resolveUnknownLabels — EID resolution', () => {
     // The with_nistUsername query is a substring match on the backend, so the
     // component must keep only the record whose nistUsername equals the EID.
-    it('resolves an EID to "Last, First" from the exact nistUsername match', () => {
+    it('resolves an EID to "First Last" from the exact nistUsername match', () => {
       jest.spyOn((component as any).nsd, 'getPeopleByUsername').mockReturnValue(of([
         { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
         { nistUsername: 'mch', lastName: 'Hawes', firstName: 'Melvin' },
@@ -746,7 +746,7 @@ describe('PermissionManagerComponent', () => {
 
       ;(component as any).resolveUnknownLabels(makeAcls(['mch'], [], [], []))
 
-      expect(component.subjectLabels()['mch']).toBe('Hawes, Melvin')
+      expect(component.subjectLabels()['mch']).toBe('Melvin Hawes')
     })
 
     it('leaves the label unset when no record matches the EID exactly', () => {

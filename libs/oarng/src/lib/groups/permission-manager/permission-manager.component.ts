@@ -9,7 +9,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
 import { NsdService } from '../nsd.service'
-import { SubjectLabelService } from '../subject-label.service'
+import { SubjectLabelService, isGroupSubject } from '../subject-label.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
@@ -413,11 +413,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   }
 
   isGroup(subject: string): boolean {
-    // Numeric IDs are NIST org groups; prefixed IDs (e.g. nistou:123) are NIST org units;
-    // MIDAS group IDs match an entry in the loaded groups list.
-    if (/^\d+$/.test(subject) || /^nist(ou|div|grp):/.test(subject)) return true
-    if (this.groups().some(g => g.id === subject)) return true
-    return false
+    return isGroupSubject(subject, this.groups())
   }
 
 

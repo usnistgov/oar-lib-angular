@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing'
 import { of } from 'rxjs'
-import { SubjectLabelService } from './subject-label.service'
+import { SubjectLabelService, isGroupSubject } from './subject-label.service'
 import { NsdService } from './nsd.service'
 
 // The directory index lists one organization under several search keys — its full name,
@@ -124,7 +124,7 @@ describe('SubjectLabelService', () => {
       expect(svc.labels()['mml:13213']).toBe('Material Measurement Laboratory (63)')
     })
 
-    it('resolves an EID to "Last, First" using the exact nistUsername match', () => {
+    it('resolves an EID to "First Last" using the exact nistUsername match', () => {
       nsd.getPeopleByUsername.mockReturnValue(of([
         { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
         { nistUsername: 'mch', lastName: 'Hawes', firstName: 'Melvin' },
@@ -132,7 +132,7 @@ describe('SubjectLabelService', () => {
 
       svc.resolve(['mch'])
 
-      expect(svc.labels()['mch']).toBe('Hawes, Melvin')
+      expect(svc.labels()['mch']).toBe('Melvin Hawes')
     })
 
     it('leaves an EID unlabelled when nothing matches exactly', () => {
@@ -163,4 +163,48 @@ describe('SubjectLabelService', () => {
       expect(nsd.searchOrgIndex.mock.calls.length).toBe(callsAfterFirst)
     })
   })
+
+  describe('person labels', () => {
+    // "Wu, Chun-Chuan" beside "Petersen, Elijah" reads as four names, not two
+    it('puts the given name first so a label holds no comma', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'ccwu', lastName: 'Wu', firstName: 'Chun-Chuan' }
+      ]))
+
+      svc.resolve(['ccwu'])
+
+      expect(svc.labels()['ccwu']).toBe('Chun-Chuan Wu')
+      expect(svc.labels()['ccwu']).not.toContain(',')
+    })
+
+    it('falls back to the surname when there is no given name', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'solo', lastName: 'Plante' }
+      ]))
+
+      svc.resolve(['solo'])
+
+      expect(svc.labels()['solo']).toBe('Plante')
+    })
+  })
+})
+
+describe('isGroupSubject', () => {
+  it('treats numeric and nist-prefixed ids as groups', () => {
+    expect(isGroupSubject('77305')).toBe(true)
+    expect(isGroupSubject('nistou:13289')).toBe(true)
+    expect(isGroupSubject('nistdiv:641')).toBe(true)
+    expect(isGroupSubject('nistgrp:12')).toBe(true)
+  })
+
+  it('treats a known MIDAS group id as a group', () => {
+    expect(isGroupSubject('grp0:alice:team', [{ id: 'grp0:alice:team' }])).toBe(true)
+    expect(isGroupSubject('grp0:alice:team')).toBe(false)
+  })
+
+  it('treats an EID as a person', () => {
+    expect(isGroupSubject('rperlner')).toBe(false)
+    expect(isGroupSubject('mch', [{ id: 'grp0:alice:team' }])).toBe(false)
+  })
+
 })
