@@ -69,3 +69,21 @@ export function withSubjectAtLevel(
   for (const perm of LEVEL_PERMS[level]) next[perm] = [...next[perm], subject]
   return next
 }
+
+/**
+ * `acls` with every one of `subjects` holding exactly `level`.
+ *
+ * Folded into one object rather than applied one subject at a time: separate
+ * writes each built from the same snapshot would have the last one undo the
+ * subjects placed before it.
+ */
+export function withSubjectsAtLevel(
+  acls: Acls | null | undefined,
+  subjects: string[],
+  level: PermissionLevel
+): Acls {
+  return subjects.reduce<Acls>(
+    (next, subject) => withSubjectAtLevel(next, subject, level),
+    standardPerms(acls)
+  )
+}

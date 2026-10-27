@@ -381,17 +381,60 @@ describe('PermissionManagerComponent', () => {
       expect(component.staged()).toEqual([])
     })
 
-    it('sets bulkGrantError when any operation fails', () => {
+    it('reports a failure rather than reverting quietly', () => {
       permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('network error')))
       component.grantBulk()
-      expect(component.bulkGrantError()).toMatch(/operation/)
+      expect(component.bulkGrantError()).toBeTruthy()
+      expect(component.bulkGranting()).toBe(false)
     })
 
-    it('does not emit permissionsChanged on partial failure', () => {
-      permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('network error')))
+    // forkJoin abandons the rest on the first failure, so a record really can be
+    // written while the user is being told the grant failed.
+    it('keeps the records it did write, and says the rest are uncertain', () => {
+      const second: RecordRef = { id: 'mdm1:0002', apiBase: 'https://api.example.com' }
+      fixture.componentRef.setInput('records', [RECORD, second])
+      permsSvc.setAcls.mockImplementation((r: RecordRef) =>
+        r.id === RECORD.id ? of(EMPTY_ACLS) : throwError(() => new Error('network error'))
+      )
       jest.spyOn(component.permissionsChanged, 'emit')
+
       component.grantBulk()
-      expect(component.permissionsChanged.emit).not.toHaveBeenCalled()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(
+        RECORD, makeAcls(['alice'], ['alice'], [], [])
+      )
+      expect(component.bulkGrantError()).toMatch(/may not have been updated/)
+      // the write that landed is live, so whatever lists these records must refresh
+      expect(component.permissionsChanged.emit).toHaveBeenCalled()
+      // and the grant can simply be repeated
+      expect(component.staged()).toEqual([{ id: 'alice', label: 'Alice' }])
+    })
+
+    // The read is new to this path: a subject may hold write on a record whose
+    // acls it is not allowed to read back.
+    it('reports a failure when a record cannot be read', () => {
+      permsSvc.getAcls.mockReturnValue(throwError(() => new Error('403')))
+
+      component.grantBulk()
+
+      expect(permsSvc.setAcls).not.toHaveBeenCalled()
+      expect(component.bulkGrantError()).toBeTruthy()
+      expect(component.bulkGranting()).toBe(false)
+    })
+
+    // A record that has been through review also carries publish and _read-style
+    // keys, and the endpoint rejects the whole request if the body names one.
+    it('sends only the four standard permissions, whatever the record holds', () => {
+      permsSvc.getAcls.mockReturnValue(of({
+        read: ['bob'], write: [], admin: [], delete: [],
+        publish: ['reviewer'], _read: ['sys']
+      } as unknown as Acls))
+
+      component.grantBulk()
+
+      const sent = permsSvc.setAcls.mock.calls[0][1]
+      expect(Object.keys(sent).sort()).toEqual(['admin', 'delete', 'read', 'write'])
+      expect(sent.read).toEqual(['bob', 'alice'])
     })
 
     it('is a no-op when staged is empty', () => {

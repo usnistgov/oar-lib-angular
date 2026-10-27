@@ -1,4 +1,6 @@
-import { aclSubjects, subjectPermissionLevel, withSubjectAtLevel, withoutSubject } from './permission-level'
+import {
+  aclSubjects, subjectPermissionLevel, withSubjectAtLevel, withSubjectsAtLevel, withoutSubject
+} from './permission-level'
 
 describe('subjectPermissionLevel', () => {
   // mdm1:0004, the record that exposed the portal's divergent copy of this rule
@@ -108,8 +110,28 @@ describe('withSubjectAtLevel / withoutSubject', () => {
   })
 
   it('folds several subjects into one object', () => {
-    const next = ['a', 'b', 'c'].reduce((acls, s) => withSubjectAtLevel(acls, s, 'admin'), BASE as any)
+    const next = withSubjectsAtLevel(BASE, ['a', 'b', 'c'], 'admin')
     for (const s of ['a', 'b', 'c']) expect(next.admin).toContain(s)
+    // and nobody already there is lost on the way
+    expect(next.read).toContain('viewer')
+    expect(next.write).toContain('editor')
+  })
+
+  it('places every subject at the level, not just the last one', () => {
+    const next = withSubjectsAtLevel(BASE, ['a', 'b'], 'update')
+    for (const s of ['a', 'b']) {
+      expect(next.read).toContain(s)
+      expect(next.write).toContain(s)
+      expect(next.admin).not.toContain(s)
+    }
+  })
+
+  it('drops what a subject held above the level it is given', () => {
+    const next = withSubjectsAtLevel(BASE, ['owner'], 'view')
+    expect(next.read).toContain('owner')
+    expect(next.write).not.toContain('owner')
+    expect(next.admin).not.toContain('owner')
+    expect(next.delete).not.toContain('owner')
   })
 
   it('copes with no acls at all', () => {

@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
 import {
   LEVEL_PERMS, PermissionLevel,
-  subjectPermissionLevel, withSubjectAtLevel, withoutSubject
+  subjectPermissionLevel, withSubjectAtLevel, withSubjectsAtLevel, withoutSubject
 } from '../permission-level'
 import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
@@ -241,18 +241,13 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.bulkGranting.set(true)
     this.bulkGrantError.set(null)
 
-    // One write per record, as everywhere else.  Granting admin to two records
-    // used to be eight writes, four of them read-modify-writes of the same
-    // record, and the one the server handled last decided what the record kept:
-    // a subject asked for admin came out holding view or update instead.
+    const subjects = people.map(person => person.id)
     // `acls` only ever holds the single selected record, so each record is read
-    // here to build a body that keeps what it already had.
+    // here: a write built without its snapshot would drop what it already had.
     const ops: Observable<unknown>[] = this.records.map(record =>
       this.permsSvc.getAcls(record).pipe(
-        switchMap(current => this.permsSvc.setAcls(
-          record,
-          people.reduce((acls, person) => withSubjectAtLevel(acls, person.id, level), current)
-        ))
+        switchMap(current =>
+          this.permsSvc.setAcls(record, withSubjectsAtLevel(current, subjects, level)))
       )
     )
 
@@ -268,7 +263,14 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       },
       error: (err) => {
         this.bulkGranting.set(false)
-        this.bulkGrantError.set('One or more operations failed.')
+        // forkJoin gives up on the first failure, so the records before it are
+        // written, the rest may never have been tried, and we cannot say which
+        // is which. Staged is left alone so the whole grant can simply be redone.
+        this.bulkGrantError.set(
+          'Some of the selected records may not have been updated. Check them and try again.'
+        )
+        // whatever did land is already live; consumers must not keep showing the old state
+        this.permissionsChanged.emit()
         console.error('[PermissionManager] bulk grant error:', err)
       }
     })
@@ -461,15 +463,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const people = this.staged()
     if (!record || !current || !people.length) return
 
-    // folded into one object: a write per person, each built from the same
-    // snapshot, would have the last one undo the people before it
-    const next = people.reduce(
-      (acls, person) => withSubjectAtLevel(acls, person.id, level),
-      current as Acls
-    )
-
     this.closeAddPerson()
-    this.writeAcls(record, next)
+    this.writeAcls(record, withSubjectsAtLevel(current, people.map(p => p.id), level))
   }
 
   // ── Confirmation wrappers ─────────────────────────────────────────────────
