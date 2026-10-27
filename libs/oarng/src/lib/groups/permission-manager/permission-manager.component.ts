@@ -233,29 +233,27 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     }
   }
 
-  // Still writes a permission at a time.  The single-write path needs the
-  // record's current acls to build a complete body, and acls is only loaded for
-  // a single record — a bulk PUT without that snapshot would clear whatever the
-  // selected records already had.
   grantBulk(): void {
     const people = this.staged()
     const level = this.bulkLevel
     if (!people.length || !this.records.length) return
 
-    const required = this.LEVEL_PERMS[level]
-    const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-    const toRevoke = all.filter(p => !required.includes(p))
     this.bulkGranting.set(true)
     this.bulkGrantError.set(null)
 
-    const ops: Observable<unknown>[] = people.flatMap(person =>
-      this.records.flatMap(record => [
-        ...required.map(perm => this.permsSvc.grantPerm(record, perm, person.id)),
-        // Revoke perms above the target level; 404s are safe (subject didn't hold that perm).
-        ...toRevoke.map(p =>
-          this.permsSvc.revokePerm(record, p, person.id).pipe(catchError(() => of(null)))
-        ),
-      ])
+    // One write per record, as everywhere else.  Granting admin to two records
+    // used to be eight writes, four of them read-modify-writes of the same
+    // record, and the one the server handled last decided what the record kept:
+    // a subject asked for admin came out holding view or update instead.
+    // `acls` only ever holds the single selected record, so each record is read
+    // here to build a body that keeps what it already had.
+    const ops: Observable<unknown>[] = this.records.map(record =>
+      this.permsSvc.getAcls(record).pipe(
+        switchMap(current => this.permsSvc.setAcls(
+          record,
+          people.reduce((acls, person) => withSubjectAtLevel(acls, person.id, level), current)
+        ))
+      )
     )
 
     forkJoin(ops).subscribe({

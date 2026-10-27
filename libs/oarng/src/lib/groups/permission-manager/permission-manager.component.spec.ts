@@ -317,11 +317,57 @@ describe('PermissionManagerComponent', () => {
       component.bulkLevel = 'update'
     })
 
-    it('calls grantPerm for each person × record × required perm', () => {
+    it('writes each record once instead of one request per permission', () => {
       component.grantBulk()
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'read', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(RECORD, 'write', 'alice')
-      expect(permsSvc.grantPerm).toHaveBeenCalledTimes(2)
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(RECORD, makeAcls(['alice'], ['alice'], [], []))
+      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
+      expect(permsSvc.revokePerm).not.toHaveBeenCalled()
+    })
+
+    // Chuan granted admin on two records and one of them came back update.
+    it('places the subject at the level asked for, on every record', () => {
+      const second: RecordRef = { id: 'mdm1:0002', apiBase: 'https://api.example.com' }
+      fixture.componentRef.setInput('records', [RECORD, second])
+      component.bulkLevel = 'admin'
+
+      component.grantBulk()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(2)
+      for (const record of [RECORD, second]) {
+        expect(permsSvc.setAcls).toHaveBeenCalledWith(
+          record, makeAcls(['alice'], ['alice'], ['alice'], ['alice'])
+        )
+      }
+    })
+
+    it('reads each record so the write keeps what that record already held', () => {
+      const second: RecordRef = { id: 'mdm1:0002', apiBase: 'https://api.example.com' }
+      fixture.componentRef.setInput('records', [RECORD, second])
+      permsSvc.getAcls.mockImplementation((r: RecordRef) =>
+        of(r.id === RECORD.id ? makeAcls(['bob'], [], [], []) : makeAcls([], [], ['carol'], []))
+      )
+
+      component.grantBulk()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(
+        RECORD, makeAcls(['bob', 'alice'], ['alice'], [], [])
+      )
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(
+        second, makeAcls(['alice'], ['alice'], ['carol'], [])
+      )
+    })
+
+    it('places every staged subject in the one write', () => {
+      component.staged.set([{ id: 'alice', label: 'Alice' }, { id: 'bob', label: 'Bob' }])
+
+      component.grantBulk()
+
+      expect(permsSvc.setAcls).toHaveBeenCalledTimes(1)
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(
+        RECORD, makeAcls(['alice', 'bob'], ['alice', 'bob'], [], [])
+      )
     })
 
     it('emits permissionsChanged when all operations succeed', () => {
@@ -336,17 +382,13 @@ describe('PermissionManagerComponent', () => {
     })
 
     it('sets bulkGrantError when any operation fails', () => {
-      permsSvc.grantPerm
-        .mockReturnValueOnce(of(['alice']))
-        .mockReturnValueOnce(throwError(() => new Error('network error')))
+      permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('network error')))
       component.grantBulk()
       expect(component.bulkGrantError()).toMatch(/operation/)
     })
 
     it('does not emit permissionsChanged on partial failure', () => {
-      permsSvc.grantPerm
-        .mockReturnValueOnce(of(['alice']))
-        .mockReturnValueOnce(throwError(() => new Error('network error')))
+      permsSvc.setAcls.mockReturnValueOnce(throwError(() => new Error('network error')))
       jest.spyOn(component.permissionsChanged, 'emit')
       component.grantBulk()
       expect(component.permissionsChanged.emit).not.toHaveBeenCalled()
@@ -355,49 +397,22 @@ describe('PermissionManagerComponent', () => {
     it('is a no-op when staged is empty', () => {
       component.staged.set([])
       component.grantBulk()
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
+      expect(permsSvc.setAcls).not.toHaveBeenCalled()
     })
 
     it('is a no-op when records is empty', () => {
       fixture.componentRef.setInput('records', [])
       component.grantBulk()
-      expect(permsSvc.grantPerm).not.toHaveBeenCalled()
+      expect(permsSvc.setAcls).not.toHaveBeenCalled()
     })
 
-    it('revokes permissions above the requested level (downgrade support)', () => {
-      fixture.componentRef.setInput('records', [{ id: 'mdm:001', apiBase: 'https://api/' }])
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.bulkLevel = 'view'  // grant view: only read should remain
+    it('drops the permissions above the requested level (downgrade support)', () => {
+      permsSvc.getAcls.mockReturnValue(of(makeAcls(['alice'], ['alice'], ['alice'], ['alice'])))
+      component.bulkLevel = 'view'
 
       component.grantBulk()
 
-      // must grant read
-      expect(permsSvc.grantPerm).toHaveBeenCalledWith(
-        expect.any(Object), 'read', 'alice'
-      )
-      // must revoke write, admin, delete
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
-        expect.any(Object), 'write', 'alice'
-      )
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
-        expect.any(Object), 'admin', 'alice'
-      )
-      expect(permsSvc.revokePerm).toHaveBeenCalledWith(
-        expect.any(Object), 'delete', 'alice'
-      )
-    })
-
-    it('does NOT revoke permissions that are part of the requested level', () => {
-      fixture.componentRef.setInput('records', [{ id: 'mdm:001', apiBase: 'https://api/' }])
-      component.staged.set([{ id: 'alice', label: 'Alice' }])
-      component.bulkLevel = 'update'  // read + write — must not revoke read or write
-
-      component.grantBulk()
-
-      const revokeCalls = (permsSvc.revokePerm as jest.Mock).mock.calls
-      const revokedPerms = revokeCalls.map((c: any[]) => c[1])
-      expect(revokedPerms).not.toContain('read')
-      expect(revokedPerms).not.toContain('write')
+      expect(permsSvc.setAcls).toHaveBeenCalledWith(RECORD, makeAcls(['alice'], [], [], []))
     })
   })
 
