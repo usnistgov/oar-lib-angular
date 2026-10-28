@@ -1,0 +1,244 @@
+import { TestBed } from '@angular/core/testing'
+import { of } from 'rxjs'
+import { SubjectLabelService, isGroupSubject, personDisplayName } from './subject-label.service'
+import { NsdService } from './nsd.service'
+
+// The directory index lists one organization under several search keys — its full name,
+// its abbreviation and its numeric code — all pointing at the same id.
+const MML_INDEX = {
+  'material measurement laboratory': { '13213': 'Material Measurement Laboratory (63)' },
+  'mml': { '13213': 'Material Measurement Laboratory (63)' },
+  '63': { '13213': 'Material Measurement Laboratory (63)' },
+}
+
+describe('SubjectLabelService', () => {
+  let svc: SubjectLabelService
+  let nsd: { searchOrgIndex: jest.Mock; getPeopleByUsername: jest.Mock }
+
+  beforeEach(() => {
+    nsd = {
+      searchOrgIndex: jest.fn().mockReturnValue(of({})),
+      getPeopleByUsername: jest.fn().mockReturnValue(of([])),
+    }
+    TestBed.configureTestingModule({
+      providers: [SubjectLabelService, { provide: NsdService, useValue: nsd }]
+    })
+    svc = TestBed.inject(SubjectLabelService)
+  })
+
+  describe('parseOrgIndex()', () => {
+    it('collapses the repeated keys into one entry per id', () => {
+      const orgs = svc.parseOrgIndex(MML_INDEX, 'nistou')
+
+      expect(orgs).toHaveLength(1)
+      expect(orgs[0]).toEqual({
+        id: 'nistou:13213',
+        name: 'Material Measurement Laboratory (63)',
+        code: '63',
+        type: 'nistou'
+      })
+    })
+
+    it('keeps organizations that differ by id', () => {
+      const orgs = svc.parseOrgIndex({
+        'engineering laboratory': { '13215': 'Engineering Laboratory (73)' },
+        'el': { '13215': 'Engineering Laboratory (73)' },
+        'physical measurement laboratory': { '13214': 'Physical Measurement Laboratory (68)' },
+      }, 'nistou')
+
+      expect(orgs.map(o => o.id).sort()).toEqual(['nistou:13214', 'nistou:13215'])
+    })
+
+    it('returns nothing for a non-object response', () => {
+      expect(svc.parseOrgIndex(null, 'nistou')).toEqual([])
+      expect(svc.parseOrgIndex('nope', 'nistou')).toEqual([])
+    })
+  })
+
+  describe('searchOrgs()', () => {
+    it('returns an org once even though the index repeats it', () => {
+      nsd.searchOrgIndex.mockImplementation((endpoint: string) =>
+        of(endpoint === 'OU' ? MML_INDEX : {}))
+
+      let result: any[] = []
+      svc.searchOrgs('material').subscribe(r => result = r)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('nistou:13213')
+    })
+
+    it('matches on a word prefix, not a bare substring', () => {
+      nsd.searchOrgIndex.mockImplementation((endpoint: string) =>
+        of(endpoint === 'OU' ? MML_INDEX : {}))
+
+      let measurement: any[] = []
+      let aterial: any[] = []
+      svc.searchOrgs('measurement').subscribe(r => measurement = r)
+      svc.searchOrgs('aterial').subscribe(r => aterial = r)
+
+      expect(measurement).toHaveLength(1)
+      expect(aterial).toHaveLength(0)
+    })
+
+    it('ignores a level whose request fails', () => {
+      nsd.searchOrgIndex.mockImplementation((endpoint: string) =>
+        endpoint === 'OU' ? of(MML_INDEX) : of({}))
+
+      let result: any[] = []
+      svc.searchOrgs('material').subscribe(r => result = r)
+
+      expect(result).toHaveLength(1)
+    })
+  })
+
+  describe('resolve()', () => {
+    it('labels a MIDAS group from the groups the caller supplied, without a lookup', () => {
+      svc.resolve(['grp0:alice:team'], [{ id: 'grp0:alice:team', name: 'My Team' }])
+
+      expect(svc.labels()['grp0:alice:team']).toBe('My Team')
+      expect(nsd.getPeopleByUsername).not.toHaveBeenCalled()
+      expect(nsd.searchOrgIndex).not.toHaveBeenCalled()
+    })
+
+    it('resolves an org subject to the directory name, not an index key', () => {
+      nsd.searchOrgIndex.mockReturnValue(of(MML_INDEX))
+
+      svc.resolve(['nistou:13213'])
+
+      expect(svc.labels()['nistou:13213']).toBe('Material Measurement Laboratory (63)')
+    })
+
+    it('resolves the legacy orgCode:orgId shape', () => {
+      nsd.searchOrgIndex.mockReturnValue(of({ '63': { '13213': 'Material Measurement Laboratory (63)' } }))
+
+      svc.resolve(['63:13213'])
+
+      expect(svc.labels()['63:13213']).toBe('Material Measurement Laboratory (63)')
+    })
+
+    it('resolves the abbreviation:orgId shape', () => {
+      nsd.searchOrgIndex.mockReturnValue(of(MML_INDEX))
+
+      svc.resolve(['mml:13213'])
+
+      expect(svc.labels()['mml:13213']).toBe('Material Measurement Laboratory (63)')
+    })
+
+    it('resolves an EID to "First Last" using the exact nistUsername match', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
+        { nistUsername: 'mch', lastName: 'Hawes', firstName: 'Melvin' },
+      ]))
+
+      svc.resolve(['mch'])
+
+      expect(svc.labels()['mch']).toBe('Melvin Hawes')
+    })
+
+    it('leaves an EID unlabelled when nothing matches exactly', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'mchiang', lastName: 'Chiang', firstName: 'Martin' },
+      ]))
+
+      svc.resolve(['mch'])
+
+      expect(svc.labels()['mch']).toBeUndefined()
+      expect(svc.label('mch')).toBe('mch')
+    })
+
+    it('labels a bare numeric subject without any lookup', () => {
+      svc.resolve(['13252'])
+
+      expect(svc.labels()['13252']).toBe('Org group (13252)')
+      expect(nsd.getPeopleByUsername).not.toHaveBeenCalled()
+    })
+
+    it('does not look a subject up twice', () => {
+      nsd.searchOrgIndex.mockReturnValue(of(MML_INDEX))
+
+      svc.resolve(['nistou:13213'])
+      const callsAfterFirst = nsd.searchOrgIndex.mock.calls.length
+      svc.resolve(['nistou:13213'])
+
+      expect(nsd.searchOrgIndex.mock.calls.length).toBe(callsAfterFirst)
+    })
+  })
+
+  describe('person labels', () => {
+    // "Wu, Chun-Chuan" beside "Petersen, Elijah" reads as four names, not two
+    it('puts the given name first so a label holds no comma', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'ccwu', lastName: 'Wu', firstName: 'Chun-Chuan' }
+      ]))
+
+      svc.resolve(['ccwu'])
+
+      expect(svc.labels()['ccwu']).toBe('Chun-Chuan Wu')
+      expect(svc.labels()['ccwu']).not.toContain(',')
+    })
+
+    it('falls back to the surname when there is no given name', () => {
+      nsd.getPeopleByUsername.mockReturnValue(of([
+        { nistUsername: 'solo', lastName: 'Plante' }
+      ]))
+
+      svc.resolve(['solo'])
+
+      expect(svc.labels()['solo']).toBe('Plante')
+    })
+  })
+})
+
+describe('isGroupSubject', () => {
+  it('treats numeric and nist-prefixed ids as groups', () => {
+    expect(isGroupSubject('77305')).toBe(true)
+    expect(isGroupSubject('nistou:13289')).toBe(true)
+    expect(isGroupSubject('nistdiv:641')).toBe(true)
+    expect(isGroupSubject('nistgrp:12')).toBe(true)
+  })
+
+  // A record can name a group the viewer is not in — the shoulder has to be
+  // enough on its own, or that group reads as a person's name.
+  it('treats a MIDAS group id as a group whether or not it is one of mine', () => {
+    expect(isGroupSubject('grp0:alice:team', [{ id: 'grp0:alice:team' }])).toBe(true)
+    expect(isGroupSubject('grp0:alice:team')).toBe(true)
+  })
+
+  it('treats the built-in public group as a group', () => {
+    // grp0:public is every user, so it is in nobody's list of their own groups
+    expect(isGroupSubject('grp0:public')).toBe(true)
+    expect(isGroupSubject('grp0:public', [{ id: 'grp0:alice:team' }])).toBe(true)
+  })
+
+  // resolve() already routes these shapes to the org lookup; both rules have to
+  // agree or an org comes out marked as somebody's name
+  it('treats a legacy organization id as a group', () => {
+    expect(isGroupSubject('775:13289')).toBe(true)
+    expect(isGroupSubject('mml:13213')).toBe(true)
+  })
+
+  it('treats an EID as a person', () => {
+    expect(isGroupSubject('rperlner')).toBe(false)
+    expect(isGroupSubject('mch', [{ id: 'grp0:alice:team' }])).toBe(false)
+    // a person's eid never carries a shoulder, so nothing here may match one
+    expect(isGroupSubject('grpowner')).toBe(false)
+  })
+
+})
+
+describe('personDisplayName', () => {
+  it('puts the given name first', () => {
+    expect(personDisplayName('Wu, Chun-Chuan')).toBe('Chun-Chuan Wu')
+    expect(personDisplayName('Nandrekar Heinis, Deoyani')).toBe('Deoyani Nandrekar Heinis')
+  })
+
+  it('leaves a name that carries no comma alone', () => {
+    expect(personDisplayName('Prince')).toBe('Prince')
+  })
+
+  it('never returns a label holding a comma', () => {
+    for (const n of ['Lu, John', 'Smith, Ashley', 'Perlner, Ray']) {
+      expect(personDisplayName(n)).not.toContain(',')
+    }
+  })
+})
