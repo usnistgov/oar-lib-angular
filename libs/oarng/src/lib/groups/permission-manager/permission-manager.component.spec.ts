@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations'
 import { ConfigurationService } from '../../config/config.service'
 import { PermissionsService } from '../permissions.service'
 import { GroupsService } from '../groups.service'
+import { NsdService } from '../nsd.service'
 import { Acls, Group, RecordRef } from '../group.types'
 
 const RECORD: RecordRef = { id: 'mdm1:0001', apiBase: 'https://api.example.com' }
@@ -19,6 +20,7 @@ describe('PermissionManagerComponent', () => {
   let component: PermissionManagerComponent
   let fixture: ComponentFixture<PermissionManagerComponent>
   let permsSvc: { grantPerm: jest.Mock; revokePerm: jest.Mock; getAcls: jest.Mock; setAcls: jest.Mock }
+  let nsd: { getPerson: jest.Mock; searchOrgIndex: jest.Mock; getPeopleByUsername: jest.Mock }
   let groupsSvc: {
     getGroups: jest.Mock
     createGroup: jest.Mock
@@ -33,6 +35,11 @@ describe('PermissionManagerComponent', () => {
       revokePerm: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
       getAcls: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
       setAcls: jest.fn().mockReturnValue(of(EMPTY_ACLS)),
+    }
+    nsd = {
+      getPerson: jest.fn().mockReturnValue(of(null)),
+      searchOrgIndex: jest.fn().mockReturnValue(of({})),
+      getPeopleByUsername: jest.fn().mockReturnValue(of([])),
     }
     groupsSvc = {
       getGroups: jest.fn().mockReturnValue(of([])),
@@ -49,6 +56,7 @@ describe('PermissionManagerComponent', () => {
         { provide: ConfigurationService, useValue: { getConfig: () => ({}) } },
         { provide: PermissionsService, useValue: permsSvc },
         { provide: GroupsService, useValue: groupsSvc },
+        { provide: NsdService, useValue: nsd },
       ]
     }).compileComponents()
 
@@ -753,40 +761,46 @@ describe('PermissionManagerComponent', () => {
 
   // ── loadNistOrgs — subject prefix ─────────────────────────────────────────
 
-  describe('loadNistOrgs — subject prefix', () => {
+  describe('loadNistOrgs', () => {
+    // The directory is searched one level at a time and each level decides the
+    // prefix an org id carries, so a Division must not come back as an OU.
+    const indexFor = (ou: string) => ({ OU: { mml: { '728': 'MML Materials Division' } },
+                                        Div: { itl: { '456': 'ITL Applied Cybersecurity Division' } },
+                                        Group: {} }[ou] ?? {})
+
     beforeEach(() => {
-      // Provide an orgURL so loadNistOrgs doesn't bail out early
-      jest.spyOn((component as any).configSvc, 'getConfig').mockReturnValue({ orgURL: 'https://orgs.example.com/api' })
+      nsd.searchOrgIndex.mockImplementation((endpoint: string) => of(indexFor(endpoint)))
     })
 
-    it('stages a NIST ou org with nistou: prefix', () => {
-      // org name contains 'mml' so the name-based filter passes
-      const orgApiResponse = { ou: { '728': 'MML Materials Division' } }
-      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
-
+    it('prefixes an org with the level it was found at', () => {
       component.loadNistOrgs('MML')
+      expect(component.nistOrgs()).toContainEqual(
+        { id: 'nistou:728', name: 'MML Materials Division', code: 'mml', type: 'nistou' })
 
-      expect(component.nistOrgs()).toContainEqual({ id: 'nistou:728', name: 'MML Materials Division' })
+      component.nistOrgs.set([])
+      component.loadNistOrgs('ITL')
+      expect(component.nistOrgs()).toContainEqual(
+        { id: 'nistdiv:456', name: 'ITL Applied Cybersecurity Division', code: 'itl', type: 'nistdiv' })
     })
 
-    it('stages a NIST div org with nistdiv: prefix', () => {
-      // org name contains 'itl' so the name-based filter passes
-      const orgApiResponse = { div: { '456': 'ITL Applied Cybersecurity Division' } }
-      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
+    it('keeps only the orgs whose name matches what was typed', () => {
+      component.loadNistOrgs('ITL')
+      expect(component.nistOrgs().map(o => o.id)).toEqual(['nistdiv:456'])
+    })
+
+    it('does not search at all without an org unit', () => {
+      component.loadNistOrgs('')
+      expect(nsd.searchOrgIndex).not.toHaveBeenCalled()
+    })
+
+    it('ignores a level whose lookup fails', () => {
+      nsd.searchOrgIndex.mockImplementation((endpoint: string) =>
+        endpoint === 'OU' ? throwError(() => new Error('nope')) : of(indexFor(endpoint)))
 
       component.loadNistOrgs('ITL')
 
-      expect(component.nistOrgs()).toContainEqual({ id: 'nistdiv:456', name: 'ITL Applied Cybersecurity Division' })
-    })
-
-    it('falls back to the raw key as prefix for unknown org types', () => {
-      // org name contains 'x' so the name-based filter passes
-      const orgApiResponse = { custom: { '999': 'X Unknown Org' } }
-      jest.spyOn((component as any).http, 'get').mockReturnValue(of(orgApiResponse))
-
-      component.loadNistOrgs('X')
-
-      expect(component.nistOrgs()).toContainEqual({ id: 'custom:999', name: 'X Unknown Org' })
+      expect(component.nistOrgsLoading()).toBe(false)
+      expect(component.nistOrgs().map(o => o.id)).toEqual(['nistdiv:456'])
     })
   })
 
