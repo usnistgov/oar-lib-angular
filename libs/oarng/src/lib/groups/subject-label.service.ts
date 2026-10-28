@@ -34,9 +34,15 @@ const ORG_ENDPOINT: Record<OrgType, string> = {
  *
  * Group names can legitimately contain a comma, so anything listing subjects
  * needs to say which is which; the id is the only reliable signal.
+ *
+ * Only groups are marked wherever these are shown, so an id this does not
+ * recognise is asserted to be a person. Matching the shoulder rather than the
+ * caller's own groups matters for exactly that reason: grp0:public is the
+ * built-in group every user belongs to and is in nobody's group list, and it
+ * would otherwise read as somebody's name against a record open to everyone.
  */
 export function isGroupSubject(subject: string, groups: { id: string }[] = []): boolean {
-  if (/^\d+$/.test(subject) || /^nist(ou|div|grp):/.test(subject)) return true
+  if (/^\d+$/.test(subject) || /^(nist(ou|div|grp)|grp\d*):/.test(subject)) return true
   return groups.some(g => g.id === subject)
 }
 

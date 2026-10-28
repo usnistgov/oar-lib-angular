@@ -197,14 +197,24 @@ describe('isGroupSubject', () => {
     expect(isGroupSubject('nistgrp:12')).toBe(true)
   })
 
-  it('treats a known MIDAS group id as a group', () => {
+  // A record can name a group the viewer is not in — the shoulder has to be
+  // enough on its own, or that group reads as a person's name.
+  it('treats a MIDAS group id as a group whether or not it is one of mine', () => {
     expect(isGroupSubject('grp0:alice:team', [{ id: 'grp0:alice:team' }])).toBe(true)
-    expect(isGroupSubject('grp0:alice:team')).toBe(false)
+    expect(isGroupSubject('grp0:alice:team')).toBe(true)
+  })
+
+  it('treats the built-in public group as a group', () => {
+    // grp0:public is every user, so it is in nobody's list of their own groups
+    expect(isGroupSubject('grp0:public')).toBe(true)
+    expect(isGroupSubject('grp0:public', [{ id: 'grp0:alice:team' }])).toBe(true)
   })
 
   it('treats an EID as a person', () => {
     expect(isGroupSubject('rperlner')).toBe(false)
     expect(isGroupSubject('mch', [{ id: 'grp0:alice:team' }])).toBe(false)
+    // a person's eid never carries a shoulder, so nothing here may match one
+    expect(isGroupSubject('grpowner')).toBe(false)
   })
 
 })
