@@ -25,27 +25,51 @@ const ORG_ENDPOINT: Record<OrgType, string> = {
 }
 
 /**
- * Turns the identities held in a record's ACLs — user EIDs, MIDAS group ids and NIST
- * organization ids — into names fit for display, and remembers what it has resolved so
- * an identity shown in several places is looked up once.
+ * An organization id. The last two shapes are older ids still held in records:
+ * orgCode:orgId, and the division abbreviation form such as mml:13213.
  */
+const ORG_ID = /^(nist(ou|div|grp):|\d+:\d+$|[a-z]+:\d+$)/
+
+/** A MIDAS group id. The shoulder is what makes one recognisable. */
+const GROUP_ID = /^grp\d*:/
+
+/** The built-in group every user belongs to; it is in nobody's list of their own groups. */
+const PUBLIC_GROUP = 'grp0:public'
+
 /**
- * Whether a subject is a group rather than a person.
+ * Whether a subject is a group or an organization rather than a person.
  *
  * Group names can legitimately contain a comma, so anything listing subjects
  * needs to say which is which; the id is the only reliable signal.
  *
  * Only groups are marked wherever these are shown, so an id this does not
- * recognise is asserted to be a person. Matching the shoulder rather than the
- * caller's own groups matters for exactly that reason: grp0:public is the
- * built-in group every user belongs to and is in nobody's group list, and it
- * would otherwise read as somebody's name against a record open to everyone.
+ * recognise is asserted to be a person — which is why it matches the shoulder
+ * rather than the caller's own groups. grp0:public is the built-in group every
+ * user belongs to and so appears in nobody's list of their groups; a record
+ * open to everyone would otherwise read as one shared with a person.
  */
 export function isGroupSubject(subject: string, groups: { id: string }[] = []): boolean {
-  if (/^\d+$/.test(subject) || /^(nist(ou|div|grp)|grp\d*):/.test(subject)) return true
+  if (/^\d+$/.test(subject) || ORG_ID.test(subject) || GROUP_ID.test(subject)) return true
   return groups.some(g => g.id === subject)
 }
 
+/**
+ * NSD writes a person's name "Last, First"; it is shown "First Last".
+ *
+ * A comma in a name is indistinguishable from the one separating one person
+ * from the next wherever several are listed together, and the picker has to
+ * agree with the lists its choices end up in.
+ */
+export function personDisplayName(nsdName: string): string {
+  const [last, first] = nsdName.split(',')
+  return first ? `${first.trim()} ${last.trim()}` : nsdName.trim()
+}
+
+/**
+ * Turns the identities held in a record's ACLs — user EIDs, MIDAS group ids and NIST
+ * organization ids — into names fit for display, and remembers what it has resolved so
+ * an identity shown in several places is looked up once.
+ */
 @Injectable({ providedIn: 'root' })
 export class SubjectLabelService {
   private nsd = inject(NsdService)
@@ -121,9 +145,13 @@ export class SubjectLabelService {
       const group = groups.find(g => g.id === subject)
       if (group) {
         sync[subject] = group.name
-      } else if (/^nist(ou|div|grp):/.test(subject) || /^\d+:\d+$/.test(subject) ||
-                 /^[a-z]+:\d+$/.test(subject)) {
+      } else if (ORG_ID.test(subject)) {
         orgs.push(subject)
+      } else if (GROUP_ID.test(subject)) {
+        // only the viewer's own groups come back from the groups service, so one
+        // shared onto a record by somebody else cannot be named. Looking it up as
+        // a username just spends a request to fail, and leaves the id on screen.
+        sync[subject] = subject === PUBLIC_GROUP ? 'Public (all MIDAS users)' : subject
       } else if (/^\d+$/.test(subject)) {
         sync[subject] = `Org group (${subject})`
       } else {

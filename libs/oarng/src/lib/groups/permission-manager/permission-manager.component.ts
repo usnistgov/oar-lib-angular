@@ -9,7 +9,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
 import { NsdService } from '../nsd.service'
-import { SubjectLabelService, isGroupSubject } from '../subject-label.service'
+import { SubjectLabelService, isGroupSubject, personDisplayName } from '../subject-label.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
@@ -155,7 +155,9 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
         const group = raw[lastName]
         if (group && typeof group === 'object') {
           Object.keys(group).forEach(id => {
-            const label: string = group[id]
+            // the staged chips and the columns these end up in all read
+            // "First Last"; the picker has to match what it feeds
+            const label = personDisplayName(group[id])
             all.push(label)
             this.peopleIndex[label] = id
           })
@@ -205,7 +207,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
         const group = raw[lastName]
         if (group && typeof group === 'object') {
           Object.keys(group).forEach(id => {
-            const label: string = group[id]
+            const label = personDisplayName(group[id])
             all.push(label)
             this.memberPeopleIndex[label] = id
           })

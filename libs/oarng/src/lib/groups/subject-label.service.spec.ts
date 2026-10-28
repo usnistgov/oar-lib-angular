@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing'
 import { of } from 'rxjs'
-import { SubjectLabelService, isGroupSubject } from './subject-label.service'
+import { SubjectLabelService, isGroupSubject, personDisplayName } from './subject-label.service'
 import { NsdService } from './nsd.service'
 
 // The directory index lists one organization under several search keys — its full name,
@@ -210,6 +210,13 @@ describe('isGroupSubject', () => {
     expect(isGroupSubject('grp0:public', [{ id: 'grp0:alice:team' }])).toBe(true)
   })
 
+  // resolve() already routes these shapes to the org lookup; both rules have to
+  // agree or an org comes out marked as somebody's name
+  it('treats a legacy organization id as a group', () => {
+    expect(isGroupSubject('775:13289')).toBe(true)
+    expect(isGroupSubject('mml:13213')).toBe(true)
+  })
+
   it('treats an EID as a person', () => {
     expect(isGroupSubject('rperlner')).toBe(false)
     expect(isGroupSubject('mch', [{ id: 'grp0:alice:team' }])).toBe(false)
@@ -217,4 +224,21 @@ describe('isGroupSubject', () => {
     expect(isGroupSubject('grpowner')).toBe(false)
   })
 
+})
+
+describe('personDisplayName', () => {
+  it('puts the given name first', () => {
+    expect(personDisplayName('Wu, Chun-Chuan')).toBe('Chun-Chuan Wu')
+    expect(personDisplayName('Nandrekar Heinis, Deoyani')).toBe('Deoyani Nandrekar Heinis')
+  })
+
+  it('leaves a name that carries no comma alone', () => {
+    expect(personDisplayName('Prince')).toBe('Prince')
+  })
+
+  it('never returns a label holding a comma', () => {
+    for (const n of ['Lu, John', 'Smith, Ashley', 'Perlner, Ray']) {
+      expect(personDisplayName(n)).not.toContain(',')
+    }
+  })
 })
