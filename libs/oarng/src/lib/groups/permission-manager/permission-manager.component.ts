@@ -1,17 +1,21 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject, signal, computed } from '@angular/core'
+import {
+  LEVEL_PERMS, PermissionLevel,
+  subjectPermissionLevel, withSubjectAtLevel, withSubjectsAtLevel, withoutSubject
+} from '../permission-level'
 import { Subject, Subscription, Observable, of, forkJoin } from 'rxjs'
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators'
-import { HttpClient } from '@angular/common/http'
 import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
-import { ConfigurationService } from '../../config/config.service'
+import { NsdService } from '../nsd.service'
+import { SubjectLabelService, PersonEntry, isGroupSubject } from '../subject-label.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
-interface PersonSuggestion {
-  id: string
-  label: string
+function searchStatus(n: number): string {
+  if (n === 0) return 'No matches'
+  return n === 1 ? '1 suggestion' : `${n} suggestions`
 }
 
 @Component({
@@ -24,22 +28,21 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   @Input() layout: 'compact' | 'panel' = 'compact'
   @Input() userOu: string = ''
   @Input() section: 'permissions' | 'groups' = 'permissions'
+  // When set, a hint linking to the MIDAS portal is shown under the group search
+  @Input() groupsPortalUrl: string = ''
 
   @Output() permissionsChanged = new EventEmitter<void>()
 
   private groupsSvc = inject(GroupsService)
   private permsSvc = inject(PermissionsService)
-  private http = inject(HttpClient)
-  private configSvc = inject(ConfigurationService)
+  private nsd = inject(NsdService)
+  private labelSvc = inject(SubjectLabelService)
   private dialog = inject(MatDialog)
 
   // ── Graduated permission model ────────────────────────────────────────────
 
-  readonly LEVEL_PERMS: Record<'view' | 'update' | 'admin', AclPerm[]> = {
-    view:   ['read'],
-    update: ['read', 'write'],
-    admin:  ['read', 'write', 'admin', 'delete'],
-  }
+  // kept on the class because it is part of the published API
+  readonly LEVEL_PERMS = LEVEL_PERMS
 
   private readonly NIST_ORG_TYPES = [
     { endpoint: 'OU',    prefix: 'nistou'  as const },
@@ -62,6 +65,11 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   aclsError = signal<string | null>(null)
 
   readonly singleRecord = signal<RecordRef | null>(null)
+
+  /** a write is in flight; the chips must not accept another until it lands */
+  readonly aclsBusy = signal(false)
+  /** a failed write used to reach the console only, so it looked like nothing happened */
+  readonly aclsWriteError = signal<string | null>(null)
 
   readonly uniqueSubjects = computed(() => {
     const acls = this.acls()
@@ -96,10 +104,18 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   showAddPanel = signal(false)
   grantLevelValue: 'view' | 'update' | 'admin' = 'update'
   peopleQuery = ''
-  peopleSuggestions = signal<string[]>([])
-  staged = signal<PersonSuggestion[]>([])
+  peopleSuggestions = signal<PersonEntry[]>([])
+  staged = signal<PersonEntry[]>([])
   peopleSearchLoading = signal(false)
-  subjectLabels = signal<{ [subject: string]: string }>({})
+  /**
+   * Spoken by the live region beside the field. Choosing a suggestion used to
+   * leave the name in the input, which is what a screen reader read back; the
+   * input is cleared on selection, so how many matches there are and who was
+   * added have to be said instead.
+   */
+  peopleStatus = signal('')
+  // labels live in the service so a host app's own views resolve each subject once
+  readonly subjectLabels = this.labelSvc.labels
 
   // ── Bulk grant state (multiple records) ──────────────────────────────────
   bulkLevel: 'view' | 'update' | 'admin' = 'update'
@@ -112,11 +128,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   // ── Group member search state ─────────────────────────────────────────────
   memberQuery = ''
-  memberSuggestions = signal<string[]>([])
+  memberSuggestions = signal<PersonEntry[]>([])
   memberSearchLoading = signal(false)
+  memberStatus = signal('')
 
-  private peopleIndex: { [label: string]: string } = {}
-  private memberPeopleIndex: { [label: string]: string } = {}
   private searchInput$ = new Subject<string>()
   private searchSub!: Subscription
   private groupSearchInput$ = new Subject<string>()
@@ -131,32 +146,19 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 2) return of(null)
         this.peopleSearchLoading.set(true)
-        const baseUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-        return this.http.get<any>(`${baseUrl}?${encodeURIComponent(query.toUpperCase())}`).pipe(
+        return this.nsd.searchPeople(query).pipe(
           map(raw => ({ raw, query })),
           catchError(() => of(null))
         )
       })
     ).subscribe(result => {
       this.peopleSearchLoading.set(false)
-      if (!result) { this.peopleSuggestions.set([]); return }
+      if (!result) { this.peopleSuggestions.set([]); this.peopleStatus.set(''); return }
       const { raw, query } = result
-      const all: string[] = []
-      this.peopleIndex = {}
-      Object.keys(raw).forEach(lastName => {
-        const group = raw[lastName]
-        if (group && typeof group === 'object') {
-          Object.keys(group).forEach(id => {
-            const label: string = group[id]
-            all.push(label)
-            this.peopleIndex[label] = id
-          })
-        }
-      })
-      const q = query.toLowerCase()
-      this.peopleSuggestions.set(
-        all.filter(label => label.toLowerCase().includes(q)).slice(0, 10)
-      )
+      const matches = this.labelSvc.personMatcher(query)
+      const found = this.labelSvc.parsePeopleIndex(raw).filter(p => matches(p.label)).slice(0, 10)
+      this.peopleSuggestions.set(found)
+      this.peopleStatus.set(searchStatus(found.length))
     })
 
     this.groupSearchSub = this.groupSearchInput$.pipe(
@@ -165,23 +167,13 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 3) return of([])
         const q = query.toLowerCase()
-        const wordPrefixMatch = (text: string) =>
-          text.toLowerCase().split(/[\s()]+/).some(word => word.startsWith(q))
+        const wordPrefixMatch = this.labelSvc.wordPrefixMatcher(query)
         const midas = this.groups()
           .filter(g => wordPrefixMatch(g.name) || g.id.toLowerCase().startsWith(q))
           .slice(0, 5)
           .map(g => ({ id: g.id, name: g.name, code: '', type: 'midas' as const }))
-        const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-        if (!orgBaseUrl) return of(midas)
-        return forkJoin(
-          this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
-            this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(query.toUpperCase())}`).pipe(
-              map(raw => this.parseOrgIndex(raw, prefix).filter(o => wordPrefixMatch(o.name))),
-              catchError(() => of([]))
-            )
-          )
-        ).pipe(
-          map(results => [...midas, ...results.flat()].slice(0, 10))
+        return this.labelSvc.searchOrgs(query).pipe(
+          map(orgs => [...midas, ...orgs].slice(0, 10))
         )
       })
     ).subscribe(suggestions => this.groupSuggestions.set(suggestions))
@@ -192,32 +184,19 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       switchMap(query => {
         if (query.length < 2) return of(null)
         this.memberSearchLoading.set(true)
-        const baseUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-        return this.http.get<any>(`${baseUrl}?${encodeURIComponent(query.toUpperCase())}`).pipe(
+        return this.nsd.searchPeople(query).pipe(
           map(raw => ({ raw, query })),
           catchError(() => of(null))
         )
       })
     ).subscribe(result => {
       this.memberSearchLoading.set(false)
-      if (!result) { this.memberSuggestions.set([]); return }
+      if (!result) { this.memberSuggestions.set([]); this.memberStatus.set(''); return }
       const { raw, query } = result
-      const all: string[] = []
-      this.memberPeopleIndex = {}
-      Object.keys(raw).forEach(lastName => {
-        const group = raw[lastName]
-        if (group && typeof group === 'object') {
-          Object.keys(group).forEach(id => {
-            const label: string = group[id]
-            all.push(label)
-            this.memberPeopleIndex[label] = id
-          })
-        }
-      })
-      const q = query.toLowerCase()
-      this.memberSuggestions.set(
-        all.filter(label => label.toLowerCase().includes(q)).slice(0, 10)
-      )
+      const matches = this.labelSvc.personMatcher(query)
+      const found = this.labelSvc.parsePeopleIndex(raw).filter(p => matches(p.label)).slice(0, 10)
+      this.memberSuggestions.set(found)
+      this.memberStatus.set(searchStatus(found.length))
     })
   }
 
@@ -241,20 +220,17 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     const level = this.bulkLevel
     if (!people.length || !this.records.length) return
 
-    const required = this.LEVEL_PERMS[level]
-    const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-    const toRevoke = all.filter(p => !required.includes(p))
     this.bulkGranting.set(true)
     this.bulkGrantError.set(null)
 
-    const ops: Observable<unknown>[] = people.flatMap(person =>
-      this.records.flatMap(record => [
-        ...required.map(perm => this.permsSvc.grantPerm(record, perm, person.id)),
-        // Revoke perms above the target level; 404s are safe (subject didn't hold that perm).
-        ...toRevoke.map(p =>
-          this.permsSvc.revokePerm(record, p, person.id).pipe(catchError(() => of(null)))
-        ),
-      ])
+    const subjects = people.map(person => person.id)
+    // `acls` only ever holds the single selected record, so each record is read
+    // here: a write built without its snapshot would drop what it already had.
+    const ops: Observable<unknown>[] = this.records.map(record =>
+      this.permsSvc.getAcls(record).pipe(
+        switchMap(current =>
+          this.permsSvc.setAcls(record, withSubjectsAtLevel(current, subjects, level)))
+      )
     )
 
     forkJoin(ops).subscribe({
@@ -269,7 +245,14 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       },
       error: (err) => {
         this.bulkGranting.set(false)
-        this.bulkGrantError.set('One or more operations failed.')
+        // forkJoin gives up on the first failure, so the records before it are
+        // written, the rest may never have been tried, and we cannot say which
+        // is which. Staged is left alone so the whole grant can simply be redone.
+        this.bulkGrantError.set(
+          'Some of the selected records may not have been updated. Check them and try again.'
+        )
+        // whatever did land is already live; consumers must not keep showing the old state
+        this.permissionsChanged.emit()
         console.error('[PermissionManager] bulk grant error:', err)
       }
     })
@@ -302,132 +285,13 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
-  private readonly ORG_TYPE_MAP: Record<string, { endpoint: string; label: string; prefix: 'nistou' | 'nistdiv' | 'nistgrp' }> = {
-    nistou:  { endpoint: 'OU',    label: 'OU',  prefix: 'nistou'  },
-    nistdiv: { endpoint: 'Div',   label: 'Div', prefix: 'nistdiv' },
-    nistgrp: { endpoint: 'Group', label: 'Grp', prefix: 'nistgrp' },
-  }
-
   private resolveUnknownLabels(acls: Acls): void {
-    const known = this.subjectLabels()
-    const allSubjects = new Set([
+    this.labelSvc.resolve([
       ...(acls.read ?? []),
       ...(acls.write ?? []),
       ...(acls.admin ?? []),
       ...(acls.delete ?? []),
-    ])
-    const syncUpdates: { [subject: string]: string } = {}
-    const toResolveViaSearch: string[] = []
-    const toResolveViaOrg: string[] = []
-
-    for (const subject of allSubjects) {
-      if (known[subject]) continue
-      const group = this.groups().find(g => g.id === subject)
-      if (group) {
-        syncUpdates[subject] = group.name
-      } else if (/^nist(ou|div|grp):/.test(subject) || /^\d+:\d+$/.test(subject) || /^[a-z]+:\d+$/.test(subject)) {
-        toResolveViaOrg.push(subject)
-      } else if (/^\d+$/.test(subject)) {
-        syncUpdates[subject] = `Org group (${subject})`
-      } else {
-        toResolveViaSearch.push(subject)
-      }
-    }
-
-    if (Object.keys(syncUpdates).length > 0) {
-      this.subjectLabels.update(m => ({ ...m, ...syncUpdates }))
-    }
-
-    // EIDs: search the people API with the EID as query and look for an exact key match
-    const peopleUrl = (this.configSvc.getConfig<any>()['peopleURL'] ?? '') as string
-    if (peopleUrl) {
-      toResolveViaSearch.forEach(eid => {
-        this.http.get<any>(`${peopleUrl}?${encodeURIComponent(eid.toUpperCase())}`).pipe(
-          catchError(() => of({}))
-        ).subscribe((raw: any) => {
-          if (!raw || typeof raw !== 'object') return
-          for (const key of Object.keys(raw)) {
-            const group = raw[key]
-            if (group && typeof group === 'object' && Object.prototype.hasOwnProperty.call(group, eid)) {
-              this.subjectLabels.update(m => ({ ...m, [eid]: group[eid] }))
-              return
-            }
-          }
-        })
-      })
-    }
-
-    // NIST org subjects — two formats:
-    //   new: "nistou:13289" / "nistdiv:13289" / "nistgrp:13289"
-    //   legacy: "775:13289" (orgCode:orgId, stored by older versions of this UI)
-    // In both cases, display as "{orgName} ({orgCode})".
-    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-    if (orgBaseUrl) {
-      toResolveViaOrg.forEach(subject => {
-        const colonIdx = subject.indexOf(':')
-        const prefix = subject.substring(0, colonIdx)
-        const afterColon = subject.substring(colonIdx + 1)
-
-        if (/^nist(ou|div|grp)$/.test(prefix)) {
-          // New format: query the typed endpoint, look up numericId directly
-          const mapping = this.ORG_TYPE_MAP[prefix]
-          this.http.get<any>(`${orgBaseUrl}/${mapping.endpoint}/index`).pipe(
-            catchError(() => of({}))
-          ).subscribe((raw: any) => {
-            const numericId = afterColon
-            for (const code of Object.keys(raw ?? {})) {
-              const group = raw[code]
-              if (group && typeof group === 'object' && group[numericId]) {
-                const name = (group[numericId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
-                return
-              }
-            }
-          })
-        } else if (/^\d+$/.test(prefix)) {
-          // Legacy format "775:13289" (orgCode:orgId) — direct lookup by both keys
-          const orgCode = prefix
-          const orgId = afterColon
-          forkJoin(
-            this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
-                catchError(() => of({}))
-              )
-            )
-          ).subscribe(responses => {
-            for (const raw of responses) {
-              const group = raw?.[orgCode]
-              if (group && typeof group === 'object' && group[orgId]) {
-                const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${orgCode})` }))
-                return
-              }
-            }
-          })
-        } else {
-          // Org abbreviation format "mml:13213" — scan all endpoints by orgId, get code from outer key
-          const orgId = afterColon
-          forkJoin(
-            this.NIST_ORG_TYPES.map(({ endpoint }) =>
-              this.http.get<any>(`${orgBaseUrl}/${endpoint}/index`).pipe(
-                catchError(() => of({}))
-              )
-            )
-          ).subscribe(responses => {
-            for (const raw of responses) {
-              for (const code of Object.keys(raw ?? {})) {
-                const group = raw[code]
-                if (group && typeof group === 'object' && group[orgId]) {
-                  const name = (group[orgId] as string).replace(/\s*\(\d+\)\s*$/, '')
-                  this.subjectLabels.update(m => ({ ...m, [subject]: `${name} (${code})` }))
-                  return
-                }
-              }
-            }
-          })
-        }
-      })
-    }
+    ], this.groups())
   }
 
   createGroup(): void {
@@ -474,35 +338,38 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.memberSearchInput$.next(query)
   }
 
-  addGroupMember(groupId: string, label: string): void {
-    const peopleId = this.memberPeopleIndex[label]
-    if (!peopleId) return
+  addGroupMember(groupId: string, person: PersonEntry): void {
     setTimeout(() => { this.memberQuery = ''; this.memberSuggestions.set([]) })
 
-    const personUrl = (this.configSvc.getConfig<any>()['personURL'] ?? '') as string
     const doAdd = (memberId: string) => {
       this.groupsSvc.addMember(groupId, memberId).subscribe({
         next: updatedMembers => {
           this.groups.update(gs => gs.map(g =>
             g.id === groupId ? { ...g, members: updatedMembers } : g
           ))
+          // the row renders the resolved label, so say the same thing it shows
+          this.labelSvc.set(memberId, person.label)
+          this.memberStatus.set(`${person.label} added`)
         },
-        error: err => console.error('[PermissionManager] addMember error:', err)
+        error: err => {
+          console.error('[PermissionManager] addMember error:', err)
+          this.memberStatus.set(`${person.label} could not be added`)
+        }
       })
     }
 
-    if (personUrl) {
-      this.http.get<any>(`${personUrl}${peopleId}`).subscribe({
-        next: person => doAdd(person?.nistUsername || peopleId),
-        error: () => doAdd(peopleId)
-      })
-    } else {
-      doAdd(peopleId)
-    }
+    this.nsd.getPerson(person.id).subscribe({
+      next: found => doAdd(found?.nistUsername || person.id),
+      error: () => doAdd(person.id)
+    })
   }
 
   toggleGroup(id: string): void {
     this.expandedGroupId.update(cur => cur === id ? null : id)
+    // the next group opens its own live region; it must not inherit this one's
+    this.memberQuery = ''
+    this.memberSuggestions.set([])
+    this.memberStatus.set('')
   }
 
   // ── ACL ───────────────────────────────────────────────────────────────────
@@ -531,110 +398,63 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     return this.acls()?.[perm] ?? []
   }
 
-  subjectLevel(subject: string): 'view' | 'update' | 'admin' | null {
-    const acls = this.acls()
-    if (!acls) return null
-    const r = acls.read?.includes(subject) ?? false
-    const w = acls.write?.includes(subject) ?? false
-    const a = acls.admin?.includes(subject) ?? false
-    const d = acls.delete?.includes(subject) ?? false
-    if (a) return 'admin'
-    if (w) return 'update'
-    if (r) return 'view'
-    return null
+  subjectLevel(subject: string): PermissionLevel | null {
+    return subjectPermissionLevel(this.acls(), subject)
   }
 
   isGroup(subject: string): boolean {
-    // Numeric IDs are NIST org groups; prefixed IDs (e.g. nistou:123) are NIST org units;
-    // MIDAS group IDs match an entry in the loaded groups list.
-    if (/^\d+$/.test(subject) || /^nist(ou|div|grp):/.test(subject)) return true
-    if (this.groups().some(g => g.id === subject)) return true
-    return false
+    return isGroupSubject(subject, this.groups())
   }
 
-  setSubjectLevel(subject: string, newLevel: 'view' | 'update' | 'admin', emitChange = true): void {
-    const record = this.singleRecord()
-    if (!record) return
-    const current = this.acls()
-    if (!current) return
 
-    const required = this.LEVEL_PERMS[newLevel]
-    const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-    const toGrant = required.filter(p => !(current[p] ?? []).includes(subject))
-    const toRevoke = all.filter(p => !required.includes(p) && (current[p] ?? []).includes(subject))
-    const ops: Observable<unknown>[] = [
-      ...toGrant.map(p => this.permsSvc.grantPerm(record, p, subject)),
-      ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject)),
-    ]
-    if (!ops.length) return
-
-    forkJoin(ops).subscribe({
+  /**
+   * One request expresses one intent.  Granting admin used to mean four separate
+   * writes, each a read-modify-write of the whole record server-side, so the
+   * record's final state depended on which of them the server handled last.
+   */
+  private writeAcls(record: RecordRef, acls: Acls, emitChange = true): void {
+    this.aclsBusy.set(true)
+    this.aclsWriteError.set(null)
+    this.permsSvc.setAcls(record, acls).subscribe({
       next: () => {
+        this.aclsBusy.set(false)
         this.loadAcls()
         if (emitChange) this.permissionsChanged.emit()
       },
       error: (err: unknown) => {
+        this.aclsBusy.set(false)
+        this.aclsWriteError.set('That permission change could not be saved. Please try again.')
         this.loadAcls()
-        console.error('[PermissionManager] setSubjectLevel error:', err)
+        console.error('[PermissionManager] setAcls failed:', err)
       }
     })
+  }
+
+  setSubjectLevel(subject: string, newLevel: PermissionLevel, emitChange = true): void {
+    const record = this.singleRecord()
+    const current = this.acls()
+    if (!record || !current) return
+    if (subjectPermissionLevel(current, subject) === newLevel) return
+
+    this.writeAcls(record, withSubjectAtLevel(current, subject, newLevel), emitChange)
   }
 
   removeSubject(subject: string): void {
     const record = this.singleRecord()
-    if (!record) return
     const current = this.acls()
-    if (!current) return
+    if (!record || !current) return
 
-    const toRevoke: AclPerm[] = (['read', 'write', 'admin', 'delete'] as AclPerm[])
-      .filter(p => (current[p] ?? []).includes(subject))
-    if (!toRevoke.length) return
-
-    forkJoin(toRevoke.map(p => this.permsSvc.revokePerm(record, p, subject))).subscribe({
-      next: () => { this.loadAcls(); this.permissionsChanged.emit() },
-      error: (err: unknown) => {
-        this.loadAcls()
-        console.error('[PermissionManager] removeSubject error:', err)
-      }
-    })
+    this.writeAcls(record, withoutSubject(current, subject))
   }
 
-  grantStagedLevel(level: 'view' | 'update' | 'admin'): void {
+  grantStagedLevel(level: PermissionLevel): void {
     const record = this.singleRecord()
-    if (!record) return
+    const current = this.acls()
     const people = this.staged()
-    if (!people.length) return
-
-    const currentAcls = this.acls()
-    const allOps: Observable<unknown>[] = people.flatMap(person => {
-      if (!currentAcls) return []
-      const required = this.LEVEL_PERMS[level]
-      const all: AclPerm[] = ['read', 'write', 'admin', 'delete']
-      const toGrant = required.filter(p => !(currentAcls[p] ?? []).includes(person.id))
-      const toRevoke = all.filter(p => !required.includes(p) && (currentAcls[p] ?? []).includes(person.id))
-      return [
-        ...toGrant.map(p => this.permsSvc.grantPerm(record, p, person.id)),
-        ...toRevoke.map(p => this.permsSvc.revokePerm(record, p, person.id)),
-      ]
-    })
+    if (!record || !current || !people.length) return
 
     this.closeAddPerson()
-
-    if (!allOps.length) {
-      this.permissionsChanged.emit()
-      return
-    }
-
-    forkJoin(allOps).subscribe({
-      next: () => {
-        this.loadAcls()
-        this.permissionsChanged.emit()
-      },
-      error: (err: unknown) => {
-        this.loadAcls()
-        console.error('[PermissionManager] grantStagedLevel error:', err)
-      }
-    })
+    this.writeAcls(record, withSubjectsAtLevel(current, people.map(p => p.id), level))
   }
 
   // ── Confirmation wrappers ─────────────────────────────────────────────────
@@ -723,13 +543,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   // ── User's NIST org units ─────────────────────────────────────────────────
 
   loadNistOrgs(ou: string): void {
-    const orgBaseUrl = ((this.configSvc.getConfig<any>()['orgURL'] ?? '') as string).replace(/\/index$/, '')
-    if (!orgBaseUrl || !ou) return
+    if (!ou) return
     this.nistOrgsLoading.set(true)
     forkJoin(
       this.NIST_ORG_TYPES.map(({ endpoint, prefix }) =>
-        this.http.get<any>(`${orgBaseUrl}/${endpoint}/index?${encodeURIComponent(ou.toUpperCase())}`).pipe(
-          map(raw => this.parseOrgIndex(raw, prefix)),
+        this.nsd.searchOrgIndex(endpoint, ou).pipe(
+          map(raw => this.labelSvc.parseOrgIndex(raw, prefix)),
           catchError(() => of([]))
         )
       )
@@ -747,29 +566,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     })
   }
 
-  private parseOrgIndex(
-    raw: any,
-    prefix: 'nistou' | 'nistdiv' | 'nistgrp'
-  ): { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] {
-    const out: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }[] = []
-    if (!raw || typeof raw !== 'object') return out
-    Object.keys(raw).forEach(code => {
-      const group = raw[code]
-      if (group && typeof group === 'object') {
-        Object.keys(group).forEach(numericId => {
-          out.push({ id: `${prefix}:${numericId}`, name: group[numericId], code, type: prefix })
-        })
-      }
-    })
-    return out
-  }
-
   stageNistOrg(org: { id: string; name: string; code: string; type: 'nistou' | 'nistdiv' | 'nistgrp' }): void {
     this._addStaged(org.id, org.name)
-    this.subjectLabels.update(m => ({
-      ...m,
-      [org.id]: `${org.name} (${org.code})`
-    }))
   }
 
   isNistOrgStaged(orgId: string): boolean {
@@ -791,6 +589,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.grantLevelValue = 'update'
     this.peopleQuery = ''
     this.peopleSuggestions.set([])
+    this.peopleStatus.set('')
     this.groupQuery = ''
     this.groupSuggestions.set([])
   }
@@ -800,6 +599,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.staged.set([])
     this.peopleQuery = ''
     this.peopleSuggestions.set([])
+    this.peopleStatus.set('')
     this.groupQuery = ''
     this.groupSuggestions.set([])
   }
@@ -809,28 +609,20 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.searchInput$.next(query)
   }
 
-  stagePerson(label: string): void {
-    const peopleId = this.peopleIndex[label]
-    if (!peopleId) return
-
+  stagePerson(person: PersonEntry): void {
     // clear input immediately
     setTimeout(() => {
       this.peopleQuery = ''
       this.peopleSuggestions.set([])
     })
 
-    const personUrl = ((this.configSvc.getConfig<any>()['personURL'] ?? '') as string).replace(/\/?$/, '/')
-    if (personUrl !== '/') {
-      this.http.get<any>(`${personUrl}${peopleId}`).subscribe({
-        next: person => {
-          const subject = person?.nistUsername || peopleId
-          this._addStaged(subject, label)
-        },
-        error: () => this._addStaged(peopleId, label)
-      })
-    } else {
-      this._addStaged(peopleId, label)
-    }
+    // the fallback stages a bare NSD peopleID, which isGroupSubject() reads as an
+    // org group — the name shows until the drawer is reloaded, then it reads
+    // "Org group (13913)". Rare, and better than dropping the choice silently.
+    this.nsd.getPerson(person.id).subscribe({
+      next: found => this._addStaged(found?.nistUsername || person.id, person.label),
+      error: () => this._addStaged(person.id, person.label)
+    })
   }
 
   onGroupQueryChange(query: string): void {
@@ -838,7 +630,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.groupSearchInput$.next(query)
   }
 
-  displayGroupLabel = (_: any): string => ''
+  /** every picker here clears its input on selection; the chip or row is the record of it */
+  clearOnSelect = (_: any): string => ''
 
   stageGroupSuggestion(s: { id: string; name: string; type: string }): void {
     this._addStaged(s.id, s.name)
@@ -859,7 +652,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   private _addStaged(subject: string, label: string): void {
     if (!this.staged().find(p => p.id === subject)) {
       this.staged.update(s => [...s, { id: subject, label }])
-      this.subjectLabels.update(m => ({ ...m, [subject]: label }))
+      this.labelSvc.set(subject, label)
+      this.peopleStatus.set(`${label} added`)
+    } else {
+      this.peopleStatus.set(`${label} is already on the list`)
     }
   }
 

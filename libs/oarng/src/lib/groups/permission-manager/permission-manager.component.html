@@ -61,14 +61,17 @@
                      placeholder="Type a name…"
                      aria-label="Search for a person to add" />
               @if (peopleSearchLoading()) {
-                <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"
+                                      aria-label="Searching NIST personnel"></mat-progress-spinner>
               }
             </mat-form-field>
-            <mat-autocomplete #bulkPersonAuto (optionSelected)="stagePerson($event.option.value)">
-              @for (suggestion of peopleSuggestions(); track suggestion) {
-                <mat-option [value]="suggestion">{{ suggestion }}</mat-option>
+            <mat-autocomplete #bulkPersonAuto [displayWith]="clearOnSelect"
+                              (optionSelected)="stagePerson($event.option.value)">
+              @for (s of peopleSuggestions(); track s.id) {
+                <mat-option [value]="s">{{ s.label }}</mat-option>
               }
             </mat-autocomplete>
+            <div class="pm-sr-only" aria-live="polite">{{ peopleStatus() }}</div>
 
             <mat-form-field appearance="outline" class="pm-group-field">
               <mat-label>Search groups or orgs</mat-label>
@@ -79,7 +82,7 @@
                      placeholder="My groups or NIST orgs…"
                      aria-label="Search for a group to add" />
             </mat-form-field>
-            <mat-autocomplete #bulkGroupAuto [displayWith]="displayGroupLabel"
+            <mat-autocomplete #bulkGroupAuto [displayWith]="clearOnSelect"
                               (optionSelected)="stageGroupSuggestion($event.option.value)">
               @for (s of groupSuggestions(); track s.id) {
                 <mat-option [value]="s">
@@ -135,16 +138,19 @@
             <!-- Admin -->
             <div class="pm-level-section">
               <span class="pm-level-header pm-level-header--admin">Admin</span>
+              @if (aclsWriteError()) {
+                <p class="pm-error" role="alert">{{ aclsWriteError() }}</p>
+              }
               <div class="pm-chips">
                 @for (s of subjectsByLevel().admin; track s) {
                   <div class="pm-chip pm-chip--admin">
-                    <button class="pm-chip-label"
+                    <button class="pm-chip-label" [disabled]="aclsBusy()"
                             [matMenuTriggerFor]="adminMenu"
                             [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
                       <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
                       {{ subjectLabels()[s] || s }}
                     </button>
-                    <button class="pm-chip-remove"
+                    <button class="pm-chip-remove" [disabled]="aclsBusy()"
                             (click)="confirmRemoveSubject(s)"
                             [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
                     <mat-menu #adminMenu>
@@ -165,13 +171,13 @@
               <div class="pm-chips">
                 @for (s of subjectsByLevel().update; track s) {
                   <div class="pm-chip pm-chip--update">
-                    <button class="pm-chip-label"
+                    <button class="pm-chip-label" [disabled]="aclsBusy()"
                             [matMenuTriggerFor]="updateMenu"
                             [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
                       <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
                       {{ subjectLabels()[s] || s }}
                     </button>
-                    <button class="pm-chip-remove"
+                    <button class="pm-chip-remove" [disabled]="aclsBusy()"
                             (click)="confirmRemoveSubject(s)"
                             [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
                     <mat-menu #updateMenu>
@@ -192,13 +198,13 @@
               <div class="pm-chips">
                 @for (s of subjectsByLevel().view; track s) {
                   <div class="pm-chip pm-chip--view">
-                    <button class="pm-chip-label"
+                    <button class="pm-chip-label" [disabled]="aclsBusy()"
                             [matMenuTriggerFor]="viewMenu"
                             [attr.aria-label]="'Change level for ' + (subjectLabels()[s] || s)">
                       <mat-icon class="pm-chip-icon" aria-hidden="true">{{ isGroup(s) ? 'corporate_fare' : 'person' }}</mat-icon>
                       {{ subjectLabels()[s] || s }}
                     </button>
-                    <button class="pm-chip-remove"
+                    <button class="pm-chip-remove" [disabled]="aclsBusy()"
                             (click)="confirmRemoveSubject(s)"
                             [attr.aria-label]="'Remove ' + (subjectLabels()[s] || s)">×</button>
                     <mat-menu #viewMenu>
@@ -251,14 +257,17 @@
                          placeholder="Type a name…"
                          aria-label="Search for a person to add" />
                   @if (peopleSearchLoading()) {
-                    <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                    <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"
+                                          aria-label="Searching NIST personnel"></mat-progress-spinner>
                   }
                 </mat-form-field>
-                <mat-autocomplete #personAuto (optionSelected)="stagePerson($event.option.value)">
-                  @for (suggestion of peopleSuggestions(); track suggestion) {
-                    <mat-option [value]="suggestion">{{ suggestion }}</mat-option>
+                <mat-autocomplete #personAuto [displayWith]="clearOnSelect"
+                                  (optionSelected)="stagePerson($event.option.value)">
+                  @for (s of peopleSuggestions(); track s.id) {
+                    <mat-option [value]="s">{{ s.label }}</mat-option>
                   }
                 </mat-autocomplete>
+                <div class="pm-sr-only" aria-live="polite">{{ peopleStatus() }}</div>
 
                 <mat-form-field appearance="outline" class="pm-group-field">
                   <mat-label>Search groups or orgs</mat-label>
@@ -269,7 +278,7 @@
                          placeholder="My groups or NIST orgs…"
                          aria-label="Search for a group to add" />
                 </mat-form-field>
-                <mat-autocomplete #groupAuto [displayWith]="displayGroupLabel"
+                <mat-autocomplete #groupAuto [displayWith]="clearOnSelect"
                                   (optionSelected)="stageGroupSuggestion($event.option.value)">
                   @for (s of groupSuggestions(); track s.id) {
                     <mat-option [value]="s">
@@ -439,14 +448,17 @@
                            placeholder="Type a name…"
                            aria-label="Search for a person to add to this group" />
                     @if (memberSearchLoading()) {
-                      <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"></mat-progress-spinner>
+                      <mat-progress-spinner matSuffix mode="indeterminate" diameter="16"
+                                            aria-label="Searching NIST personnel"></mat-progress-spinner>
                     }
                   </mat-form-field>
-                  <mat-autocomplete #memberAuto (optionSelected)="addGroupMember(group.id, $event.option.value)">
-                    @for (s of memberSuggestions(); track s) {
-                      <mat-option [value]="s">{{ s }}</mat-option>
+                  <mat-autocomplete #memberAuto [displayWith]="clearOnSelect"
+                                    (optionSelected)="addGroupMember(group.id, $event.option.value)">
+                    @for (s of memberSuggestions(); track s.id) {
+                      <mat-option [value]="s">{{ s.label }}</mat-option>
                     }
                   </mat-autocomplete>
+                  <div class="pm-sr-only" aria-live="polite">{{ memberStatus() }}</div>
                 </div>
               }
 
