@@ -9,13 +9,13 @@ import { MatDialog } from '@angular/material/dialog'
 import { GroupsService } from '../groups.service'
 import { PermissionsService } from '../permissions.service'
 import { NsdService } from '../nsd.service'
-import { SubjectLabelService, isGroupSubject, personDisplayName } from '../subject-label.service'
+import { SubjectLabelService, PersonEntry, isGroupSubject } from '../subject-label.service'
 import { Group, RecordRef, Acls, AclPerm } from '../group.types'
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog.component'
 
-interface PersonSuggestion {
-  id: string
-  label: string
+function searchStatus(n: number): string {
+  if (n === 0) return 'No matches'
+  return n === 1 ? '1 suggestion' : `${n} suggestions`
 }
 
 @Component({
@@ -104,9 +104,16 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
   showAddPanel = signal(false)
   grantLevelValue: 'view' | 'update' | 'admin' = 'update'
   peopleQuery = ''
-  peopleSuggestions = signal<string[]>([])
-  staged = signal<PersonSuggestion[]>([])
+  peopleSuggestions = signal<PersonEntry[]>([])
+  staged = signal<PersonEntry[]>([])
   peopleSearchLoading = signal(false)
+  /**
+   * Spoken by the live region beside the field. Choosing a suggestion used to
+   * leave the name in the input, which is what a screen reader read back; the
+   * input is cleared on selection, so how many matches there are and who was
+   * added have to be said instead.
+   */
+  peopleStatus = signal('')
   // labels live in the service so a host app's own views resolve each subject once
   readonly subjectLabels = this.labelSvc.labels
 
@@ -121,11 +128,10 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
 
   // ── Group member search state ─────────────────────────────────────────────
   memberQuery = ''
-  memberSuggestions = signal<string[]>([])
+  memberSuggestions = signal<PersonEntry[]>([])
   memberSearchLoading = signal(false)
+  memberStatus = signal('')
 
-  private peopleIndex: { [label: string]: string } = {}
-  private memberPeopleIndex: { [label: string]: string } = {}
   private searchInput$ = new Subject<string>()
   private searchSub!: Subscription
   private groupSearchInput$ = new Subject<string>()
@@ -147,26 +153,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       })
     ).subscribe(result => {
       this.peopleSearchLoading.set(false)
-      if (!result) { this.peopleSuggestions.set([]); return }
+      if (!result) { this.peopleSuggestions.set([]); this.peopleStatus.set(''); return }
       const { raw, query } = result
-      const all: string[] = []
-      this.peopleIndex = {}
-      Object.keys(raw).forEach(lastName => {
-        const group = raw[lastName]
-        if (group && typeof group === 'object') {
-          Object.keys(group).forEach(id => {
-            // the staged chips and the columns these end up in all read
-            // "First Last"; the picker has to match what it feeds
-            const label = personDisplayName(group[id])
-            all.push(label)
-            this.peopleIndex[label] = id
-          })
-        }
-      })
-      const q = query.toLowerCase()
-      this.peopleSuggestions.set(
-        all.filter(label => label.toLowerCase().includes(q)).slice(0, 10)
-      )
+      const matches = this.labelSvc.personMatcher(query)
+      const found = this.labelSvc.parsePeopleIndex(raw).filter(p => matches(p.label)).slice(0, 10)
+      this.peopleSuggestions.set(found)
+      this.peopleStatus.set(searchStatus(found.length))
     })
 
     this.groupSearchSub = this.groupSearchInput$.pipe(
@@ -199,24 +191,12 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
       })
     ).subscribe(result => {
       this.memberSearchLoading.set(false)
-      if (!result) { this.memberSuggestions.set([]); return }
+      if (!result) { this.memberSuggestions.set([]); this.memberStatus.set(''); return }
       const { raw, query } = result
-      const all: string[] = []
-      this.memberPeopleIndex = {}
-      Object.keys(raw).forEach(lastName => {
-        const group = raw[lastName]
-        if (group && typeof group === 'object') {
-          Object.keys(group).forEach(id => {
-            const label = personDisplayName(group[id])
-            all.push(label)
-            this.memberPeopleIndex[label] = id
-          })
-        }
-      })
-      const q = query.toLowerCase()
-      this.memberSuggestions.set(
-        all.filter(label => label.toLowerCase().includes(q)).slice(0, 10)
-      )
+      const matches = this.labelSvc.personMatcher(query)
+      const found = this.labelSvc.parsePeopleIndex(raw).filter(p => matches(p.label)).slice(0, 10)
+      this.memberSuggestions.set(found)
+      this.memberStatus.set(searchStatus(found.length))
     })
   }
 
@@ -358,9 +338,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.memberSearchInput$.next(query)
   }
 
-  addGroupMember(groupId: string, label: string): void {
-    const peopleId = this.memberPeopleIndex[label]
-    if (!peopleId) return
+  addGroupMember(groupId: string, person: PersonEntry): void {
     setTimeout(() => { this.memberQuery = ''; this.memberSuggestions.set([]) })
 
     const doAdd = (memberId: string) => {
@@ -369,19 +347,29 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
           this.groups.update(gs => gs.map(g =>
             g.id === groupId ? { ...g, members: updatedMembers } : g
           ))
+          // the row renders the resolved label, so say the same thing it shows
+          this.labelSvc.set(memberId, person.label)
+          this.memberStatus.set(`${person.label} added`)
         },
-        error: err => console.error('[PermissionManager] addMember error:', err)
+        error: err => {
+          console.error('[PermissionManager] addMember error:', err)
+          this.memberStatus.set(`${person.label} could not be added`)
+        }
       })
     }
 
-    this.nsd.getPerson(peopleId).subscribe({
-      next: person => doAdd(person?.nistUsername || peopleId),
-      error: () => doAdd(peopleId)
+    this.nsd.getPerson(person.id).subscribe({
+      next: found => doAdd(found?.nistUsername || person.id),
+      error: () => doAdd(person.id)
     })
   }
 
   toggleGroup(id: string): void {
     this.expandedGroupId.update(cur => cur === id ? null : id)
+    // the next group opens its own live region; it must not inherit this one's
+    this.memberQuery = ''
+    this.memberSuggestions.set([])
+    this.memberStatus.set('')
   }
 
   // ── ACL ───────────────────────────────────────────────────────────────────
@@ -601,6 +589,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.grantLevelValue = 'update'
     this.peopleQuery = ''
     this.peopleSuggestions.set([])
+    this.peopleStatus.set('')
     this.groupQuery = ''
     this.groupSuggestions.set([])
   }
@@ -610,6 +599,7 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.staged.set([])
     this.peopleQuery = ''
     this.peopleSuggestions.set([])
+    this.peopleStatus.set('')
     this.groupQuery = ''
     this.groupSuggestions.set([])
   }
@@ -619,19 +609,19 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.searchInput$.next(query)
   }
 
-  stagePerson(label: string): void {
-    const peopleId = this.peopleIndex[label]
-    if (!peopleId) return
-
+  stagePerson(person: PersonEntry): void {
     // clear input immediately
     setTimeout(() => {
       this.peopleQuery = ''
       this.peopleSuggestions.set([])
     })
 
-    this.nsd.getPerson(peopleId).subscribe({
-      next: person => this._addStaged(person?.nistUsername || peopleId, label),
-      error: () => this._addStaged(peopleId, label)
+    // the fallback stages a bare NSD peopleID, which isGroupSubject() reads as an
+    // org group — the name shows until the drawer is reloaded, then it reads
+    // "Org group (13913)". Rare, and better than dropping the choice silently.
+    this.nsd.getPerson(person.id).subscribe({
+      next: found => this._addStaged(found?.nistUsername || person.id, person.label),
+      error: () => this._addStaged(person.id, person.label)
     })
   }
 
@@ -640,7 +630,8 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     this.groupSearchInput$.next(query)
   }
 
-  displayGroupLabel = (_: any): string => ''
+  /** every picker here clears its input on selection; the chip or row is the record of it */
+  clearOnSelect = (_: any): string => ''
 
   stageGroupSuggestion(s: { id: string; name: string; type: string }): void {
     this._addStaged(s.id, s.name)
@@ -662,6 +653,9 @@ export class PermissionManagerComponent implements OnChanges, OnDestroy {
     if (!this.staged().find(p => p.id === subject)) {
       this.staged.update(s => [...s, { id: subject, label }])
       this.labelSvc.set(subject, label)
+      this.peopleStatus.set(`${label} added`)
+    } else {
+      this.peopleStatus.set(`${label} is already on the list`)
     }
   }
 

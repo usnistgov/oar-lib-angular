@@ -55,6 +55,57 @@ describe('SubjectLabelService', () => {
     })
   })
 
+  describe('parsePeopleIndex()', () => {
+    it('collapses the surname and given-name keys into one entry per id', () => {
+      const people = svc.parsePeopleIndex({
+        blonder: { '13913': 'Blonder, Niksa' },
+        niksa:   { '13913': 'Blonder, Niksa' },
+      })
+
+      expect(people).toEqual([{ id: '13913', label: 'Niksa Blonder' }])
+    })
+
+    it('keeps two people who share a display name', () => {
+      const people = svc.parsePeopleIndex({
+        smith: { '1': 'Smith, John', '2': 'Smith, John' },
+        john:  { '1': 'Smith, John', '2': 'Smith, John' },
+      })
+
+      expect(people).toEqual([
+        { id: '1', label: 'John Smith' },
+        { id: '2', label: 'John Smith' },
+      ])
+    })
+
+    it('returns nothing for a non-object response', () => {
+      expect(svc.parsePeopleIndex(null)).toEqual([])
+      expect(svc.parsePeopleIndex('nope')).toEqual([])
+    })
+  })
+
+  describe('personMatcher()', () => {
+    const NIKSA = 'Niksa Blonder'
+
+    it('finds a name given either way round, however it is punctuated', () => {
+      for (const q of ['niksa blonder', 'blonder niksa', 'blonder, niksa', 'niksa  blonder']) {
+        expect(svc.personMatcher(q)(NIKSA)).toBe(true)
+      }
+    })
+
+    it('keeps matching part of a word, since a given name may be hyphenated', () => {
+      expect(svc.personMatcher('chuan')('Chun-Chuan Wu')).toBe(true)
+      expect(svc.personMatcher('lond')(NIKSA)).toBe(true)
+    })
+
+    it('needs every term', () => {
+      expect(svc.personMatcher('niksa zzz')(NIKSA)).toBe(false)
+    })
+
+    it('matches nothing when nothing was typed', () => {
+      expect(svc.personMatcher('  ')(NIKSA)).toBe(false)
+    })
+  })
+
   describe('searchOrgs()', () => {
     it('returns an org once even though the index repeats it', () => {
       nsd.searchOrgIndex.mockImplementation((endpoint: string) =>

@@ -1,5 +1,5 @@
 import { of, throwError } from 'rxjs'
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing'
+import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing'
 import { PermissionManagerComponent } from './permission-manager.component'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
 import { MatDialogModule } from '@angular/material/dialog'
@@ -20,7 +20,12 @@ describe('PermissionManagerComponent', () => {
   let component: PermissionManagerComponent
   let fixture: ComponentFixture<PermissionManagerComponent>
   let permsSvc: { grantPerm: jest.Mock; revokePerm: jest.Mock; getAcls: jest.Mock; setAcls: jest.Mock }
-  let nsd: { getPerson: jest.Mock; searchOrgIndex: jest.Mock; getPeopleByUsername: jest.Mock }
+  let nsd: {
+    getPerson: jest.Mock
+    searchPeople: jest.Mock
+    searchOrgIndex: jest.Mock
+    getPeopleByUsername: jest.Mock
+  }
   let groupsSvc: {
     getGroups: jest.Mock
     createGroup: jest.Mock
@@ -38,6 +43,7 @@ describe('PermissionManagerComponent', () => {
     }
     nsd = {
       getPerson: jest.fn().mockReturnValue(of(null)),
+      searchPeople: jest.fn().mockReturnValue(of({})),
       searchOrgIndex: jest.fn().mockReturnValue(of({})),
       getPeopleByUsername: jest.fn().mockReturnValue(of([])),
     }
@@ -714,32 +720,170 @@ describe('PermissionManagerComponent', () => {
     })
   })
 
+  // ── people picker ──────────────────────────────────────────────────────────
+
+  describe('people picker', () => {
+    // the directory lists a person under both names, both pointing at one id
+    const BLONDER = {
+      blonder: { '13913': 'Blonder, Niksa' },
+      niksa:   { '13913': 'Blonder, Niksa' },
+    }
+
+    const search = (query: string) => {
+      component.onPeopleQueryChange(query)
+      tick(250)
+    }
+
+    it('offers a person once however many names they are indexed under', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      search('blon')
+      expect(component.peopleSuggestions()).toEqual([{ id: '13913', label: 'Niksa Blonder' }])
+    }))
+
+    // a map keyed by the shown name kept only the last of the two, so picking
+    // the first row used to stage the second person
+    it('keeps two people who share a display name, and stages the one picked', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of({
+        smith: { '1': 'Smith, John', '2': 'Smith, John' }
+      }))
+      search('smith')
+      const suggestions = component.peopleSuggestions()
+      expect(suggestions.map(s => s.id)).toEqual(['1', '2'])
+
+      nsd.getPerson.mockReturnValue(of({ nistUsername: 'jsmith1' }))
+      component.stagePerson(suggestions[0])
+      tick()
+      expect(nsd.getPerson).toHaveBeenCalledWith('1')
+      expect(component.staged().map(s => s.id)).toEqual(['jsmith1'])
+    }))
+
+    it('collapses before the cap, so ten rows are ten people', fakeAsync(() => {
+      const raw: any = {}
+      for (let i = 0; i < 12; i++) {
+        raw[`last${i}`] = { [`${i}`]: `Last${i}, Niksa` }
+        raw[`niksa${i}`] = { [`${i}`]: `Last${i}, Niksa` }
+      }
+      nsd.searchPeople.mockReturnValue(of(raw))
+      search('niksa')
+      const ids = component.peopleSuggestions().map(s => s.id)
+      expect(ids).toHaveLength(10)
+      expect(new Set(ids).size).toBe(10)
+    }))
+
+    // the path from picking a suggestion to the subject in the body was never
+    // covered, which is how a picker keyed by display name went unnoticed
+    it('writes the picked person as the ACL subject', fakeAsync(() => {
+      component.singleRecord.set(RECORD)
+      component.acls.set(makeAcls(['owner'], [], ['owner'], []))
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      nsd.getPerson.mockReturnValue(of({ nistUsername: 'nblonder' }))
+
+      search('blon')
+      component.stagePerson(component.peopleSuggestions()[0])
+      tick()
+      component.grantStagedLevel('view')
+
+      expect(permsSvc.setAcls.mock.calls[0][1].read).toContain('nblonder')
+      flush()   // the write reloads the ACLs; drain it so no timer is left pending
+    }))
+
+    it('stages the peopleID when the person lookup fails', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      nsd.getPerson.mockReturnValue(throwError(() => new Error('nope')))
+      search('blon')
+      component.stagePerson(component.peopleSuggestions()[0])
+      tick()
+      expect(component.staged().map(s => s.id)).toEqual(['13913'])
+    }))
+
+    it('matches on the displayed name, not the directory form', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of({
+        blonder: { '13913': 'Blonder, Niksa' },
+        davis:   { '7': 'Davis, Carol' },
+      }))
+      search('niksa b')
+      expect(component.peopleSuggestions().map(s => s.label)).toEqual(['Niksa Blonder'])
+    }))
+
+    it('finds a name given either way round, however it is punctuated', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      for (const query of ['niksa blonder', 'blonder niksa', 'blonder, niksa']) {
+        search(query)
+        expect(component.peopleSuggestions().map(s => s.label)).toEqual(['Niksa Blonder'])
+      }
+    }))
+
+    // a given name is not always one word, so a term has to be contained
+    // rather than start one
+    it('finds a hyphenated given name by either half', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of({
+        wu: { '5': 'Wu, Chun-Chuan' }, lin: { '8': 'Lin, Chuan' }
+      }))
+      search('chuan')
+      expect(component.peopleSuggestions().map(s => s.label))
+        .toEqual(['Chun-Chuan Wu', 'Chuan Lin'])
+    }))
+
+    it('says how many matches there are, and who was added', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      search('blon')
+      expect(component.peopleStatus()).toBe('1 suggestion')
+
+      nsd.getPerson.mockReturnValue(of({ nistUsername: 'nblonder' }))
+      component.stagePerson(component.peopleSuggestions()[0])
+      tick()
+      expect(component.peopleStatus()).toBe('Niksa Blonder added')
+    }))
+
+    it('does not carry an announcement into the next time the panel is opened', fakeAsync(() => {
+      nsd.searchPeople.mockReturnValue(of(BLONDER))
+      search('blon')
+      expect(component.peopleStatus()).not.toBe('')
+
+      component.closeAddPerson()
+      component.openAddPerson()
+      expect(component.peopleStatus()).toBe('')
+    }))
+  })
+
   // ── addGroupMember() ───────────────────────────────────────────────────────
 
   describe('addGroupMember()', () => {
+    const bob = { id: '42', label: 'Bob Smith' }
+
     beforeEach(() => {
       component.groups.set([{
         id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: []
       }])
-      // memberPeopleIndex is a private field; set it via the member search response path
-      ;(component as any).memberPeopleIndex = { 'Bob Smith': 'bob' }
+      nsd.getPerson.mockReturnValue(of({ nistUsername: 'bob' }))
     })
 
     it('calls groupsSvc.addMember with the resolved EID', () => {
       groupsSvc.addMember.mockReturnValue(of(['bob']))
-      component.addGroupMember('grp0:alice:team', 'Bob Smith')
+      component.addGroupMember('grp0:alice:team', bob)
+      expect(nsd.getPerson).toHaveBeenCalledWith('42')
       expect(groupsSvc.addMember).toHaveBeenCalledWith('grp0:alice:team', 'bob')
+      expect(component.memberStatus()).toBe('Bob Smith added')
+    })
+
+    it('says nothing was added when the write fails', () => {
+      groupsSvc.addMember.mockReturnValue(throwError(() => new Error('nope')))
+      jest.spyOn(console, 'error').mockImplementation(() => {})
+      component.addGroupMember('grp0:alice:team', bob)
+      expect(component.memberStatus()).toBe('Bob Smith could not be added')
     })
 
     it('updates the group members signal on success', () => {
       groupsSvc.addMember.mockReturnValue(of(['bob', 'carol']))
-      component.addGroupMember('grp0:alice:team', 'Bob Smith')
+      component.addGroupMember('grp0:alice:team', bob)
       expect(component.groups()[0].members).toEqual(['bob', 'carol'])
     })
 
-    it('does nothing when the label has no matching EID in memberPeopleIndex', () => {
-      component.addGroupMember('grp0:alice:team', 'Unknown Person')
-      expect(groupsSvc.addMember).not.toHaveBeenCalled()
+    it('falls back to the peopleID when the person lookup fails', () => {
+      nsd.getPerson.mockReturnValue(throwError(() => new Error('nope')))
+      groupsSvc.addMember.mockReturnValue(of(['42']))
+      component.addGroupMember('grp0:alice:team', bob)
+      expect(groupsSvc.addMember).toHaveBeenCalledWith('grp0:alice:team', '42')
     })
   })
 

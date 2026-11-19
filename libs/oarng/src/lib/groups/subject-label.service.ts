@@ -12,6 +12,11 @@ export interface OrgEntry {
   type: OrgType
 }
 
+export interface PersonEntry {
+  id: string
+  label: string
+}
+
 const ORG_TYPES: { endpoint: string; prefix: OrgType }[] = [
   { endpoint: 'OU',    prefix: 'nistou'  },
   { endpoint: 'Div',   prefix: 'nistdiv' },
@@ -112,6 +117,24 @@ export class SubjectLabelService {
     return [...byId.values()]
   }
 
+  /**
+   * The directory index lists a person under both their surname and their given
+   * name, both pointing at the same id, so collapse them to one entry per id.
+   */
+  parsePeopleIndex(raw: any): PersonEntry[] {
+    const byId = new Map<string, PersonEntry>()
+    if (!raw || typeof raw !== 'object') return []
+    Object.keys(raw).forEach(key => {
+      const group = raw[key]
+      if (group && typeof group === 'object') {
+        Object.keys(group).forEach(id => {
+          if (!byId.has(id)) byId.set(id, { id, label: personDisplayName(group[id]) })
+        })
+      }
+    })
+    return [...byId.values()]
+  }
+
   /** organizations with a word starting with `query`, across all three org levels */
   searchOrgs(query: string): Observable<OrgEntry[]> {
     const matches = this.wordPrefixMatcher(query)
@@ -123,6 +146,22 @@ export class SubjectLabelService {
         )
       )
     ).pipe(map(results => results.flat()))
+  }
+
+  /**
+   * Every word typed has to appear in the name, in any order, so a name can be
+   * searched the way the directory writes it as well as the way it is shown:
+   * "Blonder, Niksa" and "Niksa Blonder" both find her. The term has to be
+   * contained rather than start a word, because a given name is not always one
+   * word — "Chuan" has to keep finding Chun-Chuan Wu.
+   */
+  personMatcher(query: string): (label: string) => boolean {
+    const terms = query.toLowerCase().split(/[\s,]+/).filter(Boolean)
+    if (!terms.length) return () => false
+    return (label: string) => {
+      const text = label.toLowerCase()
+      return terms.every(term => text.includes(term))
+    }
   }
 
   wordPrefixMatcher(query: string): (text: string) => boolean {
