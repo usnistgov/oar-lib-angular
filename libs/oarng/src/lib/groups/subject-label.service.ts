@@ -164,9 +164,18 @@ export class SubjectLabelService {
     }
   }
 
+  /**
+   * Every word typed has to start a word of the name, so "software and sy" finds
+   * the Software and Systems Division. Matching the whole query against a single
+   * word, as this once did, meant anything with a space in it matched nothing.
+   */
   wordPrefixMatcher(query: string): (text: string) => boolean {
-    const q = query.toLowerCase()
-    return (text: string) => text.toLowerCase().split(/[\s()]+/).some(word => word.startsWith(q))
+    const terms = query.toLowerCase().split(/[\s()]+/).filter(Boolean)
+    if (!terms.length) return () => false
+    return (text: string) => {
+      const words = text.toLowerCase().split(/[\s()]+/).filter(Boolean)
+      return terms.every(term => words.some(word => word.startsWith(term)))
+    }
   }
 
   /**

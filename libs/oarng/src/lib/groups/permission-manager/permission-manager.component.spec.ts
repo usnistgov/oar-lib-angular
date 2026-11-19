@@ -1033,6 +1033,41 @@ describe('PermissionManagerComponent', () => {
       expect(component.groupSuggestions()[0].id).toBe('nistou:13213')
     }))
 
+    it('suggests an org from a query carrying a space', fakeAsync(() => {
+      jest.spyOn((component as any).nsd, 'searchOrgIndex')
+        .mockImplementation((endpoint: any) => of(endpoint === 'OU' ? mmlIndex : {}))
+
+      component.onGroupQueryChange('measurement lab')
+      tick(250)
+
+      expect(component.groupSuggestions().map(s => s.id)).toEqual(['nistou:13213'])
+    }))
+
+    // a group id never goes through the matcher, so the rewrite must leave it alone
+    it('still finds a group by its id prefix', fakeAsync(() => {
+      component.groups.set([
+        { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: [] }
+      ])
+
+      component.onGroupQueryChange('grp0:')
+      tick(250)
+
+      expect(component.groupSuggestions().map(s => s.id)).toEqual(['grp0:alice:team'])
+    }))
+
+    it('suggests nothing for a query of only spaces', fakeAsync(() => {
+      component.groups.set([
+        { id: 'grp0:alice:team', name: 'Team', owner: 'alice', members: [] }
+      ])
+      jest.spyOn((component as any).nsd, 'searchOrgIndex')
+        .mockImplementation((endpoint: any) => of(endpoint === 'OU' ? mmlIndex : {}))
+
+      component.onGroupQueryChange('   ')
+      tick(250)
+
+      expect(component.groupSuggestions()).toEqual([])
+    }))
+
     it('labels a staged org with the name the directory returned', () => {
       component.stageNistOrg({
         id: 'nistou:13213',

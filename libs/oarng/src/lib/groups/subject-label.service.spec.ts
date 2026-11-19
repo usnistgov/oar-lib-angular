@@ -106,6 +106,35 @@ describe('SubjectLabelService', () => {
     })
   })
 
+  describe('wordPrefixMatcher()', () => {
+    const SSD = 'Software and Systems Division (775)'
+
+    it('matches a single term as it always did', () => {
+      expect(svc.wordPrefixMatcher('775')(SSD)).toBe(true)
+      expect(svc.wordPrefixMatcher('soft')(SSD)).toBe(true)
+      expect(svc.wordPrefixMatcher('zzz')(SSD)).toBe(false)
+    })
+
+    it('matches a query carrying a space', () => {
+      expect(svc.wordPrefixMatcher('software and')(SSD)).toBe(true)
+      expect(svc.wordPrefixMatcher('software and sy')(SSD)).toBe(true)
+      expect(svc.wordPrefixMatcher('systems div')(SSD)).toBe(true)
+    })
+
+    it('matches the name as it is displayed, parentheses and all', () => {
+      expect(svc.wordPrefixMatcher(SSD)(SSD)).toBe(true)
+    })
+
+    it('needs every term, so an extra word still narrows', () => {
+      expect(svc.wordPrefixMatcher('software zzz')(SSD)).toBe(false)
+    })
+
+    it('matches nothing when nothing was typed', () => {
+      expect(svc.wordPrefixMatcher('   ')(SSD)).toBe(false)
+      expect(svc.wordPrefixMatcher('')(SSD)).toBe(false)
+    })
+  })
+
   describe('searchOrgs()', () => {
     it('returns an org once even though the index repeats it', () => {
       nsd.searchOrgIndex.mockImplementation((endpoint: string) =>
