@@ -30,11 +30,9 @@
 }
 
 .home-icon {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     margin-right: 0px !important;
-    transform: translateY(2px);
 
     color: white;
     cursor: pointer;
