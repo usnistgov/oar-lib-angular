@@ -24,11 +24,18 @@ import {
     faBars,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import { GovBannerComponent } from '../gov-banner/gov-banner.component';
+
 
 @Component({
     selector: 'app-header',
     standalone: true,
-    imports: [CommonModule, NistLogoComponent, FontAwesomeModule],
+    imports: [
+        CommonModule,
+        NistLogoComponent,
+        FontAwesomeModule,
+        GovBannerComponent
+    ],
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css'],
     animations: [
@@ -58,6 +65,8 @@ export class HeaderComponent implements OnInit {
     faXmark = faXmark;
 
     mobileMenuOpen = false;
+
+    bannerExpanded = false;
 
     @Input() appVersion: string = '1.0';
     @Input() titleLn1: string = 'MIDAS';
@@ -126,5 +135,9 @@ export class HeaderComponent implements OnInit {
 
     backToPortal() {
         this.document.location.href = this.homeButtonLink;
+    }
+
+    toggleBanner(): void {
+        this.bannerExpanded = !this.bannerExpanded;
     }
 }
